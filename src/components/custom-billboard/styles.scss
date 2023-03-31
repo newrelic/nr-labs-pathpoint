@@ -1,0 +1,46 @@
+.metric {
+  display: flex;
+}
+
+.metric-status {
+  padding-left: 3px;
+  width: 10px;
+  height: 10px;
+}
+
+.metric-content {
+  line-height: 25px;
+  margin: 10px 10px 0 10px;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap:10px;
+
+  &--colorgrey {
+    color: #bdbdbd;
+  }
+
+  &--colorblack {
+    color: #333333;
+  }
+
+  &--size16 {
+    font-size: 16px;
+  }
+
+  &--size24 {
+    font-size: 24px;
+  }
+
+  &--size1_2em {
+    font-size: 1.2em;
+  }
+
+  &--size1_6em {
+    font-size: 1.6em;
+  }
+
+  &--weight900 {
+    font-weight: 900;
+  }
+}
