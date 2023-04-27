@@ -1,0 +1,75 @@
+.kpi-bar {
+  display: flex;
+  clear: both;
+  position: absolute;
+  bottom: 0;
+  height: 75px;
+  width: 99.5%;
+  color: #FFFFFF;
+  font-size: 16px;
+  gap: 5px;
+  
+
+  .kpi-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 120px;
+    color: #293338;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 28px;
+    margin-left: 18px;
+  }
+
+  .kpi-containers {
+    display: flex;
+    overflow-y: hidden;
+    overflow-x: auto;
+    max-width: calc(99% - 400px);
+    gap: 16px;
+
+    .kpi-container {
+      position: relative;
+      width: 140px;
+      display: flex;
+      flex-direction: row;
+      padding-right: 1px;;
+
+      .kpi-data {
+        height: 100%;
+        width: 115px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+      }
+  
+      .kpi-buttons {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        height: 100%;
+        width: 15px;
+        margin-left: 5px;
+        gap: 12px;
+      }
+    }
+  }
+
+  .kpi-bar-add-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bdbdbd;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-left: 15px;
+    padding: 8px 16px;
+  }
+
+}
+
+.box-shadow {
+  box-shadow: none;
+}
