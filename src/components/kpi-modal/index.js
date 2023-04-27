@@ -12,8 +12,8 @@ import {
   debug,
 } from 'nr1';
 
-import { EditInPlace, NrqlEditor/* , SimpleBillboard */ } from '@newrelic/nr-labs-components';
-import { SimpleBillboard } from 'labs-components';
+// import { EditInPlace, NrqlEditor/* , SimpleBillboard */ } from '@newrelic/nr-labs-components';
+import { EditInPlace, NrqlEditor, SimpleBillboard } from 'nr-labs-components';
 
 import { utils } from '../utils/utils';
 

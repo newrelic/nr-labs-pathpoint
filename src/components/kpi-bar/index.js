@@ -6,7 +6,7 @@ import { EmptyState, PlatformStateContext, Button } from 'nr1';
 
 import { IconsLib, KpiModal } from '../';
 // import { SimpleBillboard } from '@newrelic/nr-labs-components';
-import { SimpleBillboard } from 'labs-components';
+import { SimpleBillboard } from 'nr-labs-components';
 // import SimpleBillboard from '../simple-billboard';
 
 import { utils } from '../utils/utils';
