@@ -2,9 +2,8 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Button, Icon, nerdlet, PlatformStateContext } from 'nr1';
 
-import { NoFlows } from '../../src/components';
+import { NoFlows, KpiBar } from '../../src/components';
 import { useFetchFlows } from '../../src/hooks';
-import KpiBar from '../../src/components/kpi-bar';
 
 const HomeNerdlet = () => {
   const [flows, setFlows] = useState([]);

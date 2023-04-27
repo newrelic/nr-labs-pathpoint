@@ -4,13 +4,12 @@ import PropTypes from 'prop-types';
 
 import { EmptyState, PlatformStateContext, Button } from 'nr1';
 
-import { IconsLib } from '../';
+import { IconsLib, KpiModal } from '../';
 // import { SimpleBillboard } from '@newrelic/nr-labs-components';
 import { SimpleBillboard } from 'labs-components';
 // import SimpleBillboard from '../simple-billboard';
 
 import { utils } from '../utils/utils';
-import KpiModal from '../kpi-modal';
 
 const KpiBar = ({
   mode = 'view', // valid modes: view, add, edit
