@@ -1,9 +1,62 @@
 @import '../../src/components/styles.scss';
 
+@import '~@newrelic/nr-labs-components/dist/styles.css';
+
+// for testing SimpleBillboard from local build
+// in "../../../labs-components/nr-labs-components"
+@import '~labs-components/dist/styles.css';
+
+
+
+
 .container {
   display: flex;
   height: 100%;
   background-color: #f3f4f4;
   gap: 8px;
   flex-direction: column;
+// }
+
+
+
+// #########################################
+// ### starting from here added by SK
+// #########################################
+
+  // added by SK - for testing
+  .flows {
+    display: flex;
+    clear: both;
+    position: fixed;
+    top: 0;
+    height: calc(99% - 75px);
+    width: 99.5%;
+    color: #FFFFFF;
+    font-size: 16px;
+  }
+
+}
+
+
+
+.dev-buttons { // FOR DEBUGGING
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 100px;
+  color: black;
+}
+
+// added by SK - for testing custom "className" and "style" values passed to <SimpleBillboard>
+.metric-class {
+  // color: red;
+  font-size: 12px;
+}
+.status-trend-class {
+  // font-size: 9px;
+  fill: rgb(153, 255, 0);
+}
+.title-class {
+  // color: darkgreen;
+  font-size: 10px;
 }
