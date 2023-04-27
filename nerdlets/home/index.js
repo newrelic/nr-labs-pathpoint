@@ -64,25 +64,28 @@ const HomeNerdlet = () => {
     /* eslint-disable prettier/prettier, no-unused-vars */
     <div className="container">
       <div className="flows">
+        {flows && flows.length ? null : (
+          <NoFlows newFlowHandler={newFlowHandler} />
+        )}
 
-        <div className="dev-buttons">
-          <Button
-            type={Button.TYPE.SECONDARY}
-            sizeType={Button.SIZE_TYPE.SMALL}
-            onClick={() => mode === 'view' ? setMode('edit') : setMode('view')}
-          >
-            {mode === 'edit' ? `Done Editing KPIs` : `Edit KPIs`}
-          </Button>
+      </div>
 
-          <Button
-            type={Button.TYPE.SECONDARY}
-            sizeType={Button.SIZE_TYPE.SMALL}
-            onClick={() => setDebug(!debug)}
-          >
-            {debug ? `Disable Debug` : `Enable Debug`}
-          </Button>
-        </div>
+      <div className="dev-buttons">
+        <Button
+          type={Button.TYPE.SECONDARY}
+          sizeType={Button.SIZE_TYPE.SMALL}
+          onClick={() => mode === 'view' ? setMode('edit') : setMode('view')}
+        >
+          {mode === 'edit' ? `Done Editing KPIs` : `Edit KPIs`}
+        </Button>
 
+        <Button
+          type={Button.TYPE.SECONDARY}
+          sizeType={Button.SIZE_TYPE.SMALL}
+          onClick={() => setDebug(!debug)}
+        >
+          {debug ? `Disable Debug` : `Enable Debug`}
+        </Button>
       </div>
 
       <div>
