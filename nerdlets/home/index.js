@@ -44,12 +44,41 @@ const HomeNerdlet = () => {
   });
 
   const [kpiArray, setKpiArray] = useState([
-    /* eslint-disable prettier/prettier, no-unused-vars */
-    {"id": 0, "accountIds": [192626], "name": "TRANSACTIONS", "desc": "Transactions", "nrqlQuery": "SELECT count(*) as value FROM Transaction since 1 day ago COMPARE WITH 1 day ago", "source": "nr-hedgehog-kpis:useUpdateKpisCollection"},
-    {"id": 1, "accountIds": [192626], "name": "PAGE VIEWS", "desc": "Browser Page Views", "nrqlQuery": "SELECT count(*) as value FROM PageView since 1 day ago COMPARE WITH 1 day ago", "source": "nr-hedgehog-kpis:useUpdateKpisCollection"},
-    {"id": 2, "accountIds": [192626], "name": "PUBLIC CALLS", "desc": "Public API Calls", "nrqlQuery": "SELECT count(*) as value FROM Public_APICall SINCE 1 DAY AGO", "source": "nr-hedgehog-kpis:useUpdateKpisCollection"},
-    {"id": 3, "accountIds": [192626], "name": "UNIQUE USER SESSIONS", "desc": "Unique browser user sessions", "nrqlQuery": "SELECT uniqueCount(session) as value FROM PageView SINCE 1 DAY AGO COMPARE WITH 1 DAY AGO", "source": "nr-hedgehog-kpis:useUpdateKpisCollection"},
-    /* eslint-enable prettier/prettier, no-unused-vars */
+    {
+      id: 0,
+      accountIds: [192626],
+      name: 'TRANSACTIONS',
+      desc: 'Transactions',
+      nrqlQuery:
+        'SELECT count(*) as value FROM Transaction since 1 day ago COMPARE WITH 1 day ago',
+      source: 'nr-hedgehog-kpis:useUpdateKpisCollection',
+    },
+    {
+      id: 1,
+      accountIds: [192626],
+      name: 'PAGE VIEWS',
+      desc: 'Browser Page Views',
+      nrqlQuery:
+        'SELECT count(*) as value FROM PageView since 1 day ago COMPARE WITH 1 day ago',
+      source: 'nr-hedgehog-kpis:useUpdateKpisCollection',
+    },
+    {
+      id: 2,
+      accountIds: [192626],
+      name: 'PUBLIC CALLS',
+      desc: 'Public API Calls',
+      nrqlQuery: 'SELECT count(*) as value FROM Public_APICall SINCE 1 DAY AGO',
+      source: 'nr-hedgehog-kpis:useUpdateKpisCollection',
+    },
+    {
+      id: 3,
+      accountIds: [192626],
+      name: 'UNIQUE USER SESSIONS',
+      desc: 'Unique browser user sessions',
+      nrqlQuery:
+        'SELECT uniqueCount(session) as value FROM PageView SINCE 1 DAY AGO COMPARE WITH 1 DAY AGO',
+      source: 'nr-hedgehog-kpis:useUpdateKpisCollection',
+    },
   ]);
 
   // return (
@@ -61,20 +90,18 @@ const HomeNerdlet = () => {
   // );
 
   return (
-    /* eslint-disable prettier/prettier, no-unused-vars */
     <div className="container">
       <div className="flows">
         {flows && flows.length ? null : (
           <NoFlows newFlowHandler={newFlowHandler} />
         )}
-
       </div>
 
       <div className="dev-buttons">
         <Button
           type={Button.TYPE.SECONDARY}
           sizeType={Button.SIZE_TYPE.SMALL}
-          onClick={() => mode === 'view' ? setMode('edit') : setMode('view')}
+          onClick={() => (mode === 'view' ? setMode('edit') : setMode('view'))}
         >
           {mode === 'edit' ? `Done Editing KPIs` : `Edit KPIs`}
         </Button>
@@ -99,7 +126,6 @@ const HomeNerdlet = () => {
         />
       </div>
     </div>
-    /* eslint-enable prettier/prettier, no-unused-vars */
   );
 };
 

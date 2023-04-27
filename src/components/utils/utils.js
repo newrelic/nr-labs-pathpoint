@@ -51,12 +51,23 @@ const mapQueryResult = (result, debug = false) => {
     result[0].comparison === 'current' &&
     result[1].comparison === 'previous'
   ) {
+    debug &&
+      console.log(
+        '### SK >>> mapQueryResult: value, previousValue: ',
+        result[0][Object.keys(result[0])[1]],
+        result[1][Object.keys(result[1])[1]]
+      );
     return {
       value: result[0][Object.keys(result[0])[1]],
       previousValue: result[1][Object.keys(result[1])[1]],
     };
   } else if (result.length === 1) {
     // query has a count/percentile/etc.
+    debug &&
+      console.log(
+        '### SK >>> mapQueryResult: value: ',
+        result[0][Object.keys(result[0])[0]]
+      );
     return {
       value: result[0][Object.keys(result[0])[0]],
       previousValue: '',
