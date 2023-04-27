@@ -16,10 +16,6 @@
     "nr1": {
         "uuid": "4873f895-e78c-4cd8-a63a-5e3bd659c5a6"
     },
-    "sk_temp": {
-       "@newrelic/nr-labs-components": "latest",
-        "nr-labs-components": "file:../nr-labs-components"
-    },
     "dependencies": {
         "prop-types": "15.7.2",
         "react": "17.0.2",
