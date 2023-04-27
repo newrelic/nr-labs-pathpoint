@@ -14,11 +14,13 @@ import {
   HeadingText,
   Modal,
   PlatformStateContext,
-  debug,
 } from 'nr1';
 
-// import { EditInPlace, NrqlEditor/* , SimpleBillboard */ } from '@newrelic/nr-labs-components';
-import { EditInPlace, NrqlEditor, SimpleBillboard } from 'nr-labs-components';
+import {
+  EditInPlace,
+  NrqlEditor,
+  SimpleBillboard,
+} from '@newrelic/nr-labs-components';
 
 import { utils } from '../utils/utils';
 
@@ -30,8 +32,7 @@ const KpiModal = ({
   setShowModal,
   setModalMounted,
   updateKpiArray,
-  // updateCurrentKpi,
-  // deleteKpi,
+  debug,
 }) => {
   debug &&
     console.log(
