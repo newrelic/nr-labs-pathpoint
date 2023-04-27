@@ -1,0 +1,66 @@
+.kpi-modal-buttons {
+  height: 40px;
+
+
+  &.add {
+    color: #FAFBFB;
+    background-color: #ECEDED;
+    margin: 150px 0px 0px;
+  }
+
+  &.save {
+    color: #9EA5A9;
+    background-color: #293338;
+    margin: 150px 0px 0px;
+    padding: 12px 16px;
+  }
+
+  &.delete {
+    padding: 12px 16px;
+  }
+
+}
+
+.modal-component {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.modal-component-kpi-title {
+  margin-bottom: 40px;
+  text-align: center;
+  font-size: 2em;
+}
+
+.modal-component-detail {
+  height: 500px;
+}
+
+.modal-component-delete {
+  margin-top: 250px;
+}
+
+.modal-component-edit-in-place {
+  margin: 20px 0;
+  font-size: 1.5rem;
+  gap: 10px;
+}
+
+.modal-component-kpi-name {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.modal-component-nrql-editor {
+  margin: 30px 0;
+  overflow: hidden;
+}
+
+.modal-component-preview-heading {
+  margin: 20px 0;
+}
+
+.modal-component-empty-state {
+  text-align: center;
+}
