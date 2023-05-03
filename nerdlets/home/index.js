@@ -2,13 +2,17 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { Icon, nerdlet, PlatformStateContext } from 'nr1';
 
-import { NoFlows } from '../../src/components';
+import { NoFlows, KpiBar } from '../../src/components';
 import { useFetchFlows } from '../../src/hooks';
 
 const HomeNerdlet = () => {
   const [flows, setFlows] = useState([]);
   const { accountId } = useContext(PlatformStateContext);
   const { data: flowsData, error: flowsError } = useFetchFlows({ accountId });
+
+  const [nerdletMode, setNerdletMode] = useState('edit'); // eslint-disable-line no-unused-vars
+  const [loadingKpis, setLoadingKpis] = useState(true);
+  const [kpiArray, setKpiArray] = useState([]);
 
   useEffect(() => {
     nerdlet.setConfig({
@@ -41,9 +45,18 @@ const HomeNerdlet = () => {
 
   return (
     <div className="container">
-      {flows && flows.length ? null : (
-        <NoFlows newFlowHandler={newFlowHandler} />
-      )}
+      <div className="flows">
+        {flows && flows.length ? null : (
+          <NoFlows newFlowHandler={newFlowHandler} />
+        )}
+      </div>
+      <KpiBar
+        nerdletMode={nerdletMode} // view / edit
+        kpiArray={kpiArray} // array of kpis [ { "id": 0, "name": "", "query": "", "accountIds": [] } ]
+        setKpiArray={setKpiArray}
+        loading={loadingKpis} // initially true
+        setLoading={setLoadingKpis}
+      />
     </div>
   );
 };

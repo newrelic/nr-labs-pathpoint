@@ -1,4 +1,6 @@
 @import '../../src/components/styles.scss';
+@import '~@newrelic/nr-labs-components/dist/styles.css';
+
 
 .container {
   display: flex;
@@ -6,4 +8,32 @@
   background-color: #f3f4f4;
   gap: 8px;
   flex-direction: column;
+
+
+
+  .flows {
+    display: flex;
+    height: calc(100% - 5% - 75px);
+    background-color: #f3f4f4;
+    gap: 8px;
+    flex-direction: column;
+  }
+}
+
+.modal-component-metric-value {
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 2.5rem;
+}
+
+.modal-component-status-trend {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.modal-component-metric-name {
+  width: 360px;
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 2rem;
 }
