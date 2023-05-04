@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAccountStorageQuery } from 'nr1';
 
-import { NERD_STORAGE } from '../constants';
+import { NERD_STORAGE } from '../../constants';
 
 const useFetchFlows = ({ accountId }) => {
   const [skip, setSkip] = useState(true);

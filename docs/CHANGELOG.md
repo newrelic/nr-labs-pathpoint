@@ -1,3 +1,17 @@
+# [1.3.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.2.0...v1.3.0) (2023-05-04)
+
+
+### Features
+
+* signal component ([7296233](https://github.com/newrelic/nr-labs-hedgehog/commit/7296233a7fb3741bd5a42ce832984bc6b363c5d2))
+
+# [1.2.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.1.0...v1.2.0) (2023-05-03)
+
+
+### Features
+
+* edit step modal ([60823ac](https://github.com/newrelic/nr-labs-hedgehog/commit/60823ac3b0498d919031c569f40c82c19d159203))
+
 # [1.1.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.0.0...v1.1.0) (2023-03-29)
 
 
