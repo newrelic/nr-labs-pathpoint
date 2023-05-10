@@ -6,73 +6,63 @@ import { EmptyState, PlatformStateContext, Button } from 'nr1';
 import { KpiModal } from '../';
 import { SimpleBillboard } from '@newrelic/nr-labs-components';
 
-import nrqlQueries from '../../hooks/fetch-kpi-values';
+import useFetchKpis from '../../hooks/fetch-kpi-values';
 
 const KpiBar = ({
   nerdletMode = 'view', // valid modes: view, add, edit
   kpiArray = {},
   setKpiArray,
-  loading,
-  setLoading,
 }) => {
   const { accountId } = useContext(PlatformStateContext);
 
   const [showModal, setShowModal] = useState(false);
-  const [modalMounted, setModalMounted] = useState(true);
-
   const [currentKpi, setCurrentKpi] = useState({});
   const [kpiMode, setKpiMode] = useState('view');
   const [kpiIndex, setKpiIndex] = useState(-1);
 
   useEffect(() => {
     if (kpiMode === 'view') {
-      setLoading(false);
       updateKpis(kpiArray);
     }
   }, [kpiMode]);
 
-  useEffect(() => {
-    if (loading) {
-      setLoading(false);
-      updateKpis(kpiArray);
-    }
-  }, [loading]);
+  const [queryResults, setQueryResults] = useState([]);
+
+  const hookData = useFetchKpis({ kpiData: kpiArray });
 
   useEffect(() => {
-    if (showModal) {
-      setModalMounted(true);
+    if (hookData.kpis && hookData.kpis.length) {
+      setQueryResults(hookData.kpis);
     }
-  }, [showModal]);
+  }, [hookData]);
 
-  const updateKpis = useCallback(async (updatedKpiArray) => {
-    const newKpiArray = await nrqlQueries(updatedKpiArray, true);
-    if (setKpiArray) setKpiArray(newKpiArray);
+  const updateKpis = useCallback((updatedKpiArray) => {
+    setKpiIndex(-1);
+    setShowModal(false);
+    setKpiMode('view');
+    setKpiArray(updatedKpiArray);
   });
 
-  const deleteKpi = useCallback(async (index) => {
-    await updateKpis(kpiArray.filter((_, i) => i !== index));
+  const deleteKpi = useCallback((index) => {
+    updateKpis(kpiArray.filter((_, i) => i !== index));
   });
 
-  const updateKpi = useCallback(async (updatedKpi, kpiIndex) => {
-    kpiArray = kpiArray.map((k, i) => {
+  const updateKpi = useCallback((updatedKpi, kpiIndex) => {
+    const newKpis = kpiArray.map((k, i) => {
       if (i === kpiIndex) {
         return { ...k, ...updatedKpi };
       } else {
         return k;
       }
     });
-    setShowModal(false);
-    setKpiMode('view');
-    await updateKpis(kpiArray);
+    updateKpis(newKpis);
   });
 
   const addNewKpi = useCallback(
-    async (currentKpi) => {
+    (currentKpi) => {
       currentKpi.accountIds = [Number(currentKpi.accountIds)];
       const newKpiArray = [...kpiArray, currentKpi];
-      setShowModal(false);
-      setKpiMode('view');
-      await updateKpis(newKpiArray);
+      updateKpis(newKpiArray);
     },
     [kpiArray]
   );
@@ -82,7 +72,6 @@ const KpiBar = ({
       <div className="kpi-title">
         <label>Critical Measures</label>
       </div>
-
       <div
         className="kpi-containers"
         style={{
@@ -109,8 +98,9 @@ const KpiBar = ({
               <div className="kpi-data">
                 <SimpleBillboard
                   metric={{
-                    value: kpi.value,
-                    previousValue: kpi.previousValue,
+                    value: ((queryResults || [])[index] || {}).value || 0,
+                    previousValue:
+                      ((queryResults || [])[index] || {}).previousValue || '',
                   }}
                   title={{
                     name: kpi.name,
@@ -149,7 +139,6 @@ const KpiBar = ({
           ))
         )}
       </div>
-
       {nerdletMode === 'edit' && (
         <div>
           <div className="kpi-bar-add-button">
@@ -174,14 +163,13 @@ const KpiBar = ({
               Create new KPI
             </Button>
           </div>
-          {kpiMode !== 'view' && modalMounted && (
+          {kpiMode !== 'view' && (
             <KpiModal
               kpi={currentKpi}
               kpiIndex={kpiIndex}
               kpiMode={kpiMode} // kpiMode = view, add=add new KPI, edit=edit existing KPI
               showModal={showModal}
               setShowModal={setShowModal}
-              setModalMounted={setModalMounted}
               updateKpiArray={
                 kpiMode === 'add'
                   ? addNewKpi
@@ -201,8 +189,6 @@ KpiBar.propTypes = {
   nerdletMode: PropTypes.string,
   kpiArray: PropTypes.object,
   setKpiArray: PropTypes.func,
-  loading: PropTypes.object,
-  setLoading: PropTypes.func,
 };
 
 export default KpiBar;

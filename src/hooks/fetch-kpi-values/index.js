@@ -1,51 +1,20 @@
-import { NerdGraphQuery } from 'nr1';
+import { useEffect, useState } from 'react';
+import { ngql, useNerdGraphQuery } from 'nr1';
 
-const buildNrqlQuery = (kpis) => {
-  return (
-    `
-    {
-      actor {
-        ` +
-    kpis
-      .map(
-        (k, index) => `
-        nrql${index}: nrql(accounts: [${k.accountIds[0]}], query: "${k.nrqlQuery}", timeout: 30) {
+const gqlFromKpiArray = (kpiData = []) => {
+  const fragment =
+    kpiData && kpiData.length
+      ? kpiData
+          .map((kpi, index) => {
+            return `q${index}: nrql(accounts: [${kpi.accountIds.join(
+              ', '
+            )}], query: "${kpi.nrqlQuery}", timeout: 100) {
           results
-        }`
-      )
-      .join('') +
-    `
-      }
-    }`
-  );
-};
-
-const nrqlQueries = async (inputObject, mapResult = false) => {
-  const kpis = Array.isArray(inputObject)
-    ? inputObject
-    : typeof inputObject === 'object'
-    ? [inputObject]
-    : [];
-  if (!kpis.length) return [];
-
-  const query = buildNrqlQuery(kpis);
-  try {
-    const { data, error } = await NerdGraphQuery.query({ query });
-    if (error) {
-      return error;
-    } else {
-      return mapResult
-        ? kpis.map((kpi, index) => {
-            return {
-              ...kpi,
-              ...mapQueryResult(data.actor[`nrql${index}`].results),
-            };
+        }`;
           })
-        : data.actor;
-    }
-  } catch (e) {
-    return false;
-  }
+          .join(' ')
+      : 'user { id }';
+  return ngql`{ actor { ${fragment} } }`;
 };
 
 const mapQueryResult = (result) => {
@@ -64,9 +33,47 @@ const mapQueryResult = (result) => {
       previousValue: '',
     };
   } else {
-    // can't be used in simple-billboard
+    // more than 2 values can't be rendered in simple-billboard
     return null;
   }
 };
 
-export default nrqlQueries;
+const kpisFromData = ({ actor = {} } = {}) => {
+  return Object.keys(actor)
+    .filter((q) => q[0] === 'q')
+    .map((q) => {
+      return actor[q]
+        ? {
+            ...mapQueryResult(actor[q].results),
+          }
+        : [];
+    });
+};
+
+const useFetchKpis = ({ kpiData }) => {
+  const [kpis, setKpis] = useState([]);
+  const [query, setQuery] = useState(gqlFromKpiArray(kpiData));
+  const { data, error, loading } = useNerdGraphQuery({
+    query,
+  });
+
+  useEffect(() => {
+    kpiData && setQuery(gqlFromKpiArray(kpiData));
+  }, [kpiData]);
+
+  useEffect(() => {
+    if (data && !loading) {
+      setKpis(kpisFromData(data));
+    }
+  }, [data, loading]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching Kpi values', error);
+    }
+  }, [error]);
+
+  return { kpis, error };
+};
+
+export default useFetchKpis;
