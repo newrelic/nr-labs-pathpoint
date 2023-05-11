@@ -69,16 +69,64 @@ const KpiBar = ({
 
   return (
     <div className="kpi-bar">
-      <div className="kpi-title">
-        <label>Critical Measures</label>
+      <div className="kpi-bar-heading">
+        {nerdletMode === 'view' ? (
+          <div className="kpi-bar-title buttonEditModeWidth">
+            <label>Critical Measures</label>
+          </div>
+        ) : (
+          <div>
+            <div className="kpi-bar-edit-mode-title buttonEditModeWidth">
+              <label>Critical Measures</label>
+            </div>
+            <div className="kpi-bar-add-button">
+              <Button
+                type={Button.TYPE.SECONDARY}
+                iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS__V_ALTERNATE}
+                sizeType={Button.SIZE_TYPE.LARGE}
+                onClick={() => {
+                  setKpiIndex(kpiArray.length); // new kpiArray bucket being added
+                  setCurrentKpi({
+                    id: kpiArray.length
+                      ? kpiArray[kpiArray.length - 1].id + 1
+                      : 0,
+                    accountIds: [accountId],
+                    name: '',
+                    nrqlQuery: '',
+                  });
+                  setKpiMode('add');
+                  setShowModal(true);
+                }}
+              >
+                Create new KPI
+              </Button>
+            </div>
+            <div id="kpi-modal">
+              <KpiModal
+                kpi={currentKpi}
+                kpiIndex={kpiIndex}
+                kpiMode={kpiMode} // kpiMode = view, add=add new KPI, edit=edit existing KPI
+                showModal={showModal}
+                setShowModal={setShowModal}
+                updateKpiArray={
+                  kpiMode === 'add'
+                    ? addNewKpi
+                    : kpiMode === 'edit'
+                    ? updateKpi
+                    : deleteKpi
+                }
+              />
+            </div>
+          </div>
+        )}
       </div>
+
       <div
-        className="kpi-containers"
-        style={{
-          maxWidth: `${
-            nerdletMode === 'edit' ? 'calc(99% - 340px)' : 'calc(99% - 120px)}'
-          }`,
-        }}
+        className={`kpi-containers ${
+          nerdletMode === 'edit'
+            ? 'kpiBarViewModeMaxWidth'
+            : 'kpiBarViewModeMaxWidth'
+        }`}
       >
         {!kpiArray || !kpiArray.length ? (
           <div className="empty-state-component">
@@ -92,8 +140,11 @@ const KpiBar = ({
           kpiArray.map((kpi, index) => (
             <div
               key={index}
-              className="kpi-container"
-              style={{ width: `${nerdletMode === 'edit' ? '140px' : '115px'}` }}
+              className={`kpi-container ${
+                nerdletMode === 'edit'
+                  ? 'kpiContainerEditModeWidth'
+                  : 'kpiContainerViewModeWidth'
+              }`}
             >
               <div className="kpi-data">
                 <SimpleBillboard
@@ -139,48 +190,6 @@ const KpiBar = ({
           ))
         )}
       </div>
-      {nerdletMode === 'edit' && (
-        <div>
-          <div className="kpi-bar-add-button">
-            <Button
-              type={Button.TYPE.SECONDARY}
-              iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS__V_ALTERNATE}
-              sizeType={Button.SIZE_TYPE.LARGE}
-              onClick={() => {
-                setKpiIndex(kpiArray.length); // new kpiArray bucket being added
-                setCurrentKpi({
-                  id: kpiArray.length
-                    ? kpiArray[kpiArray.length - 1].id + 1
-                    : 0,
-                  accountIds: [accountId],
-                  name: '',
-                  nrqlQuery: '',
-                });
-                setKpiMode('add');
-                setShowModal(true);
-              }}
-            >
-              Create new KPI
-            </Button>
-          </div>
-          {kpiMode !== 'view' && (
-            <KpiModal
-              kpi={currentKpi}
-              kpiIndex={kpiIndex}
-              kpiMode={kpiMode} // kpiMode = view, add=add new KPI, edit=edit existing KPI
-              showModal={showModal}
-              setShowModal={setShowModal}
-              updateKpiArray={
-                kpiMode === 'add'
-                  ? addNewKpi
-                  : kpiMode === 'edit'
-                  ? updateKpi
-                  : deleteKpi
-              }
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 };

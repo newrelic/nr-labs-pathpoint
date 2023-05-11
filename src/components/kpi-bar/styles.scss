@@ -1,3 +1,9 @@
+$buttonViewModeWidth: 120px;
+$buttonEditModeWidth: 176px;
+$kpiBarViewModeMaxWidth: calc(99% - 120px);
+$kpiBarEditModeMaxWidth: calc(99% - 340px);
+$kpiContainerViewModeWidth: 115px;
+$kpiContainerEditModeWidth: 140px;
 
 .kpi-bar {
   display: flex;
@@ -12,13 +18,46 @@
   gap: 0.3125rem;
 
 
-  .kpi-title {
-    width: 120px;
-    font-size: 1.125rem;
-    font-weight: 600;
-    line-height: 1.75rem;
-    margin-left: 1.125rem;
+  
+  .kpi-bar-heading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    &.buttonViewModeWidth {
+      width: $buttonViewModeWidth;
+    }
+
+    &.buttonEditModeWidth {
+      width: $buttonEditModeWidth;
+    }
+
+    .kpi-bar-title {
+      width: 120px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      line-height: 1.75rem;
+      margin-left: 1.125rem;
+      margin: 0 0.5rem;
+    }
+
+    .kpi-bar-edit-mode-title {
+      width: 8.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.125rem;
+      margin-left: 0.5rem;
+    }
+
+    .kpi-bar-add-button {
+      width: 160px;
+      color: #bdbdbd;
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 0.3rem 0.5rem;
+    }
   }
+
 
   .kpi-containers {
     display: flex;
@@ -26,10 +65,26 @@
     overflow-x: auto;
     gap: 0.625rem;
 
+    &.kpiBarViewModeMaxWidth {
+      max-width: $kpiBarViewModeMaxWidth;
+    }
+    
+    &.kpiBarEditModeMaxWidth {
+      max-width: $kpiBarEditModeMaxWidth;
+    }
+    
     .kpi-container {
       position: relative;
       display: flex;
       flex-direction: row;
+
+      &.kpiContainerViewModeWidth {
+        width: $kpiContainerViewModeWidth;
+      }
+
+      &.kpiContainerEditModeWidth {
+        width: $kpiContainerEditModeWidth;
+      }
 
       .kpi-data {
         height: 100%;
@@ -40,7 +95,7 @@
         line-height: 1.25rem;
         gap: 0.125rem;
       }
-
+  
       .kpi-buttons {
         display: flex;
         flex-direction: column;
@@ -51,17 +106,6 @@
         gap: 0.125rem
       }
     }
-  }
-
-  .kpi-bar-add-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #bdbdbd;
-    font-weight: 500;
-    font-size: 0.875rem;
-    margin-left: 1rem;
-    padding: 0.5rem 1rem;
   }
 
 }
