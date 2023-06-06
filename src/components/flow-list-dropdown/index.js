@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 
 import { Dropdown, DropdownItem } from 'nr1';
 
-// SearchDropdown
 const FlowListDropdown = ({ flows = [], onSelect = () => null }) => {
   const [searchPattern, setSearchPattern] = useState('');
 
@@ -22,8 +21,6 @@ const FlowListDropdown = ({ flows = [], onSelect = () => null }) => {
     );
   }, [items, searchPattern]);
 
-  console.log('### items: ', items);
-  console.log('### filteredItems: ', filteredItems());
   return (
     <Dropdown
       title="Select a Flow"
@@ -32,13 +29,7 @@ const FlowListDropdown = ({ flows = [], onSelect = () => null }) => {
       onSearch={(evt) => setSearchPattern(evt.target.value)}
     >
       {({ item }) => (
-        <DropdownItem
-          key={item.id}
-          onClick={(evt) => {
-            console.log('onClick: ', evt, item.id);
-            onSelect(item.id);
-          }}
-        >
+        <DropdownItem key={item.id} onClick={() => onSelect(item.id)}>
           {item.name}
         </DropdownItem>
       )}
