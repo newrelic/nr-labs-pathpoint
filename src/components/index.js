@@ -9,3 +9,4 @@ export { default as Stage } from './stage';
 export { default as KpiModal } from './kpi-modal';
 export { default as KpiBar } from './kpi-bar';
 export { default as Flow } from './flow';
+export { default as FlowListDropdown } from './flow-list-dropdown';
