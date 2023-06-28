@@ -75,7 +75,7 @@ const Flow = ({
   useEffect(() => {
     const { nerdStorageDeleteDocument: { deleted } = {} } =
       deleteFlowData || {};
-    if (deleted) setCurrentFlowIndex(-1);
+    if (deleted) onClose();
   }, [deleteFlowData]);
 
   useEffect(() => {
