@@ -64,13 +64,17 @@ const Flow = ({
       accountId: accountId,
     });
 
-  const deleteFlowHandler = useCallback(() =>
-    deleteFlow({
-      documentId: flow.id,
-    }), [flow]);
+  const deleteFlowHandler = useCallback(
+    () =>
+      deleteFlow({
+        documentId: flow.id,
+      }),
+    [flow]
+  );
 
   useEffect(() => {
-    const { nerdStorageDeleteDocument: { deleted } = {} } = deleteFlowData || {};
+    const { nerdStorageDeleteDocument: { deleted } = {} } =
+      deleteFlowData || {};
     if (deleted) setCurrentFlowIndex(-1);
   }, [deleteFlowData]);
 

@@ -89,10 +89,7 @@ const FlowHeader = ({
         </PopoverTrigger>
         <PopoverBody>
           <div className="flow-listing-dropdown">
-            <FlowListDropdown
-              flows={flows}
-              onSelectFlow={onSelectFlow}
-            />
+            <FlowListDropdown flows={flows} onSelectFlow={onSelectFlow} />
           </div>
         </PopoverBody>
       </Popover>

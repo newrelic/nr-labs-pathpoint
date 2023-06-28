@@ -53,8 +53,9 @@ const HomeNerdlet = () => {
         buttons.push({
           label: mode === MODES.KIOSK ? 'Compact view' : 'Detail view',
           type: Button.TYPE.SECONDARY,
-          onClick: () => setMode(mode === MODES.KIOSK ? MODES.LIST : MODES.KIOSK),
-        })
+          onClick: () =>
+            setMode(mode === MODES.KIOSK ? MODES.LIST : MODES.KIOSK),
+        });
       }
       buttons.push({
         label: 'Create new flow',
@@ -62,7 +63,7 @@ const HomeNerdlet = () => {
         iconType: Icon.TYPE.DATAVIZ__DATAVIZ__SERVICE_MAP_CHART,
         onClick: () => newFlowHandler(),
       });
-    };
+    }
     return buttons;
   }, [mode, newFlowHandler, currentFlowIndex, newFlowId]);
 
