@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import { useAccountStorageMutation } from 'nr1';
 
-import { KpiBar, Stages } from '../';
+import { KpiBar, Stages, DeleteConfirmModal } from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
 
@@ -13,9 +13,13 @@ const Flow = ({
   onClose,
   accountId,
   mode = MODES.KIOSK,
+  flows = [],
+  onSelectFlow = () => null,
+  setCurrentFlowIndex = () => null,
 }) => {
   const [stages, setStages] = useState([]);
   const [kpis, setKpis] = useState([]);
+  const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const [updateFlow, { data: updateFlowData, error: updateFlowError }] =
     useAccountStorageMutation({
       actionType: useAccountStorageMutation.ACTION_TYPE.WRITE_DOCUMENT,
@@ -53,6 +57,27 @@ const Flow = ({
   const updateKpisHandler = (updatedKpis) =>
     flowUpdateHandler({ kpis: updatedKpis });
 
+  const [deleteFlow, { data: deleteFlowData, error: deleteFlowError }] =
+    useAccountStorageMutation({
+      actionType: useAccountStorageMutation.ACTION_TYPE.DELETE_DOCUMENT,
+      collection: NERD_STORAGE.FLOWS_COLLECTION,
+      accountId: accountId,
+    });
+
+  const deleteFlowHandler = useCallback(() =>
+    deleteFlow({
+      documentId: flow.id,
+    }), [flow]);
+
+  useEffect(() => {
+    const { nerdStorageDeleteDocument: { deleted } = {} } = deleteFlowData || {};
+    if (deleted) setCurrentFlowIndex(-1);
+  }, [deleteFlowData]);
+
+  useEffect(() => {
+    if (deleteFlowError) console.error('Error deleting flow', deleteFlowError);
+  }, [deleteFlowError]);
+
   return (
     <div className="flow">
       <FlowHeader
@@ -61,9 +86,21 @@ const Flow = ({
         onUpdate={flowUpdateHandler}
         onClose={onClose}
         mode={mode}
+        flows={flows}
+        onSelectFlow={onSelectFlow}
+        onDeleteFlow={() => setDeleteModalHidden(false)}
       />
       <Stages stages={stages} onUpdate={flowUpdateHandler} mode={mode} />
       <KpiBar kpis={kpis} onChange={updateKpisHandler} mode={mode} />
+      {mode === MODES.EDIT && (
+        <DeleteConfirmModal
+          name={flow.name}
+          type="flow"
+          hidden={deleteModalHidden}
+          onConfirm={() => deleteFlowHandler()}
+          onClose={() => setDeleteModalHidden(true)}
+        />
+      )}
     </div>
   );
 };
@@ -74,6 +111,9 @@ Flow.propTypes = {
   onClose: PropTypes.func,
   accountId: PropTypes.number,
   mode: PropTypes.oneOf(Object.values(MODES)),
+  flows: PropTypes.array,
+  onSelectFlow: PropTypes.func,
+  setCurrentFlowIndex: PropTypes.func,
 };
 
 export default Flow;

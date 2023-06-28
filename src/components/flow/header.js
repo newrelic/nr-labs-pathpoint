@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { HeadingText, Icon, Popover, PopoverTrigger, PopoverBody } from 'nr1';
+import {
+  Button,
+  HeadingText,
+  Icon,
+  Popover,
+  PopoverTrigger,
+  PopoverBody,
+} from 'nr1';
 import { EditInPlace } from '@newrelic/nr-labs-components';
 
 import IconsLib from '../icons-lib';
+import { FlowListDropdown } from '../';
 import ImageUploadModal from '../image-upload-modal';
 import { MODES } from '../../constants';
 
@@ -14,6 +22,9 @@ const FlowHeader = ({
   onUpdate,
   onClose,
   mode = MODES.KIOSK,
+  flows = [],
+  onSelectFlow = () => null,
+  onDeleteFlow = () => null,
 }) => {
   const [imageModalHidden, setImageModalHidden] = useState(true);
 
@@ -50,6 +61,14 @@ const FlowHeader = ({
         }
         onClose={() => setImageModalHidden(true)}
       />
+      <Button
+        type={Button.TYPE.DESTRUCTIVE}
+        iconType={Icon.TYPE.INTERFACE__OPERATIONS__TRASH}
+        sizeType={Button.SIZE_TYPE.SMALL}
+        onClick={() => onDeleteFlow()}
+      >
+        Delete Flow
+      </Button>
     </div>
   ) : (
     <div className="flow-header">
@@ -70,7 +89,10 @@ const FlowHeader = ({
         </PopoverTrigger>
         <PopoverBody>
           <div className="flow-listing-dropdown">
-            {/* TODO: flow list drop down goes here */}
+            <FlowListDropdown
+              flows={flows}
+              onSelectFlow={onSelectFlow}
+            />
           </div>
         </PopoverBody>
       </Popover>
@@ -84,6 +106,9 @@ FlowHeader.propTypes = {
   onUpdate: PropTypes.func,
   onClose: PropTypes.func,
   mode: PropTypes.oneOf(Object.values(MODES)),
+  flows: PropTypes.array,
+  onSelectFlow: PropTypes.func,
+  onDeleteFlow: PropTypes.func,
 };
 
 export default FlowHeader;
