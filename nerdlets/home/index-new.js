@@ -26,7 +26,7 @@ const HomeNerdlet = () => {
   const [currentFlowIndex, setCurrentFlowIndex] = useState(-1);
   const { accountId } = useContext(PlatformStateContext);
   const { flows: flowsData, error: flowsError } = useFlowLoader({ accountId });
-  const [createFlow, { error: createFlowError }] = useAccountStorageMutation({
+  const [createFlow, { data: createFlowData, error: createFlowError }] = useAccountStorageMutation({
     actionType: useAccountStorageMutation.ACTION_TYPE.WRITE_DOCUMENT,
     collection: NERD_STORAGE.FLOWS_COLLECTION,
     accountId: accountId,
@@ -102,6 +102,8 @@ const HomeNerdlet = () => {
         kpis: [],
       },
     });
+    // flowClickHandler(id);
+    console.log('### new flow index: ', newFlowId.current);
   }, []);
 
   const updateFlowHandler = useCallback(
@@ -123,6 +125,16 @@ const HomeNerdlet = () => {
   }, []);
 
   useEffect(() => {
+    console.log('### useEffect().createFlowData: ', createFlowData);
+    const { nerdStorageWriteDocument: { id } = {} } =
+      createFlowData || {};
+    if (id) {
+      updateFlowHandler(createFlowData.nerdStorageWriteDocument);
+      console.log('### useEffect().id: ', id);
+    }
+  }, [createFlowData]);
+
+  useEffect(() => {
     if (createFlowError)
       console.error('Error creating new flow', createFlowError);
   }, [createFlowError]);
@@ -138,6 +150,7 @@ const HomeNerdlet = () => {
           mode={mode}
           flows={flows}
           onSelectFlow={flowClickHandler}
+          setCurrentFlowIndex={setCurrentFlowIndex}
         />
       );
     if (flows && flows.length)

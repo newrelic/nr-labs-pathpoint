@@ -15,7 +15,6 @@ const Flow = ({
   mode = MODES.KIOSK,
   flows = [],
   onSelectFlow = () => null,
-  setCurrentFlowIndex = () => null,
 }) => {
   const [stages, setStages] = useState([]);
   const [kpis, setKpis] = useState([]);
@@ -117,7 +116,6 @@ Flow.propTypes = {
   mode: PropTypes.oneOf(Object.values(MODES)),
   flows: PropTypes.array,
   onSelectFlow: PropTypes.func,
-  setCurrentFlowIndex: PropTypes.func,
 };
 
 export default Flow;
