@@ -10,7 +10,13 @@ import React, {
 import { Button, Icon, nerdlet, PlatformStateContext, Spinner } from 'nr1';
 
 import { Flow, FlowList, NoFlows } from '../../src/components';
-import { useFlowLoader, useFlowWriter, useFetchUser } from '../../src/hooks';
+import {
+  useFlowLoader,
+  useFlowWriter,
+  useFetchUser,
+  useFetchUserConfig,
+  useUpdateUserConfig,
+} from '../../src/hooks';
 import { MODES, UI_CONTENT } from '../../src/constants';
 import { uuid } from '../../src/utils';
 
@@ -19,7 +25,45 @@ const HomeNerdlet = () => {
   const [flows, setFlows] = useState([]);
   const [currentFlowIndex, setCurrentFlowIndex] = useState(-1);
   const { accountId } = useContext(PlatformStateContext);
-  const { user } = useFetchUser();
+  const userRef = useRef();
+  userRef.current = useFetchUser();
+  const [userConfig, setUserConfig] = useState({});
+  const { userStorageConfig } = useFetchUserConfig();
+  const { userStorageHandler } = useUpdateUserConfig();
+  const [loadingUserConfig, setLoadingUserConfig] = useState(true);
+
+  useEffect(() => {
+    if (
+      loadingUserConfig &&
+      userStorageConfig &&
+      Object.prototype.toString.call(userStorageConfig) !== '[object Set]'
+    ) {
+      setUserConfig({
+        ...userStorageConfig,
+        favorite_flows: new Set(
+          userStorageConfig.favorite_flows &&
+          Object.prototype.toString.call(userStorageConfig.favorite_flows) ===
+            '[object Array]'
+            ? userStorageConfig.favorite_flows
+            : []
+        ),
+        last_updated: new Date().getTime(),
+      });
+      setLoadingUserConfig(false);
+    }
+  }, [userStorageConfig]);
+
+  useEffect(() => {
+    if (
+      Object.prototype.toString.call(userConfig.favorite_flows) ===
+      '[object Set]'
+    ) {
+      userStorageHandler({
+        ...userConfig,
+        favorite_flows: Array.from(userConfig.favorite_flows),
+      });
+    }
+  }, [userConfig?.favorite_flows?.size]);
 
   const {
     flows: flowsData,
@@ -27,19 +71,19 @@ const HomeNerdlet = () => {
     loading: flowsLoading,
   } = useFlowLoader({ accountId });
 
-  const flowWriter = useFlowWriter({ accountId, user });
+  const flowWriter = useFlowWriter({ accountId, user: userRef.current.user });
   const newFlowId = useRef();
 
   const actionControlButtons = useMemo(() => {
     const buttons = [];
     if (mode !== MODES.EDIT) {
+      buttons.push({
+        label: UI_CONTENT.GLOBAL.BUTTON_LABEL_CREATE_FLOW,
+        type: Button.TYPE.PRIMARY,
+        iconType: Icon.TYPE.DATAVIZ__DATAVIZ__SERVICE_MAP_CHART,
+        onClick: () => newFlowHandler(),
+      });
       if (currentFlowIndex > -1) {
-        buttons.push({
-          label: UI_CONTENT.GLOBAL.BUTTON_LABEL_CREATE_FLOW,
-          type: Button.TYPE.PRIMARY,
-          iconType: Icon.TYPE.DATAVIZ__DATAVIZ__SERVICE_MAP_CHART,
-          onClick: () => newFlowHandler(),
-        });
         buttons.push({
           label: UI_CONTENT.GLOBAL.BUTTON_LABEL_EDIT_MODE,
           type: Button.TYPE.PRIMARY,
@@ -84,6 +128,10 @@ const HomeNerdlet = () => {
         name: 'Untitled',
         stages: [],
         kpis: [],
+        createdBy: {
+          name: userRef.current.user.name,
+          timestamp: Date.now(),
+        },
       },
     });
   }, []);
@@ -128,13 +176,20 @@ const HomeNerdlet = () => {
           setMode={setMode}
           flows={flows}
           onSelectFlow={flowClickHandler}
-          user={user}
+          user={userRef.current.user}
         />
       );
     }
     if (flows && flows.length) {
       backToFlowsHandler();
-      return <FlowList flows={flows} onClick={flowClickHandler} />;
+      return (
+        <FlowList
+          flows={flows}
+          userConfig={userConfig}
+          setUserConfig={setUserConfig}
+          onClick={flowClickHandler}
+        />
+      );
     }
     if (flowsLoading) {
       return <Spinner />;
