@@ -12,13 +12,14 @@ const Level = ({
   order = 0,
   steps = [],
   stageName,
+  status = STATUSES.UNKNOWN,
+  mode = MODES.INLINE,
   onUpdate,
   onDelete,
   onDragStart,
   onDragOver,
   onDrop,
-  status = STATUSES.UNKNOWN,
-  mode = MODES.INLINE,
+  stepClickHandler = () => null,
 }) => {
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const isDragHandleClicked = useRef(false);
@@ -147,13 +148,14 @@ const Level = ({
               signals={signals}
               stageName={stageName}
               level={order}
+              status={status}
+              mode={mode}
               onUpdate={(updates) => updateStepHandler(index, updates)}
               onDelete={() => deleteStepHandler(index)}
               onDragStart={(e) => stepDragStartHandler(e, index)}
               onDragOver={(e) => stepDragOverHandler(e, index)}
               onDrop={(e) => stepDropHandler(e)}
-              status={status}
-              mode={mode}
+              stepClickHandler={stepClickHandler}
             />
           </div>
         ))}
@@ -166,13 +168,14 @@ Level.propTypes = {
   order: PropTypes.number,
   steps: PropTypes.arrayOf(PropTypes.object),
   stageName: PropTypes.string,
+  status: PropTypes.oneOf(Object.values(STATUSES)),
+  mode: PropTypes.oneOf(Object.values(MODES)),
   onUpdate: PropTypes.func,
   onDelete: PropTypes.func,
   onDragStart: PropTypes.func,
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
-  status: PropTypes.oneOf(Object.values(STATUSES)),
-  mode: PropTypes.oneOf(Object.values(MODES)),
+  stepClickHandler: PropTypes.func,
 };
 
 export default Level;
