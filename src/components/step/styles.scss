@@ -1,7 +1,6 @@
 .step {
   box-sizing: border-box;
   padding: 8px;
-  background-color: #fff;
   max-width: 200px;
 
   .edit-signals-list {
@@ -15,7 +14,12 @@
     display: grid;
     gap: 8px;
     align-items: center;
-    margin-bottom: 8px;
+
+    .title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     &.edit {
       grid-template-columns: min-content auto min-content min-content;

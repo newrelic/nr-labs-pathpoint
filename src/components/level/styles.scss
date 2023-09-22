@@ -86,7 +86,19 @@
       .step-cell {
         box-sizing: border-box;
         border: 0.25px solid #dedede;
+
+        &.critical {
+          border-color: $critical;
+          cursor: pointer;
+        }
+  
+        &.warning {
+          border-color: $warning;
+          cursor: pointer;
+        }
+  
       }
+
     }
   }
 }
