@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, HeadingText } from 'nr1';
+import { Button, HeadingText, Switch } from 'nr1';
 
 import { Stage } from '../';
 import { useFetchServiceLevels } from '../../hooks';
-import { MODES, STATUSES } from '../../constants';
+import { MODES, STATUSES, STATUS_COLORS, SIGNAL_EXPAND } from '../../constants';
 import {
   addSignalStatuses,
   annotateStageWithStatuses,
@@ -15,6 +15,9 @@ import {
 const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
   const [stagesWithStatuses, setStagesWithStatuses] = useState([]);
   const [guids, setGuids] = useState([]);
+  const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
+  const [prevClickedStep, setPrevClickedStep] = useState({}); // useRef to memorize previously clicked step DOM object
+  const [selectedStep, setSelectedStep] = useState([]); // to pass to SignalsList()
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
   const { data: serviceLevelsData, error: serviceLevelsError } =
@@ -35,6 +38,20 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     if (serviceLevelsError)
       console.error('Error fetching service levels', serviceLevelsError);
   }, [serviceLevelsError]);
+
+  useEffect(() => {
+    // when mode is changed set step background back to normal
+    if (
+      mode !== MODES.STACKED &&
+      selectedStep &&
+      prevClickedStep?.clickedStep
+    ) {
+      prevClickedStep.clickedStep.style.background =
+        STATUS_COLORS[STATUSES.BLANK];
+      setPrevClickedStep({});
+      setSelectedStep([]);
+    }
+  }, [mode]);
 
   const addStageHandler = () =>
     onUpdate
@@ -90,6 +107,44 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     dragOverItemIndex.current = null;
   };
 
+  const stepClickHandler = useCallback(
+    (stepInfo) => {
+      // clickedStepRef: { id: `${level}_${stepName}`, stageName, stepStatus }
+      const { clickedStepRef, clickedStep } = stepInfo;
+
+      if (
+        prevClickedStep?.clickedStep &&
+        prevClickedStep.clickedStepRef.id !== clickedStepRef.id
+      ) {
+        prevClickedStep.clickedStep.style.background =
+          STATUS_COLORS[STATUSES.BLANK]; // toggle bg color back to normal
+      }
+
+      if (
+        [STATUSES.CRITICAL, STATUSES.WARNING].includes(
+          clickedStepRef.stepStatus
+        )
+      ) {
+        if (
+          clickedStep.style.background !==
+          STATUS_COLORS[clickedStepRef.stepStatus]
+        ) {
+          clickedStep.style.background =
+            STATUS_COLORS[clickedStepRef.stepStatus];
+          setSelectedStep(clickedStepRef);
+        } else {
+          clickedStep.style.background = STATUS_COLORS[STATUSES.BLANK];
+          setSelectedStep({});
+        }
+      }
+
+      setPrevClickedStep((pcs) =>
+        pcs?.clickedStepRef?.id === clickedStepRef.id ? null : stepInfo
+      );
+    },
+    [prevClickedStep]
+  );
+
   return (
     <>
       <div className="stages-header">
@@ -103,7 +158,37 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
           >
             Add a stage
           </Button>
-        ) : null}
+        ) : (
+          <>
+            <Switch
+              checked={signalExpandOption & SIGNAL_EXPAND.UNHEALTHY_ONLY}
+              label="Unhealthy only"
+              onChange={() =>
+                setSignalExpandOption(
+                  signalExpandOption ^ SIGNAL_EXPAND.UNHEALTHY_ONLY
+                )
+              }
+            />
+            <Switch
+              checked={signalExpandOption & SIGNAL_EXPAND.CRITICAL_ONLY}
+              label="Critical only"
+              onChange={() =>
+                setSignalExpandOption(
+                  signalExpandOption ^ SIGNAL_EXPAND.CRITICAL_ONLY
+                )
+              }
+            />
+          </>
+        )}
+        {mode === MODES.INLINE && (
+          <Switch
+            checked={signalExpandOption & SIGNAL_EXPAND.ALL}
+            label="Expand all steps"
+            onChange={() =>
+              setSignalExpandOption(signalExpandOption ^ SIGNAL_EXPAND.ALL)
+            }
+          />
+        )}
       </div>
       <div className="stages">
         {(stagesWithStatuses || []).map(
@@ -118,11 +203,14 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
               related={related}
               status={status}
               mode={mode}
+              signalExpandOption={signalExpandOption}
+              selectedStep={selectedStep}
               onUpdate={(updateStage) => updateStageHandler(updateStage, i)}
               onDelete={() => deleteStageHandler(i)}
               onDragStart={(e) => dragStartHandler(e, i)}
               onDragOver={(e) => dragOverHandler(e, i)}
               onDrop={(e) => dropHandler(e)}
+              stepClickHandler={stepClickHandler}
             />
           )
         )}
