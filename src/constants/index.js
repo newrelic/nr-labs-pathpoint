@@ -5,3 +5,5 @@ export * from './signals';
 export * from './kpis';
 export * from './stage-shapes';
 export * from './ui-content';
+export * from './signal-expand-options';
+export * from './status-colors';
