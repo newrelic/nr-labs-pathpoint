@@ -19,11 +19,13 @@ const Level = ({
   onDrop,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  stepClickHandler = () => null,
 }) => {
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const isDragHandleClicked = useRef(false);
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
+  const stepCellsRefs = useRef([]);
 
   const stepsRows = useMemo(() => {
     if (!steps.length) return [];
@@ -33,8 +35,33 @@ const Level = ({
         const isLastStep = index + 1 === arr.length;
         const cell = (
           <div
-            className={`step-cell ${mode === MODES.EDIT ? 'edit' : ''}`}
+            className={`step-cell ${
+              mode === MODES.EDIT
+                ? 'edit'
+                : mode === MODES.STACKED &&
+                  signals.length &&
+                  [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+                ? status
+                : ''
+            }`}
             key={id || index}
+            ref={(el) => (stepCellsRefs.current[index] = el)}
+            onClick={() => {
+              if (
+                mode === MODES.STACKED &&
+                signals.length &&
+                [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+              ) {
+                stepClickHandler({
+                  clickedStepRef: {
+                    id: `${order}_${title}`,
+                    stageName,
+                    stepStatus: status,
+                  },
+                  clickedStep: stepCellsRefs.current[index],
+                });
+              }
+            }}
           >
             <Step
               title={title}
@@ -207,6 +234,7 @@ Level.propTypes = {
   onDrop: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  stepClickHandler: PropTypes.func,
 };
 
 export default Level;
