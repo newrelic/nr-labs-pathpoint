@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { HeadingText } from 'nr1';
+import { HeadingText, Icon, Tooltip } from 'nr1';
 
 import Level from '../level';
 import Signal from '../signal';
@@ -15,11 +15,14 @@ const Stage = ({
   related = {},
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  signalExpandOption = 0,
+  selectedStep = {},
   onUpdate,
   onDelete,
   onDragStart,
   onDragOver,
   onDrop,
+  stepClickHandler = () => null,
 }) => {
   const [signals, setSignals] = useState({});
   const isDragHandleClicked = useRef(false);
@@ -29,37 +32,85 @@ const Stage = ({
   useEffect(
     () =>
       setSignals(
-        levels.reduce(
-          (acc, { steps = [] }) => ({
-            ...acc,
-            ...steps.reduce(
-              (acc, { signals = [] }) => ({
-                ...acc,
-                ...signals.reduce(
-                  (acc, { guid, name, status }) => ({
-                    ...acc,
-                    [guid]: { name, status },
-                  }),
-                  {}
-                ),
-              }),
-              {}
-            ),
-          }),
-          {}
-        )
+        levels.reduce((acc, { steps = [] }, levelIndex) => {
+          steps.forEach(
+            ({ signals = [], title: stepTitle, status: stepStatus }) => {
+              signals.forEach(({ guid, name, status }) => {
+                if (!acc[guid]) {
+                  acc[guid] = {
+                    name,
+                    status,
+                    stepStatus,
+                    references: [],
+                  };
+                }
+                acc[guid].references.push(`${levelIndex + 1}_${stepTitle}`);
+              });
+            }
+          );
+          return acc;
+        }, {})
       ),
     [levels]
   );
 
-  const SignalsList = memo(
-    () =>
-      Object.keys(signals).map((key, i) => {
-        const { name, status } = signals[key];
-        return <Signal key={i} name={name} status={status} />;
-      }),
-    [signals]
-  );
+  const SignalsList = memo(() => {
+    const statuses = [
+      STATUSES.CRITICAL,
+      STATUSES.WARNING,
+      STATUSES.SUCCESS,
+      STATUSES.UNKNOWN,
+    ];
+    return Object.values(signals)
+      .filter((s) => {
+        // filter out signals based on "signalExpandOption"
+        switch (signalExpandOption) {
+          case 1: // expand unhealthy only
+            return statuses.indexOf(s.status) < 2;
+
+          case 2: // expand critical only
+          case 3: // expand unhealthy & critical === only show critical
+            return statuses.indexOf(s.status) === 0;
+
+          case 0: // case 0: no signal expansion options selected
+            return true;
+
+          default:
+            return false;
+        }
+      })
+      .sort((a, b) => {
+        const a1 =
+          a.status === STATUSES.UNKNOWN &&
+          a.references.includes(selectedStep.id)
+            ? 1.5
+            : statuses.indexOf(a.status);
+
+        const b1 =
+          b.status === STATUSES.UNKNOWN &&
+          b.references.includes(selectedStep.id)
+            ? 1.5
+            : statuses.indexOf(b.status);
+
+        return a1 - b1;
+      })
+      .map((signal, i) => (
+        <Signal
+          key={i}
+          name={signal.name}
+          status={signal.status}
+          mode={mode}
+          ghost={
+            name !== selectedStep.stageName ||
+            (name === selectedStep.stageName &&
+              signal.status !== STATUSES.SUCCESS &&
+              signal.references.find((ref) => ref === selectedStep.id))
+              ? ''
+              : 'ghost'
+          }
+        />
+      ));
+  }, [signals]);
   SignalsList.displayName = 'SignalsList';
 
   const updateStageHandler = (updates = {}) => {
@@ -154,38 +205,51 @@ const Stage = ({
         onDragHandle={dragHandleHandler}
       />
       <div className="body">
-        <div className="section-title">
-          <HeadingText>Steps</HeadingText>
+        <div className="levels-title">
+          <HeadingText type={HeadingText.TYPE.HEADING_5}>Levels</HeadingText>
+          <Tooltip
+            text={
+              'Collection of potential paths a user may traverse through this stage'
+            }
+          >
+            <Icon
+              className="info-icon"
+              type={Icon.TYPE.INTERFACE__INFO__INFO}
+            />
+          </Tooltip>
           {mode === MODES.EDIT ? (
             <AddStep levels={levels} onUpdate={updateStageHandler} />
           ) : null}
         </div>
-        <div className="step-groups">
+        <div className={`step-groups ${mode}`}>
           {levels.map(({ steps, status }, index) => (
             <Level
               key={index}
               order={index + 1}
               steps={steps}
               stageName={name}
+              status={status}
+              mode={mode}
               onUpdate={(updates) => updateLevelHandler(index, updates)}
               onDelete={() => deleteLevelHandler(index)}
               onDragStart={(e) => levelDragStartHandler(e, index)}
               onDragOver={(e) => levelDragOverHandler(e, index)}
               onDrop={(e) => levelDropHandler(e)}
-              status={status}
-              mode={mode}
+              stepClickHandler={stepClickHandler}
             />
           ))}
         </div>
-        {mode === MODES.INLINE ? (
-          <>
-            <div className="section-title">
-              <HeadingText className="title">Signals</HeadingText>
+        {mode === MODES.STACKED ? (
+          <div className="signals">
+            <div className="signals-title">
+              <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                Signals
+              </HeadingText>
             </div>
             <div className="signals-listing">
               <SignalsList />
             </div>
-          </>
+          </div>
         ) : null}
       </div>
     </div>
@@ -201,11 +265,14 @@ Stage.propTypes = {
   }),
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  signalExpandOption: PropTypes.number,
+  selectedStep: PropTypes.object,
   onUpdate: PropTypes.func,
   onDelete: PropTypes.func,
   onDragStart: PropTypes.func,
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
+  stepClickHandler: PropTypes.func,
 };
 
 export default Stage;
