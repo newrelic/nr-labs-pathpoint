@@ -15,18 +15,20 @@ const Step = ({
   signals = [],
   stageName,
   level,
+  status = STATUSES.UNKNOWN,
+  mode = MODES.INLINE,
   onUpdate,
   onDelete,
   onDragStart,
   onDragOver,
   onDrop,
-  status = STATUSES.UNKNOWN,
-  mode = MODES.INLINE,
+  stepClickHandler = () => null,
 }) => {
   const [editModalHidden, setEditModalHidden] = useState(true);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
+  const stepRef = useRef();
 
   const addSignalsHandler = (guids) => {
     if (onUpdate)
@@ -106,12 +108,35 @@ const Step = ({
 
   return (
     <div
-      className={`step ${status}`}
+      className={`step ${
+        mode === MODES.STACKED &&
+        signals.length &&
+        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+          ? status
+          : ''
+      }`}
+      ref={stepRef}
       draggable={mode === MODES.EDIT}
       onDragStart={dragStartHandler}
       onDragOver={onDragOver}
       onDrop={onDropHandler}
       onDragEnd={dragEndHandler}
+      onClick={() => {
+        if (
+          mode === MODES.STACKED &&
+          signals.length &&
+          [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+        ) {
+          stepClickHandler({
+            clickedStepRef: {
+              id: `${level}_${title}`,
+              stageName: stageName,
+              stepStatus: status,
+            },
+            clickedStep: stepRef.current,
+          });
+        }
+      }}
     >
       <StepHeader
         title={title}
@@ -151,11 +176,13 @@ const Step = ({
             onClose={closeDeleteModalHandler}
           />
         </>
-      ) : null}
-      <div className="signals">
-        {mode === MODES.INLINE ? <SignalsGrid /> : null}
-        {mode === MODES.STACKED ? <SignalsList /> : null}
-      </div>
+      ) : (
+        mode === MODES.INLINE && (
+          <div className="signals">
+            <SignalsGrid />
+          </div>
+        )
+      )}
     </div>
   );
 };
@@ -165,13 +192,14 @@ Step.propTypes = {
   signals: PropTypes.arrayOf(PropTypes.object),
   stageName: PropTypes.string,
   level: PropTypes.string,
+  status: PropTypes.oneOf(Object.values(STATUSES)),
+  mode: PropTypes.oneOf(Object.values(MODES)),
   onUpdate: PropTypes.func,
   onDelete: PropTypes.func,
   onDragStart: PropTypes.func,
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
-  status: PropTypes.oneOf(Object.values(STATUSES)),
-  mode: PropTypes.oneOf(Object.values(MODES)),
+  stepClickHandler: PropTypes.func,
 };
 
 export default Step;
