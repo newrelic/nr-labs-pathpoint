@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { HeadingText, Icon } from 'nr1';
+import { HeadingText, Icon, Tooltip } from 'nr1';
 import { EditInPlace } from '@newrelic/nr-labs-components';
 
 import IconsLib from '../icons-lib';
@@ -48,10 +48,12 @@ const StepHeader = ({
       />
     </div>
   ) : (
-    <div className="step-header">
-      <HeadingText type={HeadingText.TYPE.HEADING_6} className="title">
-        {title}
-      </HeadingText>
+    <div className={`step-header ${mode}`}>
+      <Tooltip text={title} placementType={Tooltip.PLACEMENT_TYPE.TOP}>
+        <HeadingText type={HeadingText.TYPE.HEADING_6} className="title">
+          {title}
+        </HeadingText>
+      </Tooltip>
     </div>
   );
 };
