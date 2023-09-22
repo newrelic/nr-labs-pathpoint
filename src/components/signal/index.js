@@ -11,8 +11,23 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  ghost = false,
 }) => (
-  <div className={`signal ${mode === MODES.EDIT ? 'edit' : ''}`}>
+  <div
+    className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
+      ghost ? 'ghost' : ''
+    } ${mode === MODES.STACKED && !ghost ? 'detail' : ''} ${
+      mode === MODES.STACKED && !ghost && status !== STATUSES.SUCCESS
+        ? status
+        : ''
+    }`}
+    onClick={() => {
+      if (mode === MODES.STACKED && !ghost) {
+        // render signal graph for selected signal in <SideBar> component
+        console.log('### render signal graph in <SideBar> component for', name);
+      }
+    }}
+  >
     <div className="status">
       <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
     </div>
@@ -33,6 +48,7 @@ Signal.propTypes = {
   onDelete: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  ghost: PropTypes.bool,
 };
 
 export default Signal;
