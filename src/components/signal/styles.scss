@@ -14,6 +14,26 @@
     display: inline-flex;
   }
 
+  &.ghost {
+    opacity: 0.2;
+  }
+
+  &.detail {
+    cursor: pointer;
+
+    &.critical :hover {
+      color: $critical;
+    }
+
+    &.warning :hover {
+      color: $warning;
+    }
+
+    &.unknown :hover {
+      color: $unknown;
+    }
+  }
+
   .name {
     font-weight: 400;
     font-size: 12px;
