@@ -67,6 +67,7 @@
   .body {
     box-sizing: border-box;
     flex: 1 1 auto;
+    gap: 16px;
     overflow-y: auto;
     background: #FFFFFF;
     box-shadow: 0px 4px 4px 4px rgba(0, 0, 0, 0.02), 0px 8px 16px 8px rgba(2, 3, 3, 0.05);
@@ -74,35 +75,51 @@
     display: flex;
     flex-direction: column;
 
-    .section-title {
-      padding: 16px;
-      box-sizing: border-box;
+    .levels-title {
       display: flex;
-      gap: 8px;
       align-items: center;
-    }
+      box-sizing: border-box;
+      gap: 0.25rem;
+      padding: 0 16px 8px;
+   }
 
     .step-groups {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      padding: 0 16px 16px;
+      padding: 2px 16px 16px;
       box-sizing: border-box;
-      width: 100%;
       overflow-y: auto;
+
+      &.stacked {
+        max-height: 50%;
+      }
 
       .has-signals {
         height: 75%;
       }
     }
     
-    .signals-listing {
-        height: 30%;
+    .signals {
+      height: 36%;
+      margin-top: auto;
+      margin-bottom: 16px;
+
+      .signals-title {
+        padding: 16px;
+      }
+
+      .signals-listing {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        height: calc(100% - 52px);
         overflow-y: auto;
         margin-bottom: 16px;
-        padding: 0 16px 16px;
+        padding: 0 16px;
         box-sizing: border-box;
       }
+    }
   }
 }
 
