@@ -1,0 +1,5 @@
+export const SIGNAL_EXPAND = {
+  UNHEALTHY_ONLY: 1,
+  CRITICAL_ONLY: 2,
+  ALL: 4,
+};
