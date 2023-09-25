@@ -62,12 +62,12 @@ export const uniqueSignalGuidsInStages = (stages = []) => {
   return [...guidsSet];
 };
 
-export const getStageHeaderShape = (stage = {}) => {
+export const getStageHeaderShape = (stage = {}, border = '') => {
   const classNames = [
-    'has-none',
-    'has-source',
-    'has-target',
-    'has-source has-target',
+    `has-none${border}`,
+    `has-source${border}`,
+    `has-target${border}`,
+    `has-source-has-target${border}`,
   ];
   return classNames[
     ((stage.related || {}).source || 0) +
