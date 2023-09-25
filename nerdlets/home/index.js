@@ -9,7 +9,7 @@ import React, {
 
 import { Button, Icon, nerdlet, PlatformStateContext, Spinner } from 'nr1';
 
-import { Flow, FlowList, NoFlows } from '../../src/components';
+import { Flow, FlowList, NoFlows, Sidebar } from '../../src/components';
 import {
   useFlowLoader,
   useFlowWriter,
@@ -19,6 +19,7 @@ import {
 } from '../../src/hooks';
 import { MODES, UI_CONTENT } from '../../src/constants';
 import { uuid } from '../../src/utils';
+import { SidebarProvider } from '../../src/contexts';
 
 const HomeNerdlet = () => {
   const [mode, setMode] = useState(MODES.INLINE);
@@ -167,17 +168,22 @@ const HomeNerdlet = () => {
   const currentView = useMemo(() => {
     if (currentFlowIndex > -1 && flows?.[currentFlowIndex]?.document) {
       return (
-        <Flow
-          flow={flows[currentFlowIndex].document}
-          onUpdate={updateFlowHandler}
-          onClose={backToFlowsHandler}
-          accountId={accountId}
-          mode={mode}
-          setMode={setMode}
-          flows={flows}
-          onSelectFlow={flowClickHandler}
-          user={userRef.current.user}
-        />
+        <SidebarProvider>
+          <>
+            <Flow
+              flow={flows[currentFlowIndex].document}
+              onUpdate={updateFlowHandler}
+              onClose={backToFlowsHandler}
+              accountId={accountId}
+              mode={mode}
+              setMode={setMode}
+              flows={flows}
+              onSelectFlow={flowClickHandler}
+              user={userRef.current.user}
+            />
+            <Sidebar />
+          </>
+        </SidebarProvider>
       );
     }
     if (flows && flows.length) {
@@ -196,7 +202,14 @@ const HomeNerdlet = () => {
     } else {
       return <NoFlows newFlowHandler={newFlowHandler} />;
     }
-  }, [flows, currentFlowIndex, accountId, mode, flowClickHandler]);
+  }, [
+    flows,
+    flowsLoading,
+    currentFlowIndex,
+    accountId,
+    mode,
+    flowClickHandler,
+  ]);
 
   return <div className="container">{currentView}</div>;
 };
