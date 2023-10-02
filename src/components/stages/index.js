@@ -16,8 +16,8 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
   const [stagesWithStatuses, setStagesWithStatuses] = useState([]);
   const [guids, setGuids] = useState([]);
   const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
-  const [prevClickedStep, setPrevClickedStep] = useState({}); // useRef to memorize previously clicked step DOM object
-  const [selectedStep, setSelectedStep] = useState([]); // to pass to SignalsList()
+  const [selectedStep, setSelectedStep] = useState({}); // to pass to SignalsList()
+  const prevClickedStep = useRef({}); // useRef to memorize previously clicked step DOM object
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
   const { data: serviceLevelsData, error: serviceLevelsError } =
@@ -48,8 +48,8 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     ) {
       prevClickedStep.clickedStep.style.background =
         STATUS_COLORS[STATUSES.BLANK];
-      setPrevClickedStep({});
-      setSelectedStep([]);
+      prevClickedStep.current = {};
+      setSelectedStep({});
     }
   }, [mode]);
 
@@ -113,10 +113,10 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
       const { clickedStepRef, clickedStep } = stepInfo;
 
       if (
-        prevClickedStep?.clickedStep &&
-        prevClickedStep.clickedStepRef.id !== clickedStepRef.id
+        prevClickedStep.current?.clickedStep &&
+        prevClickedStep.current.clickedStepRef.id !== clickedStepRef.id
       ) {
-        prevClickedStep.clickedStep.style.background =
+        prevClickedStep.current.clickedStep.style.background =
           STATUS_COLORS[STATUSES.BLANK]; // toggle bg color back to normal
       }
 
@@ -138,9 +138,10 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
         }
       }
 
-      setPrevClickedStep((pcs) =>
-        pcs?.clickedStepRef?.id === clickedStepRef.id ? null : stepInfo
-      );
+      prevClickedStep.current =
+        prevClickedStep.current?.clickedStepRef?.id === clickedStepRef.id
+          ? {}
+          : stepInfo;
     },
     [prevClickedStep]
   );
