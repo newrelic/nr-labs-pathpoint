@@ -11,21 +11,20 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
-  ghost = false,
+  grayed = false,
+  guid = '',
+  showSignalDetail = () => null,
 }) => (
   <div
     className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
-      ghost ? 'ghost' : ''
-    } ${mode === MODES.STACKED && !ghost ? 'detail' : ''} ${
-      mode === MODES.STACKED && !ghost && status !== STATUSES.SUCCESS
+      grayed ? 'grayed' : ''
+    } ${mode === MODES.STACKED && !grayed ? 'detail' : ''} ${
+      mode === MODES.STACKED && !grayed && status !== STATUSES.SUCCESS
         ? status
         : ''
     }`}
     onClick={() => {
-      if (mode === MODES.STACKED && !ghost) {
-        // render signal graph for selected signal in <SideBar> component
-        console.log('### render signal graph in <SideBar> component for', name);
-      }
+      if (mode === MODES.STACKED && !grayed) showSignalDetail(guid);
     }}
   >
     <div className="status">
@@ -47,8 +46,12 @@ Signal.propTypes = {
   name: PropTypes.string,
   onDelete: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
+  accountId: PropTypes.number,
+  nrql: PropTypes.string,
   mode: PropTypes.oneOf(Object.values(MODES)),
-  ghost: PropTypes.bool,
+  grayed: PropTypes.bool,
+  guid: PropTypes.string,
+  showSignalDetail: PropTypes.func,
 };
 
 export default Signal;
