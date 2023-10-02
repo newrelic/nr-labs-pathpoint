@@ -101,9 +101,12 @@
     }
     
     .signals {
-      height: 36%;
-      margin-top: auto;
-      margin-bottom: 16px;
+      margin-top: 8px;
+
+      &.stacked {
+        height: 36%;
+        margin-top: auto;
+      }
 
       .signals-title {
         padding: 16px;
@@ -146,5 +149,122 @@
         color: #DF2D24;
       }
     }
+  }
+}
+
+.signal-sidebar {
+  font-feature-settings: 'clig' off, 'liga' off;
+
+  @include status-colors(
+      $critical: 'critical',
+      $success: 'success',
+      $unknown: 'unknown',
+      $warning: 'warning',
+    );
+
+  .signal-label {
+    color: #535E65;
+    /* Heading/Heading 6 */
+    font-family: Inter;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 16px;
+  }
+
+  .signal-title {
+    color: #293338;
+    /* Heading/Heading 3 */
+    font-family: Inter;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 28px;
+  }
+
+  .account-info {
+    color: #535E65;
+    font-family: Inter;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+    margin: 0.5rem 0;
+  }
+
+  .detail-link {
+    color: #0C74DF;
+    /* 🔒 Private to One Core (don't use)/Action */
+    font-family: Inter;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .signal-name {
+    color: #293338;
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px;
+  }
+
+  .signal-info {
+    color: #293338;
+    /* Body/Body 3 */
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  .signal-status {
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 24px;
+
+    &.critical {
+      color: $critical;
+    }
+
+    &.warning {
+      color: $warning;
+    }
+
+    &.success {
+      color: $success;
+    }
+
+    &.unknown {
+      color: $unknown;
+    }
+  }
+
+  hr {
+    margin: 2rem 0 1rem;
+  }
+
+  .chart-label {
+    color: #293338;
+    /* Heading/Heading 4 */
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+  }
+
+  .chart-time-range {
+    color: #535E65;
+    font-family: Inter;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
   }
 }

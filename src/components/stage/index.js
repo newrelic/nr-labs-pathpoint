@@ -1,13 +1,23 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { HeadingText, Icon, Tooltip } from 'nr1';
+import {
+  Button,
+  HeadingText,
+  Icon,
+  LineChart,
+  Link,
+  NrqlQuery,
+  Tooltip,
+  navigation,
+} from 'nr1';
+import { useSidebar } from '../../contexts';
 
 import Level from '../level';
 import Signal from '../signal';
 import StageHeader from './header';
 import AddStep from '../add-step';
-import { MODES, STATUSES } from '../../constants';
+import { MODES, STATUSES, STATUS_COLORS } from '../../constants';
 
 const Stage = ({
   name = 'Stage',
@@ -29,17 +39,23 @@ const Stage = ({
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
 
+  const [showDetail, setShowDetail] = useState('');
+  const { openSidebar, closeSidebar } = useSidebar();
+
   useEffect(
     () =>
       setSignals(
         levels.reduce((acc, { steps = [] }, levelIndex) => {
           steps.forEach(
             ({ signals = [], title: stepTitle, status: stepStatus }) => {
-              signals.forEach(({ guid, name, status }) => {
+              signals.forEach(({ guid, name, status, nrql, accountId }) => {
                 if (!acc[guid]) {
                   acc[guid] = {
+                    guid,
+                    accountId,
                     name,
                     status,
+                    nrql,
                     stepStatus,
                     references: [],
                   };
@@ -94,24 +110,98 @@ const Stage = ({
 
         return a1 - b1;
       })
-      .map((signal, i) => (
-        <Signal
-          key={i}
-          name={signal.name}
-          status={signal.status}
-          mode={mode}
-          ghost={
-            name !== selectedStep.stageName ||
-            (name === selectedStep.stageName &&
-              signal.status !== STATUSES.SUCCESS &&
-              signal.references.find((ref) => ref === selectedStep.id))
-              ? ''
-              : 'ghost'
-          }
-        />
-      ));
+      .map((signal, i) => {
+        return (
+          <Signal
+            key={i}
+            name={signal.name}
+            status={signal.status}
+            accountId={signal.accountId}
+            nrql={signal.nrql}
+            mode={mode}
+            grayed={
+              name !== selectedStep.stageName ||
+              (name === selectedStep.stageName &&
+                signal.status !== STATUSES.SUCCESS &&
+                signal.references.find((ref) => ref === selectedStep.id))
+                ? ''
+                : 'grayed'
+            }
+            guid={signal.guid}
+            showSignalDetail={showSignalDetail}
+          />
+        );
+      });
   }, [signals]);
   SignalsList.displayName = 'SignalsList';
+
+  const showSignalDetail = useCallback((guid) => {
+    const signal = signals[guid];
+    if (showDetail && showDetail === guid) {
+      setShowDetail('');
+      closeSidebar();
+    } else {
+      setShowDetail(guid);
+      openSidebar({
+        content: (
+          <div className="signal-sidebar">
+            <HeadingText
+              className="signal-label"
+              type={HeadingText.TYPE.HEADING_6}
+            >
+              SIGNAL:
+            </HeadingText>
+            <HeadingText
+              className="signal-title"
+              type={HeadingText.TYPE.HEADING_3}
+            >
+              {signal.name}
+            </HeadingText>
+            <HeadingText
+              className="account-info"
+              type={HeadingText.TYPE.HEADING_5}
+            >
+              Account | {signal.accountId}
+            </HeadingText>
+            <Link
+              className="detail-link"
+              onClick={() => navigation.openStackedEntity(guid)}
+            >
+              link to full entity details
+            </Link>
+            <HeadingText type={HeadingText.TYPE.HEADING_5}>
+              <br />
+              <span className="signal-name">{signal.name}</span>
+              <span className="signal-info">{' is reporting '}</span>
+              <span className={`signal-status ${signal.status}`}>
+                {['critical', 'warning'].includes(signal.status)
+                  ? 'blow threshold'
+                  : signal.status === 'success'
+                  ? 'success'
+                  : 'unknown'}
+              </span>
+              <hr />
+            </HeadingText>
+            <NrqlQuery
+              accountIds={[signal.accountId]}
+              query={`${signal.nrql} TIMESERIES`}
+            >
+              {({ data }) => {
+                if (data) {
+                  data.forEach(
+                    ({ metadata }) =>
+                      (metadata.color = STATUS_COLORS[signal.status])
+                  );
+                }
+                return <LineChart data={data} />;
+              }}
+            </NrqlQuery>
+          </div>
+        ),
+        status: signal.status,
+      });
+    }
+  });
 
   const updateStageHandler = (updates = {}) => {
     if (onUpdate) onUpdate({ name, levels, related, ...updates });
@@ -240,7 +330,7 @@ const Stage = ({
           ))}
         </div>
         {mode === MODES.STACKED ? (
-          <div className="signals">
+          <div className="signals stacked">
             <div className="signals-title">
               <HeadingText type={HeadingText.TYPE.HEADING_5}>
                 Signals
