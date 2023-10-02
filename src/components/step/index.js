@@ -15,14 +15,13 @@ const Step = ({
   signals = [],
   stageName,
   level,
-  status = STATUSES.UNKNOWN,
-  mode = MODES.INLINE,
   onUpdate,
   onDelete,
   onDragStart,
   onDragOver,
   onDrop,
-  stepClickHandler = () => null,
+  status = STATUSES.UNKNOWN,
+  mode = MODES.INLINE,
 }) => {
   const [editModalHidden, setEditModalHidden] = useState(true);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
@@ -108,35 +107,12 @@ const Step = ({
 
   return (
     <div
-      className={`step ${
-        mode === MODES.STACKED &&
-        signals.length &&
-        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-          ? status
-          : ''
-      }`}
-      ref={stepRef}
+      className={`step ${status}`}
       draggable={mode === MODES.EDIT}
       onDragStart={dragStartHandler}
       onDragOver={onDragOver}
       onDrop={onDropHandler}
       onDragEnd={dragEndHandler}
-      onClick={() => {
-        if (
-          mode === MODES.STACKED &&
-          signals.length &&
-          [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-        ) {
-          stepClickHandler({
-            clickedStepRef: {
-              id: `${level}_${title}`,
-              stageName: stageName,
-              stepStatus: status,
-            },
-            clickedStep: stepRef.current,
-          });
-        }
-      }}
     >
       <StepHeader
         title={title}
@@ -176,12 +152,12 @@ const Step = ({
             onClose={closeDeleteModalHandler}
           />
         </>
+      ) : mode === MODES.INLINE ? (
+        <div className="signals">
+          <SignalsGrid />
+        </div>
       ) : (
-        mode === MODES.INLINE && (
-          <div className="signals">
-            <SignalsGrid />
-          </div>
-        )
+        ''
       )}
     </div>
   );
@@ -192,14 +168,13 @@ Step.propTypes = {
   signals: PropTypes.arrayOf(PropTypes.object),
   stageName: PropTypes.string,
   level: PropTypes.string,
-  status: PropTypes.oneOf(Object.values(STATUSES)),
-  mode: PropTypes.oneOf(Object.values(MODES)),
   onUpdate: PropTypes.func,
   onDelete: PropTypes.func,
   onDragStart: PropTypes.func,
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
-  stepClickHandler: PropTypes.func,
+  status: PropTypes.oneOf(Object.values(STATUSES)),
+  mode: PropTypes.oneOf(Object.values(MODES)),
 };
 
 export default Step;
