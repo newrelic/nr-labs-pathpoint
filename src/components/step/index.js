@@ -27,7 +27,6 @@ const Step = ({
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
-  const stepRef = useRef();
 
   const addSignalsHandler = (guids) => {
     if (onUpdate)

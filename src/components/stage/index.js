@@ -2,7 +2,6 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
-  Button,
   HeadingText,
   Icon,
   LineChart,
