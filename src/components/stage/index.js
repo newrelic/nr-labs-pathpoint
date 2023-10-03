@@ -121,7 +121,6 @@ const Stage = ({
             grayed={
               name !== selectedStep.stageName ||
               (name === selectedStep.stageName &&
-                signal.status !== STATUSES.SUCCESS &&
                 signal.references.find((ref) => ref === selectedStep.id))
                 ? ''
                 : 'grayed'
