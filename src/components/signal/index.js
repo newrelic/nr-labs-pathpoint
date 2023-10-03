@@ -18,11 +18,7 @@ const Signal = ({
   <div
     className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
       grayed ? 'grayed' : ''
-    } ${mode === MODES.STACKED && !grayed ? 'detail' : ''} ${
-      mode === MODES.STACKED && !grayed && status !== STATUSES.SUCCESS
-        ? status
-        : ''
-    }`}
+    } ${mode === MODES.STACKED && !grayed ? `detail ${status}` : ''}`}
     onClick={() => {
       if (mode === MODES.STACKED && !grayed) showSignalDetail(guid);
     }}

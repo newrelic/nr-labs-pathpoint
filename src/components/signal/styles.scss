@@ -29,6 +29,10 @@
       color: $warning;
     }
 
+    &.success :hover {
+      color: $success;
+    }
+
     &.unknown :hover {
       color: $unknown;
     }
