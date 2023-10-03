@@ -5,4 +5,6 @@ export const STATUS_COLORS = {
   success: 'rgb(1, 167, 106)', // '#01A76A',
   default: 'rgb(255, 255, 255)', // '#fff',
   blank: 'transparent',
+  primary_inverted_fg: 'rgb(FA, FB, FB)', // '#FAFBFB' - system-text-primary-inverted
+  primary_fg: 'rgb(29, 33, 38)', // '#293338' - system-text-primary
 };
