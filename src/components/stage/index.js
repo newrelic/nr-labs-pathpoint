@@ -32,13 +32,13 @@ const Stage = ({
   onDragOver,
   onDrop,
   stepClickHandler = () => null,
+  oldGuid = null,
+  setOldGuid = () => null,
 }) => {
   const [signals, setSignals] = useState({});
   const isDragHandleClicked = useRef(false);
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
-
-  const [showDetail, setShowDetail] = useState('');
   const { openSidebar, closeSidebar } = useSidebar();
 
   useEffect(
@@ -134,12 +134,12 @@ const Stage = ({
   SignalsList.displayName = 'SignalsList';
 
   const showSignalDetail = useCallback((guid) => {
-    const signal = signals[guid];
-    if (showDetail && showDetail === guid) {
-      setShowDetail('');
+    const currentSignal = signals[guid];
+    if (oldGuid === guid) {
+      setOldGuid(null);
       closeSidebar();
     } else {
-      setShowDetail(guid);
+      setOldGuid(guid);
       openSidebar({
         content: (
           <div className="signal-sidebar">
@@ -153,42 +153,42 @@ const Stage = ({
               className="signal-title"
               type={HeadingText.TYPE.HEADING_3}
             >
-              {signal.name}
+              {currentSignal.name}
             </HeadingText>
             <HeadingText
               className="account-info"
               type={HeadingText.TYPE.HEADING_5}
             >
-              Account | {signal.accountId}
+              Account | {currentSignal.accountId}
             </HeadingText>
             <Link
               className="detail-link"
               onClick={() => navigation.openStackedEntity(guid)}
             >
-              link to full entity details
+              View full entity details
             </Link>
             <HeadingText type={HeadingText.TYPE.HEADING_5}>
               <br />
-              <span className="signal-name">{signal.name}</span>
+              <span className="signal-name">{currentSignal.name}</span>
               <span className="signal-info">{' is reporting '}</span>
-              <span className={`signal-status ${signal.status}`}>
-                {['critical', 'warning'].includes(signal.status)
+              <span className={`signal-status ${currentSignal.status}`}>
+                {['critical', 'warning'].includes(currentSignal.status)
                   ? 'blow threshold'
-                  : signal.status === 'success'
+                  : currentSignal.status === 'success'
                   ? 'success'
                   : 'unknown'}
               </span>
               <hr />
             </HeadingText>
             <NrqlQuery
-              accountIds={[signal.accountId]}
-              query={`${signal.nrql} TIMESERIES`}
+              accountIds={[currentSignal.accountId]}
+              query={`${currentSignal.nrql} TIMESERIES`}
             >
               {({ data }) => {
                 if (data) {
                   data.forEach(
                     ({ metadata }) =>
-                      (metadata.color = STATUS_COLORS[signal.status])
+                      (metadata.color = STATUS_COLORS[currentSignal.status])
                   );
                 }
                 return <LineChart data={data} />;
@@ -196,7 +196,7 @@ const Stage = ({
             </NrqlQuery>
           </div>
         ),
-        status: signal.status,
+        status: currentSignal.status,
       });
     }
   });
@@ -361,6 +361,8 @@ Stage.propTypes = {
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
   stepClickHandler: PropTypes.func,
+  oldGuid: PropTypes.string,
+  setOldGuid: PropTypes.func,
 };
 
 export default Stage;

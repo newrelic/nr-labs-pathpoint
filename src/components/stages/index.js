@@ -20,6 +20,7 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
   const prevClickedStep = useRef({}); // useRef to memorize previously clicked step DOM object
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
+  const [oldGuid, setOldGuid] = useState(null);
   const { data: serviceLevelsData, error: serviceLevelsError } =
     useFetchServiceLevels({ guids });
 
@@ -212,6 +213,8 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
               onDragOver={(e) => dragOverHandler(e, i)}
               onDrop={(e) => dropHandler(e)}
               stepClickHandler={stepClickHandler}
+              oldGuid={oldGuid}
+              setOldGuid={setOldGuid}
             />
           )
         )}
