@@ -45,9 +45,9 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     if (
       mode !== MODES.STACKED &&
       selectedStep &&
-      prevClickedStep?.clickedStep
+      prevClickedStep?.current?.clickedStep
     ) {
-      prevClickedStep.clickedStep.style.background =
+      prevClickedStep.current.clickedStep.style.background =
         STATUS_COLORS[STATUSES.BLANK];
       prevClickedStep.current = {};
       setSelectedStep({});
