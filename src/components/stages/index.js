@@ -45,10 +45,16 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     if (
       mode !== MODES.STACKED &&
       selectedStep &&
-      prevClickedStep?.current?.clickedStep
+      prevClickedStep?.current.clickedStep
     ) {
       prevClickedStep.current.clickedStep.style.background =
         STATUS_COLORS[STATUSES.BLANK];
+      if (
+        prevClickedStep.current.clickedStepRef.stepStatus !== STATUSES.WARNING
+      ) {
+        prevClickedStep.current.clickedStep.childNodes[0].childNodes[0].childNodes[0].style.color =
+          STATUS_COLORS.primary_fg;
+      }
       prevClickedStep.current = {};
       setSelectedStep({});
     }
@@ -119,6 +125,12 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
       ) {
         prevClickedStep.current.clickedStep.style.background =
           STATUS_COLORS[STATUSES.BLANK]; // toggle bg color back to normal
+        if (
+          prevClickedStep.current.clickedStepRef.stepStatus !== STATUSES.WARNING
+        ) {
+          prevClickedStep.current.clickedStep.childNodes[0].childNodes[0].childNodes[0].style.color =
+            STATUS_COLORS.primary_fg; // toggle fg color back to normal
+        }
       }
 
       if (
@@ -132,9 +144,16 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
         ) {
           clickedStep.style.background =
             STATUS_COLORS[clickedStepRef.stepStatus];
+
+          if (clickedStepRef.stepStatus !== STATUSES.WARNING) {
+            clickedStep.childNodes[0].childNodes[0].childNodes[0].style.color =
+              STATUS_COLORS.primary_inverted_fg;
+          }
           setSelectedStep(clickedStepRef);
         } else {
           clickedStep.style.background = STATUS_COLORS[STATUSES.BLANK];
+          clickedStep.childNodes[0].childNodes[0].childNodes[0].style.color =
+            STATUS_COLORS.primary_fg;
           setSelectedStep({});
         }
       }
