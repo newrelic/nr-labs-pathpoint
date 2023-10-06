@@ -36,6 +36,33 @@
     &.unknown :hover {
       color: $unknown;
     }
+
+    &.selected {
+
+      &.critical {
+        .name {
+          color: $critical;
+        }
+      }
+
+      &.warning {
+        .name {
+          color: $warning;
+        }
+      }
+
+      &.success {
+        .name {
+          color: $success;
+        }
+      }
+
+      &.unknown {
+        .name {
+          color: $unknown;
+        }
+      }
+    }
   }
 
   .name {

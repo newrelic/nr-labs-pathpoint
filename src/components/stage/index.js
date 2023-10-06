@@ -32,8 +32,9 @@ const Stage = ({
   onDragOver,
   onDrop,
   stepClickHandler = () => null,
-  oldGuid = null,
-  setOldGuid = () => null,
+  previousGuid = null,
+  selectedSignal = '',
+  setSelectedSignal = () => null,
 }) => {
   const [signals, setSignals] = useState({});
   const isDragHandleClicked = useRef(false);
@@ -57,6 +58,7 @@ const Stage = ({
                     nrql,
                     stepStatus,
                     references: [],
+                    selected: guid === selectedSignal,
                   };
                 }
                 acc[guid].references.push(`${levelIndex + 1}_${stepTitle}`);
@@ -66,7 +68,7 @@ const Stage = ({
           return acc;
         }, {})
       ),
-    [levels]
+    [levels, selectedSignal]
   );
 
   const SignalsList = memo(() => {
@@ -127,6 +129,7 @@ const Stage = ({
             }
             guid={signal.guid}
             showSignalDetail={showSignalDetail}
+            selected={signal.selected}
           />
         );
       });
@@ -134,12 +137,17 @@ const Stage = ({
   SignalsList.displayName = 'SignalsList';
 
   const showSignalDetail = useCallback((guid) => {
+    if (selectedSignal && signals[selectedSignal])
+      signals[selectedSignal].selected = false;
+    if (signals[guid] && selectedSignal !== guid) signals[guid].selected = true;
+    setSelectedSignal(selectedSignal === guid ? '' : guid);
+
     const currentSignal = signals[guid];
-    if (oldGuid === guid) {
-      setOldGuid(null);
+    if (previousGuid.current === guid) {
+      previousGuid.current = null;
       closeSidebar();
     } else {
-      setOldGuid(guid);
+      previousGuid.current = guid;
       openSidebar({
         content: (
           <div className="signal-sidebar">
@@ -361,8 +369,9 @@ Stage.propTypes = {
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
   stepClickHandler: PropTypes.func,
-  oldGuid: PropTypes.string,
-  setOldGuid: PropTypes.func,
+  previousGuid: PropTypes.object,
+  selectedSignal: PropTypes.string,
+  setSelectedSignal: PropTypes.func,
 };
 
 export default Stage;

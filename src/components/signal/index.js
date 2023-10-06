@@ -11,32 +11,38 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
-  grayed = false,
+  grayed = '',
   guid = '',
   showSignalDetail = () => null,
-}) => (
-  <div
-    className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
-      grayed ? 'grayed' : ''
-    } ${mode === MODES.STACKED && !grayed ? `detail ${status}` : ''}`}
-    onClick={() => {
-      if (mode === MODES.STACKED && !grayed) showSignalDetail(guid);
-    }}
-  >
-    <div className="status">
-      <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
+  selected = false,
+}) => {
+  return (
+    <div
+      className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${grayed} ${
+        [MODES.INLINE, MODES.STACKED].includes(mode) && !grayed
+          ? `detail ${status} ${selected ? 'selected' : ''}`
+          : ''
+      }`}
+      onClick={() => {
+        if ([MODES.INLINE, MODES.STACKED].includes(mode) && !grayed)
+          showSignalDetail(guid);
+      }}
+    >
+      <div className="status">
+        <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
+      </div>
+      <span className="name">{name}</span>
+      {mode === MODES.EDIT ? (
+        <span
+          className="delete-signal"
+          onClick={() => (onDelete ? onDelete() : null)}
+        >
+          <Icon type={Icon.TYPE.INTERFACE__OPERATIONS__CLOSE} />
+        </span>
+      ) : null}
     </div>
-    <span className="name">{name}</span>
-    {mode === MODES.EDIT ? (
-      <span
-        className="delete-signal"
-        onClick={() => (onDelete ? onDelete() : null)}
-      >
-        <Icon type={Icon.TYPE.INTERFACE__OPERATIONS__CLOSE} />
-      </span>
-    ) : null}
-  </div>
-);
+  );
+};
 
 Signal.propTypes = {
   name: PropTypes.string,
@@ -48,6 +54,7 @@ Signal.propTypes = {
   grayed: PropTypes.bool,
   guid: PropTypes.string,
   showSignalDetail: PropTypes.func,
+  selected: PropTypes.bool,
 };
 
 export default Signal;

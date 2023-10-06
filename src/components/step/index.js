@@ -85,7 +85,7 @@ const Step = ({
         }))}
       />
     ),
-    [signals]
+    [signals, mode]
   );
   SignalsGrid.displayName = 'SignalsGrid';
 

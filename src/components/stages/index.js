@@ -17,10 +17,11 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
   const [guids, setGuids] = useState([]);
   const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
   const [selectedStep, setSelectedStep] = useState({}); // to pass to SignalsList()
+  const [selectedSignal, setSelectedSignal] = useState('');
   const prevClickedStep = useRef({}); // useRef to memorize previously clicked step DOM object
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
-  const [oldGuid, setOldGuid] = useState(null);
+  const previousGuid = useRef(null);
   const { data: serviceLevelsData, error: serviceLevelsError } =
     useFetchServiceLevels({ guids });
 
@@ -232,8 +233,9 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
               onDragOver={(e) => dragOverHandler(e, i)}
               onDrop={(e) => dropHandler(e)}
               stepClickHandler={stepClickHandler}
-              oldGuid={oldGuid}
-              setOldGuid={setOldGuid}
+              previousGuid={previousGuid}
+              selectedSignal={selectedSignal}
+              setSelectedSignal={setSelectedSignal}
             />
           )
         )}
