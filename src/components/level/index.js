@@ -44,7 +44,7 @@ const Level = ({
                 ? status
                 : ''
             }`}
-            key={id || index}
+            key={id}
             ref={(el) => (stepCellsRefs.current[index] = el)}
             onClick={() => {
               if (

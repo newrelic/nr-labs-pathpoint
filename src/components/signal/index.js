@@ -31,7 +31,11 @@ const Signal = ({
       <div className="status">
         <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
       </div>
-      <span className="name">{name}</span>
+      {name ? (
+        <span className="name">{name}</span>
+      ) : (
+        <span className="name unknown">(unknown)</span>
+      )}
       {mode === MODES.EDIT ? (
         <span
           className="delete-signal"

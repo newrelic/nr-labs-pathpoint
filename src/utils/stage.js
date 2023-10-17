@@ -11,6 +11,7 @@ export const addSignalStatuses = (stages = [], serviceLevelsData = {}) =>
         signals: signals.map(({ type, guid }) => {
           const { name, attainment, target, nrql, accountId } =
             serviceLevelsData[guid];
+          // TODO: handle service levels with no data
           return {
             accountId,
             type,

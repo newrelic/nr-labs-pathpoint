@@ -318,9 +318,9 @@ const Stage = ({
           ) : null}
         </div>
         <div className={`step-groups ${mode}`}>
-          {levels.map(({ steps, status }, index) => (
+          {levels.map(({ id, steps, status }, index) => (
             <Level
-              key={index}
+              key={id}
               order={index + 1}
               steps={steps}
               stageName={name}
