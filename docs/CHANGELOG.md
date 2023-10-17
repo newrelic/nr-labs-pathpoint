@@ -1,3 +1,60 @@
+## [1.42.4](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.42.3...v1.42.4) (2023-10-17)
+
+
+### Bug Fixes
+
+* stage shape getting overwritten ([6206331](https://github.com/newrelic/nr-labs-hedgehog/commit/6206331746b87e81bb79cc1b48f97ccb1dc7ff2f))
+
+## [1.42.3](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.42.2...v1.42.3) (2023-10-17)
+
+
+### Bug Fixes
+
+* calculating statuses issue ([e02e380](https://github.com/newrelic/nr-labs-hedgehog/commit/e02e380dc1cd0d5e4f5f118933fe4f69a958493c))
+
+## [1.42.2](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.42.1...v1.42.2) (2023-10-17)
+
+
+### Bug Fixes
+
+* add IDs to stage components ([75cf2c5](https://github.com/newrelic/nr-labs-hedgehog/commit/75cf2c55792ce5f8a7986bfb4aace8761776afe6))
+* issues with adding step and stage ([58e2f35](https://github.com/newrelic/nr-labs-hedgehog/commit/58e2f357dc53ba72a7599d5586b0701ee8131fe9))
+
+## [1.42.1](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.42.0...v1.42.1) (2023-10-11)
+
+
+### Bug Fixes
+
+* handle deleted service levels ([be0af2e](https://github.com/newrelic/nr-labs-hedgehog/commit/be0af2ef46f42edb6b479ea702d31d95d7c85505))
+
+# [1.42.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.41.0...v1.42.0) (2023-10-11)
+
+
+### Features
+
+* flow list updates ([ec0aca9](https://github.com/newrelic/nr-labs-hedgehog/commit/ec0aca9216641610339211809ffe3782fc82152e))
+
+# [1.41.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.40.0...v1.41.0) (2023-10-09)
+
+
+### Features
+
+* get started page ([783159d](https://github.com/newrelic/nr-labs-hedgehog/commit/783159d6b329a5c52bc435d5c9a55ac2675e1b04))
+
+# [1.40.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.39.1...v1.40.0) (2023-10-06)
+
+
+### Bug Fixes
+
+* adding newline to eof for json files ([8b6605f](https://github.com/newrelic/nr-labs-hedgehog/commit/8b6605f2a9d88572aa8a2dd65c105ddc83c10fd4))
+* remove console log ([9f3abaf](https://github.com/newrelic/nr-labs-hedgehog/commit/9f3abafe968960d15715e900f8b4d17188a75857))
+
+
+### Features
+
+* adding refs for flow and flowlist ([04eb69d](https://github.com/newrelic/nr-labs-hedgehog/commit/04eb69d96ba44ce82f37cdec272767742b65aa6c))
+* product tour nerdlet ([3ddfb83](https://github.com/newrelic/nr-labs-hedgehog/commit/3ddfb836a29126f6629460384dd3f2877864e9d0))
+
 ## [1.39.1](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.39.0...v1.39.1) (2023-09-26)
 
 

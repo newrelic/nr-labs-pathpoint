@@ -2,119 +2,180 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap:9px;
+  gap: 10px;
   flex: 1;
   max-width: 100%;
   min-width: 0;
-}
 
-.search-bar {
-  width: calc(100% - 32px);
-  background-color: #ffffff;
-  padding: 0.75rem 1.0rem;
-}
+  .search-bar {
+    padding: 8px;
+    background: #fff;
+    border-radius: 4px;
 
-.flowlist-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  padding: 1rem 1.5rem;
-  background: #ffffff;
-}
-
-.flowlist-header {
-  flex-shrink: 0;
-}
-
-.flowlist-content {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  background-color: #ffffff;
-
-  &.body {
-    cursor: pointer;
-
-    &:hover {
-      background-color: #F3F4F4;
+    .search {
+      width: 100%;
     }
   }
-}
 
-.cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 12px 16px;
-  border: 1px solid #eceeee;
-}
+  .flow-list {
+    height: 100%;
+    background: #fff;
+    border-radius: 4px;
+    overflow: scroll;
 
-.col-1-format {
-  width: 19%;
-  border-style: none none solid none;
-}
+    .listing {
+      margin: 8px;
+      display: grid;
+      grid-template-columns: 48px minmax(min-content, 30%) 1fr;
 
-.col-2-format {
-  width: 79%;
-  border-style: none none solid solid;
-}
+      .header, .row {
+        min-height: 48px;
+        display: contents;
 
-.flow-name {
-  flex-direction: column;
-  justify-content: center;
-}
+        .cell {
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 16px;
+          overflow: hidden;
+          white-space: nowrap;
+          padding: 12px 16px;
+          border-bottom: 1px solid #eceeee;
+          border-right: 1px solid #eceeee;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          transition: background-color 500ms ease-out;
 
-.stage-names {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  gap: 0.5rem;
-  overflow-y: hidden;
-  overflow-x: auto;
-}
+          &.name {
+            font-weight: 500;
+            text-overflow: ellipsis;
+            align-items: start;
+            gap: 4px;
 
-.stage-name {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 1.5rem;
-  line-height: 1.5rem;
-  min-width: 4rem;
-  max-width: 7rem;
-  text-align: center;
-  background-color: rgba(192, 192, 192, 0.2);
-  box-sizing: border-box;
+            .user {
+              color: #6B757B;
+            }
+          }
+
+          &:last-child {
+            border-right: none;
+          }
+        }
+      }
+
+      .header {
+        .cell {
+          color: #535e65;
+          font-weight: 500;
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: #fff;
+        }
+      }
   
+      .row {
+        cursor: pointer;
 
-  .name-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 0.4rem;
-  }
+        .details {
+          display: contents;
 
-  &.has-none {
-    outline: 1px solid rgba(40, 54, 54, 0.1);
-  }
-  
-  &.has-source {
-    clip-path: polygon(100% 0, 100% 100%, 0% 100%, 10% 50%, 0% 0%);
-    padding-left: 0.3rem;
-  }
-  
-  &.has-target {
-    clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
-    padding-right: 0.3rem;
-  }
-  
-  &.has-target.has-source {
-    clip-path: polygon(90% 0, 100% 50%, 90% 100%, 0% 100%, 10% 50%, 0% 0%);
+          .stages-list {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
+            overflow-y: hidden;
+            overflow-x: auto;
+
+            .stage-shape {
+              position: relative;
+              max-width: 144px;
+              min-width: 96px;
+
+              .stage-name {
+                display: flex;
+                flex-direction: column;
+                flex-shrink: 0;
+                text-align: center;
+              
+                height: 28px;
+                line-height: 28px;
+                background: rgba(192, 192, 192, 0.2);
+                box-sizing: border-box;
+              
+                .name-text {
+                  font-size: 12px;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  padding: 0 8px;
+                }
+              
+                &.has-none {
+                  outline: .5px solid #cdd3d5;
+                  border-radius: 2px;
+                }
+                
+                &.has-source {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  clip-path: polygon(99% 2%, 99% 98%, 1% 98%, 11% 50%, 1% 2%);
+                  padding-left: 8px;
+                }
+              
+                &.has-source-border {
+                  clip-path: polygon(100% 0, 100% 100%, 0% 100%, 10% 50%, 0% 0%);
+                }
+                
+                &.has-target {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  clip-path: polygon(1% 2%, 89% 2%, 99% 50%, 89% 98%, 1% 98%);
+                  padding-right: 8px;
+                }
+              
+                &.has-target-border {
+                  clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
+                }
+                
+                &.has-source.has-target {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  clip-path: polygon(89% 2%, 99% 50%, 89% 98%, 1% 98%, 11% 50%, 1% 2%);
+                  padding: 0 8px;
+                }
+              
+                &.has-source.has-target-border {
+                  clip-path: polygon(90% 0, 100% 50%, 90% 100%, 0% 100%, 10% 50%, 0% 0%);
+                }
+
+                &.border {
+                  position: relative;
+                  background: #cdd3d5;
+                  border-radius: 2px;
+                }
+                
+                &.shape {
+                  width: 100%;
+                  background: #fff;
+                }
+              }
+            }
+          }
+        }
+        
+        &:hover > div.cell, &:hover > div > div.cell {
+          background: #F3F4F4;
+        }
+      }
+    }
+
+    
   }
 }

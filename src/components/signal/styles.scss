@@ -73,6 +73,10 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+
+    &.unknown {
+      color: #6B757B;
+    }
   }
 
   .delete-signal {

@@ -2,8 +2,8 @@ import { STAGE_SHAPES_CLASSNAME_ARRAY } from '../constants';
 import { signalStatus, statusFromStatuses } from './signal';
 
 export const addSignalStatuses = (stages = [], serviceLevelsData = {}) =>
-  stages.map(({ name, levels = [] }) => ({
-    name,
+  stages.map(({ levels = [], ...stage }) => ({
+    ...stage,
     levels: levels.map(({ order, steps = [] }) => ({
       order,
       steps: steps.map(({ title, signals = [] }) => ({

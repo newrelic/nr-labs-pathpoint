@@ -7,6 +7,8 @@ import IconsLib from '../icons-lib';
 import { STAGE_SHAPES_ARRAY, STAGE_SHAPES_ICON } from '../../constants';
 import { stageShapeDataFromIndex, stageShapeIndexFromData } from '../../utils';
 
+const shapeId = (shape) => shape.replace(/\s+/g, '_').toLowerCase();
+
 const ChangeShapeModal = ({
   related = {},
   hidden = true,
@@ -39,7 +41,7 @@ const ChangeShapeModal = ({
           </HeadingText>
           <div className="shape-options">
             {STAGE_SHAPES_ARRAY.map((shape, index) => (
-              <label key={index}>
+              <label key={shapeId(shape)}>
                 <Radio
                   onChange={({ target: { checked } }) =>
                     checked ? setSelectedShapeIndex(index) : null

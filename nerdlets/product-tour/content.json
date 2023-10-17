@@ -1,0 +1,43 @@
+[
+  {},
+  {
+    "title": "Welcome to Hedgehog",
+    "subtitle": "1 of 8",
+    "text": "This is the home page where you'll be able to access all of your different flows."
+  },
+  {
+    "title": "This is a demo flow",
+    "subtitle": "2 of 8",
+    "text": "A flow maps an organization's customer journey, optimizing business observability."
+  },
+  {
+    "title": "This is a stage",
+    "subtitle": "3 of 8",
+    "text": "A stage represents a high-level functional category in the flow, which consists of multiple steps to complete."
+  },
+  {
+    "title": "This is a level",
+    "subtitle": "4 of 8",
+    "text": "A level collects the potential alternate paths a user may traverse as they progress through this level of the stage. Levels are depicted in numerical order."
+  },
+  {
+    "title": "This is a step",
+    "subtitle": "5 of 8",
+    "text": "A step is an individual gate in the path, usually representing in aggregate an underlying system."
+  },
+  {
+    "title": "This is a signal",
+    "subtitle": "6 of 8",
+    "text": "A signal is a service level that reflects the underlying health of its parent step."
+  },
+  {
+    "title": "These are flow KPIs",
+    "subtitle": "7 of 8",
+    "text": "A flow KPI lets you measure attainment against a target business objective of the overall flow."
+  },
+  {
+    "title": "Create your own flow!",
+    "subtitle": "8 of 8",
+    "text": "Now that you know the basics, you're ready to create your own flow! Clicking this button will open Edit Mode for a new flow. Everything done in Edit Mode is automatically saved."
+  }
+]

@@ -1,22 +1,28 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { Button } from 'nr1';
 
+import { uuid } from '../../utils';
+
 const AddStep = ({ levels = [], onUpdate }) => {
+  const [nextLevel, setNextLevel] = useState(levels.length + 1);
   const [displayStepOptions, setDisplayStepOptions] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(levels.length + 1);
   const [stepTitle, setStepTitle] = useState('');
 
+  useEffect(() => setNextLevel(levels.length + 1), [levels]);
+
   const addStepHandler = () => {
+    const newStep = { id: uuid(), signals: [], title: stepTitle };
     const updatedLevels =
       selectedLevel > levels.length
-        ? [...levels, { steps: [{ signals: [], title: stepTitle }] }]
+        ? [...levels, { id: uuid(), steps: [newStep] }]
         : levels.map((level, index) =>
             index === selectedLevel - 1
               ? {
                   ...level,
-                  steps: [...level.steps, { signals: [], title: stepTitle }],
+                  steps: [...level.steps, newStep],
                 }
               : level
           );
@@ -36,12 +42,12 @@ const AddStep = ({ levels = [], onUpdate }) => {
         value={selectedLevel}
         onChange={({ target: { value } = {} }) => setSelectedLevel(value)}
       >
-        {levels.map((_, index) => (
-          <option key={index} value={index + 1}>
+        {levels.map(({ id }, index) => (
+          <option key={id} value={index + 1}>
             {index + 1}
           </option>
         ))}
-        <option value={levels.length + 1}>{levels.length + 1}</option>
+        <option value={nextLevel}>{nextLevel}</option>
       </select>
       <input
         type="text"

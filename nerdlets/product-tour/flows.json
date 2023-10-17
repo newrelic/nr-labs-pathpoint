@@ -1,0 +1,70 @@
+[
+  {
+    "id": "d3c13c43-a2c8-4b2b-9763-acd5b936c272",
+    "document": {
+      "createdBy": {
+        "name": "Amit Yathirajadasan", 
+        "email": "ayathirajadasan@newrelic.com",
+        "timestamp": 1695052800000
+      },
+      "id": "d3c13c43-a2c8-4b2b-9763-acd5b936c272",
+      "kpis": [
+        {
+          "accountIds": [630060],
+          "alias": "TXNs",
+          "id": 0,
+          "name": "Transactions",
+          "nrqlQuery": "SELECT count(*) FROM Transaction SINCE 1 DAY AGO COMPARE WITH 1 DAY AGO",
+          "type": "nrql_query"
+        }
+      ],
+      "name": "Demo Flow",
+      "stages": [
+        {
+          "levels": [
+            {
+              "status": "critical",
+              "steps": [
+                {
+                  "signals": [
+                    {
+                      "attainment": 96.99477777796193,
+                      "guid": "NjMwMDYwfEVYVHxTRVJWSUNFX0xFVkVMfDE5NDY1NQ",
+                      "name": "Origami Portal Legacy - Latency",
+                      "status": "success",
+                      "target": 95,
+                      "type": "service_level"
+                    },
+                    {
+                      "attainment": 90.82627721022541,
+                      "guid": "NjMwMDYwfEVYVHxTRVJWSUNFX0xFVkVMfDE5NDY1Ng",
+                      "name": "Origami Portal Legacy - Availability",
+                      "status": "critical",
+                      "target": 95,
+                      "type": "service_level"
+                    }
+                  ],
+                  "status": "critical",
+                  "title": "Step 1"
+                }
+              ]
+            }
+          ],
+          "name": "Demo Stage",
+          "related": {
+            "source": false,
+            "target": true
+          }
+        },
+        {
+          "levels": [],
+          "name": "Another Stage",
+          "related": {
+            "source": true,
+            "target": false
+          }
+        }
+      ]
+    }
+  }
+]

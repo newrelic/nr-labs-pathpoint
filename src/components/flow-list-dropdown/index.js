@@ -37,9 +37,9 @@ const FlowListDropdown = ({ flows = [], onSelectFlow = () => null }) => {
       </div>
 
       <div className="flowlist-pulldown-content">
-        {filteredFlows.map((flow, flowIndex) => (
+        {filteredFlows.map((flow) => (
           <div
-            key={`flow-${flowIndex}`}
+            key={flow.id}
             className="flowlist-row"
             onClick={() => onSelectFlow(flow.id)}
           >
