@@ -6,7 +6,7 @@ import { Icon } from 'nr1';
 import Step from '../step';
 import IconsLib from '../icons-lib';
 import DeleteConfirmModal from '../delete-confirm-modal';
-import { MODES, STATUSES } from '../../constants';
+import { MODES, STATUSES, SIGNAL_EXPAND } from '../../constants';
 
 const Level = ({
   order = 0,
@@ -20,6 +20,9 @@ const Level = ({
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
   stepClickHandler = () => null,
+  showSignalDetail = () => null,
+  signalExpandOption = SIGNAL_EXPAND.NONE,
+  selectedSignal = '',
 }) => {
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const isDragHandleClicked = useRef(false);
@@ -30,8 +33,66 @@ const Level = ({
   const stepsRows = useMemo(() => {
     if (!steps.length) return [];
 
-    return steps.reduce(
+    // filter based on combination of selected signalExpandOption switches, status, and if steps have signals
+    const orderedStatuses = [
+      STATUSES.CRITICAL,
+      STATUSES.WARNING,
+      STATUSES.SUCCESS,
+      STATUSES.UNKNOWN,
+    ];
+
+    let validStatuses = [...orderedStatuses];
+
+    if (signalExpandOption & SIGNAL_EXPAND.UNHEALTHY_ONLY)
+      validStatuses = [STATUSES.CRITICAL, STATUSES.WARNING];
+
+    if (signalExpandOption & SIGNAL_EXPAND.CRITICAL_ONLY)
+      validStatuses = [STATUSES.CRITICAL];
+
+    const filteredSteps = steps.filter(
+      (step) =>
+        (Boolean(signalExpandOption % 4) && step.signals.length) ||
+        (!(signalExpandOption % 4) && validStatuses.includes(step.status))
+    );
+
+    return filteredSteps.reduce(
       (acc, { id, title, signals = [], status }, index, arr) => {
+        let startNextRow = false;
+        if (
+          mode === MODES.INLINE &&
+          ((signalExpandOption & SIGNAL_EXPAND.UNHEALTHY_ONLY &&
+            [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)) ||
+            (signalExpandOption & SIGNAL_EXPAND.CRITICAL_ONLY &&
+              status === STATUSES.CRITICAL) ||
+            signalExpandOption & SIGNAL_EXPAND.ALL)
+        ) {
+          startNextRow = true;
+        }
+
+        const filteredSortedSignals = signals
+          .filter((s) => validStatuses.includes(s.status))
+          .map((s) =>
+            s.guid === selectedSignal
+              ? {
+                  ...s,
+                  selected: true,
+                }
+              : s
+          )
+          .sort((a, b) => {
+            const a1 =
+              a.status === STATUSES.UNKNOWN
+                ? 1.5
+                : orderedStatuses.indexOf(a.status);
+
+            const b1 =
+              b.status === STATUSES.UNKNOWN
+                ? 1.5
+                : orderedStatuses.indexOf(b.status);
+
+            return a1 - b1;
+          });
+
         const isLastStep = index + 1 === arr.length;
         const cell = (
           <div
@@ -44,7 +105,7 @@ const Level = ({
                 ? status
                 : ''
             }`}
-            key={id || index}
+            key={id}
             ref={(el) => (stepCellsRefs.current[index] = el)}
             onClick={() => {
               if (
@@ -65,7 +126,7 @@ const Level = ({
           >
             <Step
               title={title}
-              signals={signals}
+              signals={filteredSortedSignals}
               stageName={stageName}
               level={order}
               onUpdate={(updates) => updateStepHandler(index, updates)}
@@ -75,6 +136,8 @@ const Level = ({
               onDrop={(e) => stepDropHandler(e)}
               status={status}
               mode={mode}
+              showSignalDetail={showSignalDetail}
+              signalExpandOption={signalExpandOption}
             />
           </div>
         );
@@ -88,8 +151,41 @@ const Level = ({
             </div>
           );
         } else {
+          if (
+            (signalExpandOption & SIGNAL_EXPAND.UNHEALTHY_ONLY &&
+              !['critical', 'warning'].includes(status)) ||
+            (signalExpandOption & SIGNAL_EXPAND.CRITICAL_ONLY &&
+              status !== 'critical')
+          ) {
+            if (mode === MODES.STACKED && acc.cols.length) {
+              acc.rows.push(
+                <div
+                  className={`steps-row cols-${acc.cols.length}`}
+                  key={`steps_row_${order}_${index}`}
+                >
+                  {[...acc.cols]}
+                </div>
+              );
+              acc.cols = [];
+            }
+            return isLastStep ? acc.rows : acc;
+          }
+
           acc.cols.push(cell);
-          if (index % 3 === 2 || isLastStep) {
+
+          if (acc.cols.length === 3) startNextRow = true;
+          if (isLastStep) startNextRow = true;
+          if (mode === MODES.INLINE) {
+            if (['critical', 'warning'].includes(status)) startNextRow = true;
+            if (
+              !isLastStep &&
+              ['critical', 'warning'].includes(arr[index + 1].status)
+            ) {
+              startNextRow = true;
+            }
+          }
+
+          if (startNextRow) {
             acc.rows.push(
               <div
                 className={`steps-row cols-${acc.cols.length}`}
@@ -105,7 +201,7 @@ const Level = ({
       },
       { rows: [], cols: [] }
     );
-  }, [steps, mode]);
+  }, [steps, mode, signalExpandOption, selectedSignal]);
 
   const deleteHandler = useCallback(() => {
     if (onDelete) onDelete();
@@ -178,7 +274,7 @@ const Level = ({
     dragOverItemIndex.current = null;
   };
 
-  return (
+  return MODES.EDIT === mode || stepsRows.length ? (
     <div
       className="level"
       draggable={mode === MODES.EDIT}
@@ -220,6 +316,8 @@ const Level = ({
       )}
       <div className="steps">{stepsRows}</div>
     </div>
+  ) : (
+    ''
   );
 };
 
@@ -235,6 +333,9 @@ Level.propTypes = {
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
   stepClickHandler: PropTypes.func,
+  showSignalDetail: PropTypes.func,
+  signalExpandOption: PropTypes.number,
+  selectedSignal: PropTypes.string,
 };
 
 export default Level;
