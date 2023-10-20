@@ -20,6 +20,7 @@ export const addSignalStatuses = (stages = [], serviceLevelsData = {}) =>
             target,
             nrql,
             status: signalStatus({ type, attainment, target }),
+            selected: false,
           };
         }),
       })),
