@@ -16,7 +16,7 @@ import Level from '../level';
 import Signal from '../signal';
 import StageHeader from './header';
 import AddStep from '../add-step';
-import { MODES, STATUSES, STATUS_COLORS } from '../../constants';
+import { MODES, STATUSES, SIGNAL_EXPAND } from '../../constants';
 
 const Stage = ({
   name = 'Stage',
@@ -24,7 +24,7 @@ const Stage = ({
   related = {},
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
-  signalExpandOption = 0,
+  signalExpandOption = SIGNAL_EXPAND.NONE,
   selectedStep = {},
   onUpdate,
   onDelete,
@@ -32,8 +32,9 @@ const Stage = ({
   onDragOver,
   onDrop,
   stepClickHandler = () => null,
-  oldGuid = null,
-  setOldGuid = () => null,
+  previousGuid = null,
+  selectedSignal = '',
+  setSelectedSignal = () => null,
 }) => {
   const [signals, setSignals] = useState({});
   const isDragHandleClicked = useRef(false);
@@ -57,6 +58,7 @@ const Stage = ({
                     nrql,
                     stepStatus,
                     references: [],
+                    selected: guid === previousGuid.current,
                   };
                 }
                 acc[guid].references.push(`${levelIndex + 1}_${stepTitle}`);
@@ -66,11 +68,11 @@ const Stage = ({
           return acc;
         }, {})
       ),
-    [levels]
+    [levels, selectedSignal]
   );
 
-  const SignalsList = memo(() => {
-    const statuses = [
+  const StageSignalsList = memo(() => {
+    const orderedStatuses = [
       STATUSES.CRITICAL,
       STATUSES.WARNING,
       STATUSES.SUCCESS,
@@ -78,34 +80,32 @@ const Stage = ({
     ];
     return Object.values(signals)
       .filter((s) => {
-        // filter out signals based on "signalExpandOption"
-        switch (signalExpandOption) {
-          case 1: // expand unhealthy only
-            return statuses.indexOf(s.status) < 2;
-
-          case 2: // expand critical only
-          case 3: // expand unhealthy & critical === only show critical
-            return statuses.indexOf(s.status) === 0;
-
-          case 0: // case 0: no signal expansion options selected
-            return true;
-
-          default:
-            return false;
-        }
+        if (signalExpandOption & SIGNAL_EXPAND.CRITICAL_ONLY) {
+          return (
+            orderedStatuses.indexOf(s.status) ===
+            orderedStatuses.indexOf(STATUSES.CRITICAL)
+          );
+        } else if (signalExpandOption & SIGNAL_EXPAND.UNHEALTHY_ONLY) {
+          return (
+            orderedStatuses.indexOf(s.status) <
+            orderedStatuses.indexOf(STATUSES.SUCCESS)
+          );
+        } else if (signalExpandOption === SIGNAL_EXPAND.NONE) {
+          return true;
+        } else return false;
       })
       .sort((a, b) => {
         const a1 =
           a.status === STATUSES.UNKNOWN &&
           a.references.includes(selectedStep.id)
             ? 1.5
-            : statuses.indexOf(a.status);
+            : orderedStatuses.indexOf(a.status);
 
         const b1 =
           b.status === STATUSES.UNKNOWN &&
           b.references.includes(selectedStep.id)
             ? 1.5
-            : statuses.indexOf(b.status);
+            : orderedStatuses.indexOf(b.status);
 
         return a1 - b1;
       })
@@ -127,19 +127,32 @@ const Stage = ({
             }
             guid={signal.guid}
             showSignalDetail={showSignalDetail}
+            selected={signal.selected}
           />
         );
       });
   }, [signals]);
-  SignalsList.displayName = 'SignalsList';
+  StageSignalsList.displayName = 'StageSignalsList';
 
   const showSignalDetail = useCallback((guid) => {
+    if (selectedSignal && signals[selectedSignal]) {
+      signals[selectedSignal].selected = false;
+    }
+
+    if (signals[guid] && selectedSignal !== guid) {
+      signals[guid].selected = true;
+    }
+
+    setSelectedSignal((ss) => (ss === guid ? '' : guid));
+
     const currentSignal = signals[guid];
-    if (oldGuid === guid) {
-      setOldGuid(null);
+
+    if (previousGuid.current === guid) {
+      previousGuid.current = null;
+      setSelectedSignal('');
       closeSidebar();
     } else {
-      setOldGuid(guid);
+      previousGuid.current = guid;
       openSidebar({
         content: (
           <div className="signal-sidebar">
@@ -153,7 +166,7 @@ const Stage = ({
               className="signal-title"
               type={HeadingText.TYPE.HEADING_3}
             >
-              {currentSignal.name}
+              {currentSignal?.name}
             </HeadingText>
             <HeadingText
               className="account-info"
@@ -188,7 +201,7 @@ const Stage = ({
                 if (data) {
                   data.forEach(
                     ({ metadata }) =>
-                      (metadata.color = STATUS_COLORS[currentSignal.status])
+                      (metadata.color = STATUSES[currentSignal.status])
                   );
                 }
                 return <LineChart data={data} />;
@@ -310,22 +323,35 @@ const Stage = ({
           ) : null}
         </div>
         <div className={`step-groups ${mode}`}>
-          {levels.map(({ steps, status }, index) => (
-            <Level
-              key={index}
-              order={index + 1}
-              steps={steps}
-              stageName={name}
-              status={status}
-              mode={mode}
-              onUpdate={(updates) => updateLevelHandler(index, updates)}
-              onDelete={() => deleteLevelHandler(index)}
-              onDragStart={(e) => levelDragStartHandler(e, index)}
-              onDragOver={(e) => levelDragOverHandler(e, index)}
-              onDrop={(e) => levelDropHandler(e)}
-              stepClickHandler={stepClickHandler}
-            />
-          ))}
+          {levels
+            .filter((level) =>
+              level.steps.reduce(
+                (acc, cur) =>
+                  signalExpandOption === SIGNAL_EXPAND.NONE || // no expansion options selected
+                  signalExpandOption === SIGNAL_EXPAND.ALL || // expand all signals
+                  acc + cur.signals.length,
+                0
+              )
+            )
+            .map(({ id, steps, status }, index) => (
+              <Level
+                key={id}
+                order={index + 1}
+                steps={steps}
+                stageName={name}
+                status={status}
+                mode={mode}
+                onUpdate={(updates) => updateLevelHandler(index, updates)}
+                onDelete={() => deleteLevelHandler(index)}
+                onDragStart={(e) => levelDragStartHandler(e, index)}
+                onDragOver={(e) => levelDragOverHandler(e, index)}
+                onDrop={(e) => levelDropHandler(e)}
+                stepClickHandler={stepClickHandler}
+                showSignalDetail={showSignalDetail}
+                signalExpandOption={signalExpandOption}
+                selectedSignal={selectedSignal}
+              />
+            ))}
         </div>
         {mode === MODES.STACKED ? (
           <div className="signals stacked">
@@ -335,7 +361,7 @@ const Stage = ({
               </HeadingText>
             </div>
             <div className="signals-listing">
-              <SignalsList />
+              <StageSignalsList />
             </div>
           </div>
         ) : null}
@@ -361,8 +387,9 @@ Stage.propTypes = {
   onDragOver: PropTypes.func,
   onDrop: PropTypes.func,
   stepClickHandler: PropTypes.func,
-  oldGuid: PropTypes.string,
-  setOldGuid: PropTypes.func,
+  previousGuid: PropTypes.object,
+  selectedSignal: PropTypes.string,
+  setSelectedSignal: PropTypes.func,
 };
 
 export default Stage;

@@ -1,7 +1,6 @@
 .step {
   box-sizing: border-box;
   padding: 8px;
-  max-width: 200px;
 
   .edit-signals-list {
     display: flex;
@@ -32,5 +31,15 @@
     .delete-btn {
       cursor: pointer;
     }
+  }
+
+  .signals {
+    display: flex;
+    flex-direction: column;
+    max-height: 160px;
+    gap: 5px;
+    overflow-y: auto;
+    margin-top: 8px;
+    box-sizing: border-box;
   }
 }

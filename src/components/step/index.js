@@ -8,7 +8,7 @@ import Signal from '../signal';
 import StepHeader from './header';
 import EditStepModal from '../edit-step-modal';
 import DeleteConfirmModal from '../delete-confirm-modal';
-import { MODES, STATUSES } from '../../constants';
+import { MODES, STATUSES, SIGNAL_EXPAND } from '../../constants';
 
 const Step = ({
   title = 'Step',
@@ -22,9 +22,14 @@ const Step = ({
   onDrop,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  showSignalDetail = () => null,
+  signalExpandOption = SIGNAL_EXPAND.NONE,
 }) => {
   const [editModalHidden, setEditModalHidden] = useState(true);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
+  const [signalsListView, setSignalsListView] = useState(
+    [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+  );
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
 
@@ -85,23 +90,24 @@ const Step = ({
         }))}
       />
     ),
-    [signals]
+    [signals, mode, signalExpandOption]
   );
   SignalsGrid.displayName = 'SignalsGrid';
 
-  const SignalsList = memo(
-    () =>
-      signals.map(({ name, status }, i) => (
-        <Signal
-          key={i}
-          name={name}
-          onDelete={() => openDeleteModalHandler(i, name)}
-          status={status}
-          mode={mode}
-        />
-      )),
-    [signals, mode]
-  );
+  const SignalsList = memo(() => {
+    return signals.map(({ name, status, guid, selected }, i) => (
+      <Signal
+        key={i}
+        name={name}
+        onDelete={() => openDeleteModalHandler(i, name)}
+        status={status}
+        mode={mode}
+        guid={guid}
+        showSignalDetail={showSignalDetail}
+        selected={selected}
+      />
+    ));
+  }, [signals, mode, signalExpandOption]);
   SignalsList.displayName = 'SignalsList';
 
   return (
@@ -112,6 +118,13 @@ const Step = ({
       onDragOver={onDragOver}
       onDrop={onDropHandler}
       onDragEnd={dragEndHandler}
+      onClick={() => {
+        if (
+          signals.length &&
+          [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
+        )
+          setSignalsListView(!signalsListView);
+      }}
     >
       <StepHeader
         title={title}
@@ -153,7 +166,12 @@ const Step = ({
         </>
       ) : mode === MODES.INLINE ? (
         <div className="signals">
-          <SignalsGrid />
+          {Boolean(signalExpandOption & SIGNAL_EXPAND.ALL) ||
+          signalsListView ? (
+            <SignalsList />
+          ) : (
+            <SignalsGrid />
+          )}
         </div>
       ) : (
         ''
@@ -174,6 +192,8 @@ Step.propTypes = {
   onDrop: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  showSignalDetail: PropTypes.func,
+  signalExpandOption: PropTypes.number,
 };
 
 export default Step;

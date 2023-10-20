@@ -10,17 +10,21 @@ import {
   addSignalStatuses,
   annotateStageWithStatuses,
   uniqueSignalGuidsInStages,
+  uuid,
 } from '../../utils';
 
 const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
   const [stagesWithStatuses, setStagesWithStatuses] = useState([]);
   const [guids, setGuids] = useState([]);
-  const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
+  const [signalExpandOption, setSignalExpandOption] = useState(
+    SIGNAL_EXPAND.NONE
+  ); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
   const [selectedStep, setSelectedStep] = useState({}); // to pass to SignalsList()
+  const [selectedSignal, setSelectedSignal] = useState('');
   const prevClickedStep = useRef({}); // useRef to memorize previously clicked step DOM object
   const dragItemIndex = useRef();
   const dragOverItemIndex = useRef();
-  const [oldGuid, setOldGuid] = useState(null);
+  const previousGuid = useRef(null);
   const { data: serviceLevelsData, error: serviceLevelsError } =
     useFetchServiceLevels({ guids });
 
@@ -60,18 +64,20 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
     }
   }, [mode]);
 
-  const addStageHandler = () =>
-    onUpdate
-      ? onUpdate({
-          stages: [
-            ...stages,
-            {
-              name: 'New Stage',
-              levels: [],
-            },
-          ],
-        })
-      : null;
+  const addStageHandler = useCallback(() => {
+    if (onUpdate)
+      onUpdate({
+        stages: [
+          ...stages,
+          {
+            id: uuid(),
+            name: 'New Stage',
+            levels: [],
+            related: {},
+          },
+        ],
+      });
+  }, [onUpdate, stages]);
 
   const updateStageHandler = (updatedStage, index) => {
     const updatedStages = [...stages];
@@ -214,11 +220,17 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
       <div className="stages">
         {(stagesWithStatuses || []).map(
           (
-            { name = '', levels = [], related = {}, status = STATUSES.UNKNOWN },
+            {
+              id,
+              name = '',
+              levels = [],
+              related = {},
+              status = STATUSES.UNKNOWN,
+            },
             i
           ) => (
             <Stage
-              key={i}
+              key={id}
               name={name}
               levels={levels}
               related={related}
@@ -232,8 +244,9 @@ const Stages = ({ stages = [], onUpdate, mode = MODES.INLINE }) => {
               onDragOver={(e) => dragOverHandler(e, i)}
               onDrop={(e) => dropHandler(e)}
               stepClickHandler={stepClickHandler}
-              oldGuid={oldGuid}
-              setOldGuid={setOldGuid}
+              previousGuid={previousGuid}
+              selectedSignal={selectedSignal}
+              setSelectedSignal={setSelectedSignal}
             />
           )
         )}

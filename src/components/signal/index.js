@@ -11,22 +11,32 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
-  grayed = false,
+  grayed = '',
   guid = '',
   showSignalDetail = () => null,
+  selected = false,
 }) => (
   <div
-    className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
-      grayed ? 'grayed' : ''
-    } ${mode === MODES.STACKED && !grayed ? `detail ${status}` : ''}`}
-    onClick={() => {
-      if (mode === MODES.STACKED && !grayed) showSignalDetail(guid);
+    className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${grayed} ${
+      [MODES.INLINE, MODES.STACKED].includes(mode) && !grayed
+        ? `detail ${status} ${selected ? 'selected' : ''}`
+        : ''
+    }`}
+    onClick={(evt) => {
+      if ([MODES.INLINE, MODES.STACKED].includes(mode) && !grayed) {
+        evt.stopPropagation();
+        showSignalDetail(guid);
+      }
     }}
   >
     <div className="status">
       <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
     </div>
-    <span className="name">{name}</span>
+    {name ? (
+      <span className="name">{name}</span>
+    ) : (
+      <span className="name unknown">(unknown)</span>
+    )}
     {mode === MODES.EDIT ? (
       <span
         className="delete-signal"
@@ -45,9 +55,10 @@ Signal.propTypes = {
   accountId: PropTypes.number,
   nrql: PropTypes.string,
   mode: PropTypes.oneOf(Object.values(MODES)),
-  grayed: PropTypes.bool,
+  grayed: PropTypes.string,
   guid: PropTypes.string,
   showSignalDetail: PropTypes.func,
+  selected: PropTypes.bool,
 };
 
 export default Signal;
