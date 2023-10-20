@@ -2,8 +2,8 @@ import { SIGNAL_TYPES, STATUSES } from '../constants';
 import { serviceLevelStatus } from './service-levels';
 
 const statusesOrder = [
-  STATUSES.CRITICAL,
   STATUSES.UNKNOWN,
+  STATUSES.CRITICAL,
   STATUSES.WARNING,
   STATUSES.SUCCESS,
 ];
@@ -30,8 +30,12 @@ export const signalStatus = (signal) => {
 };
 
 export const statusFromStatuses = (statusesArray = []) => {
-  const valuesArray = statusesArray.map(
-    ({ status } = STATUSES.UNKNOWN) => statusesOrderIndexLookup[status] || 0
+  const valuesArray = statusesArray.reduce(
+    (acc, { status } = STATUSES.UNKNOWN) =>
+      status !== STATUSES.UNKNOWN
+        ? [...acc, statusesOrderIndexLookup[status]]
+        : acc,
+    []
   );
   const leastStatusValue = valuesArray.length ? Math.min(...valuesArray) : 0;
   return statusesOrder[leastStatusValue];

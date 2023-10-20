@@ -97,7 +97,7 @@ const Step = ({
   const SignalsList = memo(() => {
     return signals.map(({ name, status, guid, selected }, i) => (
       <Signal
-        key={i}
+        key={guid}
         name={name}
         onDelete={() => openDeleteModalHandler(i, name)}
         status={status}
