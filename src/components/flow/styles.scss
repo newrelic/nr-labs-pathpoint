@@ -60,3 +60,30 @@
   width: 450px;
   height: 270px;
 }
+
+.audit-log-content {
+  margin-left: 0.75rem;
+
+  .audit-log-header {
+    margin: 1rem 0;
+  }
+
+  .audit-log-items {
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    gap: 1.0rem;
+
+    .audit-log-item {
+      font-family: Inter;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 16px;
+
+      .change-date {
+        font-weight: 400;
+      }
+    }
+  }
+}

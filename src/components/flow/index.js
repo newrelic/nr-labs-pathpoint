@@ -7,13 +7,20 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Spinner, useAccountStorageMutation } from 'nr1';
+import {
+  Spinner,
+  useAccountStorageMutation,
+  useAccountStorageQuery,
+  HeadingText,
+  Tooltip,
+} from 'nr1';
 
 import { KpiBar, Stages, DeleteConfirmModal } from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
 import { useFlowWriter } from '../../hooks';
-import { FlowContext, FlowDispatchContext } from '../../contexts';
+import { FlowContext, FlowDispatchContext, useSidebar } from '../../contexts';
+import { formatTimestamp } from '../../utils';
 import {
   FLOW_DISPATCH_COMPONENTS,
   FLOW_DISPATCH_TYPES,
@@ -31,6 +38,8 @@ const Flow = forwardRef(
       flows = [],
       onSelectFlow = () => null,
       user,
+      showAuditLog = false,
+      setShowAuditLog = () => null,
     },
     ref
   ) => {
@@ -40,6 +49,70 @@ const Flow = forwardRef(
     const [deleteModalHidden, setDeleteModalHidden] = useState(true);
     const [lastSavedTimestamp, setLastSavedTimestamp] = useState();
     const flowWriter = useFlowWriter({ accountId, user });
+    const { openSidebar, closeSidebar, isOpen } = useSidebar();
+
+    useEffect(async () => {
+      if (showAuditLog && flowDoc.id > '') {
+        const loadAuditLog = async (accountId, documentId) => {
+          const { data: logsData, error: logReadError } =
+            await useAccountStorageQuery.query({
+              accountId,
+              collection: NERD_STORAGE.EDITS_LOG_COLLECTION,
+              documentId,
+            });
+          return { logsData, logReadError };
+        };
+
+        const { logsData, logReadError } = await loadAuditLog(
+          accountId,
+          flowDoc.id
+        );
+
+        if (logReadError) {
+          console.error('Error loading saudit log', deleteFlowError);
+        }
+
+        openSidebar({
+          content: (
+            <div className="audit-log-content">
+              <div className="audit-log-header">
+                <HeadingText type={HeadingText.TYPE.HEADING_2}>
+                  Audit Log
+                </HeadingText>
+              </div>
+              <div className="audit-log-items">
+                {logsData.logs.reverse().map((log, index) => (
+                  <Tooltip
+                    key={`log_${log.id}`}
+                    text={log.user.email}
+                    placementType={Tooltip.PLACEMENT_TYPE.TOP}
+                  >
+                    <div className="audit-log-item">
+                      <p className="user-name">
+                        {`${
+                          index === logsData.logs.length - 1
+                            ? 'Created'
+                            : 'Modified'
+                        } by ${log.user.name}`}
+                      </p>
+                      <p className="change-date">
+                        {formatTimestamp(log.timestamp)}
+                      </p>
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+          ),
+        });
+      }
+    }, [showAuditLog, flowDoc.id]);
+
+    useEffect(() => {
+      if (!isOpen) {
+        setShowAuditLog(false);
+      }
+    }, [isOpen]);
 
     useEffect(
       () =>
@@ -95,7 +168,11 @@ const Flow = forwardRef(
     useEffect(() => {
       const { nerdStorageDeleteDocument: { deleted } = {} } =
         deleteFlowData || {};
-      if (deleted) onClose();
+      if (deleted) {
+        closeSidebar();
+        setShowAuditLog(false);
+        onClose();
+      }
     }, [deleteFlowData]);
 
     useEffect(() => {
@@ -154,6 +231,8 @@ Flow.propTypes = {
   flows: PropTypes.array,
   onSelectFlow: PropTypes.func,
   user: PropTypes.object,
+  showAuditLog: PropTypes.bool,
+  setShowAuditLog: PropTypes.func,
 };
 
 Flow.displayName = 'Flow';

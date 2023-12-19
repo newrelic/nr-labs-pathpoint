@@ -44,10 +44,17 @@ const editButtonAttributes = {
   iconType: Icon.TYPE.INTERFACE__OPERATIONS__EDIT,
 };
 
+const showAuditLogAttributes = {
+  label: UI_CONTENT.GLOBAL.BUTTON_LABEL_AUDIT_LOG,
+  type: Button.TYPE.PRIMARY,
+  iconType: Icon.TYPE.DATE_AND_TIME__DATE_AND_TIME__DATE,
+};
+
 const HomeNerdlet = () => {
   const [mode, setMode] = useState(MODES.INLINE);
   const [flows, setFlows] = useState([]);
   const [currentFlowIndex, setCurrentFlowIndex] = useState(-1);
+  const [showAuditLog, setShowAuditLog] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
   const [nerdletState] = useNerdletState();
   const { user } = useFetchUser();
@@ -72,6 +79,12 @@ const HomeNerdlet = () => {
                 onClick: newFlowHandler,
               },
               {
+                ...showAuditLogAttributes,
+                onClick: () => {
+                  if (!showAuditLog) setShowAuditLog((sal) => !sal);
+                },
+              },
+              {
                 ...editButtonAttributes,
                 onClick: () => setMode(MODES.EDIT),
               },
@@ -85,7 +98,7 @@ const HomeNerdlet = () => {
       headerType: nerdlet.HEADER_TYPE.CUSTOM,
       headerTitle: 'Project Hedgehog 🦔',
     });
-  }, [user, newFlowHandler, currentFlowIndex]);
+  }, [user, newFlowHandler, currentFlowIndex, showAuditLog]);
 
   useEffect(() => setFlows(flowsData || []), [flowsData]);
 
@@ -117,6 +130,7 @@ const HomeNerdlet = () => {
 
   const backToFlowsHandler = useCallback(() => {
     setCurrentFlowIndex(-1);
+    setShowAuditLog(false);
     setMode(MODES.INLINE);
   }, []);
 
@@ -149,6 +163,8 @@ const HomeNerdlet = () => {
               flows={flows}
               onSelectFlow={flowClickHandler}
               user={user}
+              showAuditLog={showAuditLog}
+              setShowAuditLog={setShowAuditLog}
             />
             <Sidebar />
           </>
@@ -171,6 +187,7 @@ const HomeNerdlet = () => {
     accountId,
     mode,
     flowClickHandler,
+    showAuditLog,
   ]);
 
   return <div className="container">{currentView}</div>;
