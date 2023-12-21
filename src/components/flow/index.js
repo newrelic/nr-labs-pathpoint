@@ -12,7 +12,6 @@ import {
   useAccountStorageMutation,
   useAccountStorageQuery,
   HeadingText,
-  Tooltip,
 } from 'nr1';
 
 import { KpiBar, Stages, DeleteConfirmModal } from '../';
@@ -81,30 +80,23 @@ const Flow = forwardRef(
                 </HeadingText>
               </div>
               <div className="audit-log-items">
-                {logsData.logs.reverse().map((log, index) => (
-                  <Tooltip
-                    key={`log_${log.id}`}
-                    text={log.user.email}
-                    placementType={Tooltip.PLACEMENT_TYPE.TOP}
-                  >
-                    <div className="audit-log-item">
-                      <p className="user-name">
-                        {`${
-                          index === logsData.logs.length - 1
-                            ? 'Created'
-                            : 'Modified'
-                        } by ${log.user.name}`}
-                      </p>
-                      <p className="change-date">
-                        {formatTimestamp(log.timestamp)}
-                      </p>
-                    </div>
-                  </Tooltip>
+                {logsData.logs.reverse().map((log) => (
+                  <div key={`log_${log.id}`} className="audit-log-item">
+                    <p className="user-name">
+                      {log.user.name}
+                      <span className="change-date">{` (${log.user.email})`}</span>
+                    </p>
+                    <p className="change-date">
+                      {formatTimestamp(log.timestamp)}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
           ),
         });
+      } else {
+        closeSidebar();
       }
     }, [showAuditLog, flowDoc.id]);
 

@@ -81,7 +81,7 @@ const HomeNerdlet = () => {
               {
                 ...showAuditLogAttributes,
                 onClick: () => {
-                  if (!showAuditLog) setShowAuditLog((sal) => !sal);
+                  setShowAuditLog((sal) => !sal);
                 },
               },
               {
