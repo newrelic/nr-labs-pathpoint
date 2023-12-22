@@ -68,7 +68,7 @@ const Flow = forwardRef(
         );
 
         if (logReadError) {
-          console.error('Error loading saudit log', deleteFlowError);
+          console.error('Error loading audit log', logReadError);
         }
 
         openSidebar({
