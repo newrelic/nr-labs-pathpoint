@@ -7,24 +7,19 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import {
-  Spinner,
-  useAccountStorageMutation,
-  useAccountStorageQuery,
-  HeadingText,
-} from 'nr1';
+import { Spinner, useAccountStorageMutation } from 'nr1';
 
 import { KpiBar, Stages, DeleteConfirmModal } from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
-import { useFlowWriter } from '../../hooks';
+import { useFlowWriter, loadAuditLog } from '../../hooks';
 import { FlowContext, FlowDispatchContext, useSidebar } from '../../contexts';
-import { formatTimestamp } from '../../utils';
 import {
   FLOW_DISPATCH_COMPONENTS,
   FLOW_DISPATCH_TYPES,
   flowReducer,
 } from '../../reducers';
+import renderAuditLogs from './audit-logs';
 
 const Flow = forwardRef(
   (
@@ -52,51 +47,18 @@ const Flow = forwardRef(
 
     useEffect(async () => {
       if (showAuditLog && flowDoc.id > '') {
-        const loadAuditLog = async (accountId, documentId) => {
-          const { data: logsData, error: logReadError } =
-            await useAccountStorageQuery.query({
-              accountId,
-              collection: NERD_STORAGE.EDITS_LOG_COLLECTION,
-              documentId,
-            });
-          return { logsData, logReadError };
-        };
-
-        const { logsData, logReadError } = await loadAuditLog(
+        const { auditLogs, logReadError } = await loadAuditLog(
           accountId,
           flowDoc.id
         );
 
-        if (logReadError) {
-          console.error('Error loading audit log', logReadError);
+        if (!logReadError) {
+          openSidebar({
+            content: renderAuditLogs(auditLogs),
+          });
         }
-
-        openSidebar({
-          content: (
-            <div className="audit-log-content">
-              <div className="audit-log-header">
-                <HeadingText type={HeadingText.TYPE.HEADING_2}>
-                  Audit Log
-                </HeadingText>
-              </div>
-              <div className="audit-log-items">
-                {logsData.logs.reverse().map((log) => (
-                  <div key={`log_${log.id}`} className="audit-log-item">
-                    <p className="user-name">
-                      {log.user.name}
-                      <span className="change-date">{` (${log.user.email})`}</span>
-                    </p>
-                    <p className="change-date">
-                      {formatTimestamp(log.timestamp)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ),
-        });
       } else {
-        closeSidebar();
+        if (isOpen) closeSidebar(); // toggle sidebar
       }
     }, [showAuditLog, flowDoc.id]);
 
