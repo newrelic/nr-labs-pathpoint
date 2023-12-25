@@ -1,8 +1,8 @@
 import { AccountStorageQuery } from 'nr1';
 
-import { NERD_STORAGE } from '../../constants';
+import { NERD_STORAGE } from '../constants';
 
-const loadAuditLog = async (accountId, documentId) => {
+export const loadAuditLog = async (accountId, documentId) => {
   const { data: logsData, error: logReadError } =
     await AccountStorageQuery.query({
       accountId,
@@ -16,5 +16,3 @@ const loadAuditLog = async (accountId, documentId) => {
 
   return { auditLogs: logsData?.logs || [], logReadError };
 };
-
-export default loadAuditLog;

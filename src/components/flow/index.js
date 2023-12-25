@@ -12,13 +12,14 @@ import { Spinner, useAccountStorageMutation } from 'nr1';
 import { KpiBar, Stages, DeleteConfirmModal } from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
-import { useFlowWriter, loadAuditLog } from '../../hooks';
+import { useFlowWriter } from '../../hooks';
 import { FlowContext, FlowDispatchContext, useSidebar } from '../../contexts';
 import {
   FLOW_DISPATCH_COMPONENTS,
   FLOW_DISPATCH_TYPES,
   flowReducer,
 } from '../../reducers';
+import { loadAuditLog } from '../../utils';
 import renderAuditLogs from './audit-logs';
 
 const Flow = forwardRef(

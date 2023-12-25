@@ -4,3 +4,4 @@ export * from './service-levels';
 export * from './stage';
 export * from './crypto';
 export * from './nrql-lexer';
+export * from './load-audit-log';
