@@ -12,6 +12,15 @@
   .status {
     min-width: 12px;
     display: inline-flex;
+    
+    .icons-lib {
+      @include fill-colors(
+        $critical: 'critical',
+        $success: 'success',
+        $unknown: 'unknown',
+        $warning: 'warning',
+      ); 
+    }
   }
 
   .name {

@@ -10,6 +10,13 @@ const queryFieldsParser = (query, fields = {}) => {
 const queryFragment = (alias, accounts, query) => `
   ${alias}: nrql(accounts: [${accounts}], query: "${query}") {
     results
+    metadata {
+      timeWindow {
+        compareWith
+        since
+        until
+      }
+    }
   }
 `;
 

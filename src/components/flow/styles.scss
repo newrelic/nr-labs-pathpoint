@@ -18,8 +18,10 @@
     align-items: center;
     gap: 4px;
 
-    .view-mode {
+    .flow-header-actions {
       margin-left: auto;
+      display: flex;
+      gap: 8px;
     }
 
     .back {

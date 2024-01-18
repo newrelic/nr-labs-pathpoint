@@ -1,6 +1,13 @@
 import React from 'react';
 
 const icons = {
+  alert: (
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 7V4.5C12 2 10 0 7.5 0C5 0 3 2 3 4.5V7L1 9V12H14V9L12 7ZM6 13H6.1H7.5H8.9H9H10C9.8 14.1 8.7 15 7.5 15C6.3 15 5.2 14.1 5 13H6Z"
+    />
+  ),
   camera: (
     <path
       fillRule="evenodd"

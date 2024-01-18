@@ -6,7 +6,7 @@ import { NERD_STORAGE } from '../../constants';
 const useFlowLoader = ({ accountId, flowId }) => {
   const [skip, setSkip] = useState(true);
   const [flows, setFlows] = useState([]);
-  const { data, error, loading } = useAccountStorageQuery({
+  const { data, error, loading, refetch } = useAccountStorageQuery({
     skip,
     accountId,
     collection: NERD_STORAGE.FLOWS_COLLECTION,
@@ -21,7 +21,7 @@ const useFlowLoader = ({ accountId, flowId }) => {
     if (!loading && data) setFlows(data);
   }, [data, loading]);
 
-  return { flows, error, loading };
+  return { flows, error, loading, refetch };
 };
 
 export default useFlowLoader;

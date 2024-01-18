@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "nr-labs-hedgehog",
-    "version": "1.44.1",
+    "version": "1.51.1",
     "scripts": {
         "start": "nr1 nerdpack:serve",
         "eslint-check": "eslint nerdlets/ src/",
@@ -17,7 +17,7 @@
         "uuid": "4873f895-e78c-4cd8-a63a-5e3bd659c5a6"
     },
     "dependencies": {
-        "@newrelic/nr-labs-components": "^1.14.2",
+        "@newrelic/nr-labs-components": "^1.21.1",
         "prop-types": "15.7.2",
         "react": "17.0.2",
         "react-dom": "17.0.2"

@@ -26,6 +26,7 @@ const FlowHeader = ({
   setMode = () => null,
   flows = [],
   onSelectFlow = () => null,
+  onExportFlow = () => null,
   onDeleteFlow = () => null,
   lastSavedTimestamp,
   resetLastSavedTimestamp = () => null,
@@ -77,21 +78,22 @@ const FlowHeader = ({
         }
         onClose={() => setImageModalHidden(true)}
       />
-      <Button
-        className="view-mode"
-        type={Button.TYPE.PRIMARY}
-        iconType={Icon.TYPE.INTERFACE__SIGN__CHECKMARK}
-        sizeType={Button.SIZE_TYPE.SMALL}
-        onClick={doneEditingHandler}
-      >
-        {UI_CONTENT.GLOBAL.BUTTON_LABEL_EXIT_EDIT_MODE}
-      </Button>
-      <Button
-        type={Button.TYPE.DESTRUCTIVE}
-        iconType={Icon.TYPE.INTERFACE__OPERATIONS__TRASH}
-        sizeType={Button.SIZE_TYPE.SMALL}
-        onClick={() => onDeleteFlow()}
-      ></Button>
+      <div className="flow-header-actions">
+        <Button
+          type={Button.TYPE.PRIMARY}
+          iconType={Icon.TYPE.INTERFACE__SIGN__CHECKMARK}
+          sizeType={Button.SIZE_TYPE.SMALL}
+          onClick={doneEditingHandler}
+        >
+          {UI_CONTENT.GLOBAL.BUTTON_LABEL_EXIT_EDIT_MODE}
+        </Button>
+        <Button
+          type={Button.TYPE.DESTRUCTIVE}
+          iconType={Icon.TYPE.INTERFACE__OPERATIONS__TRASH}
+          sizeType={Button.SIZE_TYPE.SMALL}
+          onClick={() => onDeleteFlow()}
+        ></Button>
+      </div>
     </div>
   ) : (
     <div className="flow-header">
@@ -119,24 +121,34 @@ const FlowHeader = ({
           </div>
         </PopoverBody>
       </Popover>
-      <SegmentedControl
-        className="view-mode"
-        value={mode}
-        onChange={(_, value) => setMode(value)}
-      >
-        <SegmentedControlItem
-          label={capitalize(MODES.STACKED)}
-          value={MODES.STACKED}
-          iconType={
-            SegmentedControlItem.ICON_TYPE.DATAVIZ__DATAVIZ__TABLE_CHART
-          }
-        />
-        <SegmentedControlItem
-          label={capitalize(MODES.INLINE)}
-          value={MODES.INLINE}
-          iconType={SegmentedControlItem.ICON_TYPE.INTERFACE__VIEW__LIST_VIEW}
-        />
-      </SegmentedControl>
+      <div className="flow-header-actions">
+        <Button
+          type={Button.TYPE.PLAIN}
+          sizeType={Button.SIZE_TYPE.SMALL}
+          iconType={Button.ICON_TYPE.INTERFACE__OPERATIONS__DOWNLOAD}
+          onClick={onExportFlow}
+        >
+          {UI_CONTENT.FLOW.BUTTON_EXPORT}
+        </Button>
+        <SegmentedControl
+          className="view-mode"
+          value={mode}
+          onChange={(_, value) => setMode(value)}
+        >
+          <SegmentedControlItem
+            label={capitalize(MODES.STACKED)}
+            value={MODES.STACKED}
+            iconType={
+              SegmentedControlItem.ICON_TYPE.DATAVIZ__DATAVIZ__TABLE_CHART
+            }
+          />
+          <SegmentedControlItem
+            label={capitalize(MODES.INLINE)}
+            value={MODES.INLINE}
+            iconType={SegmentedControlItem.ICON_TYPE.INTERFACE__VIEW__LIST_VIEW}
+          />
+        </SegmentedControl>
+      </div>
     </div>
   );
 };
@@ -150,6 +162,7 @@ FlowHeader.propTypes = {
   setMode: PropTypes.func,
   flows: PropTypes.array,
   onSelectFlow: PropTypes.func,
+  onExportFlow: PropTypes.func,
   onDeleteFlow: PropTypes.func,
   lastSavedTimestamp: PropTypes.number,
   resetLastSavedTimestamp: PropTypes.func,

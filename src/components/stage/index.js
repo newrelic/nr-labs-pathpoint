@@ -8,7 +8,11 @@ import Signal from '../signal';
 import StageHeader from './header';
 import AddStep from '../add-step';
 import { MODES, STATUSES } from '../../constants';
-import { FlowDispatchContext, StagesContext } from '../../contexts';
+import {
+  FlowDispatchContext,
+  SignalsContext,
+  StagesContext,
+} from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 
 const Stage = ({
@@ -20,6 +24,7 @@ const Stage = ({
   saveFlow,
 }) => {
   const stages = useContext(StagesContext);
+  const signalsDetails = useContext(SignalsContext);
   const dispatch = useContext(FlowDispatchContext);
   const [name, setName] = useState('Stage');
   const [levels, setLevels] = useState([]);
@@ -50,7 +55,10 @@ const Stage = ({
                 ...signals.reduce(
                   (acc, { guid, name, status }) => ({
                     ...acc,
-                    [guid]: { name, status },
+                    [guid]: {
+                      name: signalsDetails[guid]?.name || name,
+                      status,
+                    },
                   }),
                   {}
                 ),

@@ -1,23 +1,21 @@
-import { STAGE_SHAPES_CLASSNAME_ARRAY } from '../constants';
+import { SIGNAL_TYPES, STAGE_SHAPES_CLASSNAME_ARRAY } from '../constants';
 import { signalStatus, statusFromStatuses } from './signal';
 
-export const addSignalStatuses = (stages = [], serviceLevelsData = {}) =>
+export const addSignalStatuses = (stages = [], statuses = {}) =>
   stages.map(({ levels = [], ...stage }) => ({
     ...stage,
     levels: levels.map(({ steps = [], ...level }) => ({
       ...level,
       steps: steps.map(({ signals = [], ...step }) => ({
         ...step,
-        signals: signals.map(({ type, guid }) => {
-          const { name, attainment, target } = serviceLevelsData[guid] || {};
-          // TODO: handle service levels with no data
+        signals: signals.map(({ guid, type }) => {
+          const { name = '', ...entity } = (statuses[type] || {})[guid] || {};
+          const status = signalStatus({ type }, entity);
           return {
             type,
             guid,
             name,
-            attainment,
-            target,
-            status: signalStatus({ type, attainment, target }),
+            status,
           };
         }),
       })),
@@ -52,15 +50,24 @@ export const annotateStageWithStatuses = (stage = {}) => {
 };
 
 export const uniqueSignalGuidsInStages = (stages = []) => {
-  const guidsSet = new Set();
+  const guids = Object.values(SIGNAL_TYPES).reduce(
+    (acc, type) => ({ ...acc, [type]: new Set() }),
+    {}
+  );
   stages.map(({ levels = [] }) =>
     levels.map(({ steps = [] }) =>
       steps.map(({ signals = [] }) =>
-        signals.map(({ guid }) => guidsSet.add(guid))
+        signals.forEach(({ guid, type }) =>
+          type in guids ? guids[type].add(guid) : null
+        )
       )
     )
   );
-  return [...guidsSet];
+  return Object.keys(guids).reduce(
+    (acc, type) =>
+      guids[type] instanceof Set ? { ...acc, [type]: [...guids[type]] } : acc,
+    {}
+  );
 };
 
 export const getStageHeaderShape = (stage = {}) => {

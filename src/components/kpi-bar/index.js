@@ -8,7 +8,16 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Icon, HeadingText, PlatformStateContext, Tooltip } from 'nr1';
+import {
+  Button,
+  Icon,
+  HeadingText,
+  PlatformStateContext,
+  Tooltip,
+  Popover,
+  PopoverTrigger,
+  PopoverBody,
+} from 'nr1';
 
 import { SimpleBillboard } from '@newrelic/nr-labs-components';
 
@@ -17,7 +26,7 @@ import { KPI_MODES, MODES, SIGNAL_TYPES, UI_CONTENT } from '../../constants';
 import { useFetchKpis } from '../../hooks';
 import KpiEditButtons from './edit-buttons';
 import KpiModal from '../kpi-modal';
-import { uuid } from '../../utils';
+import { uuid, formatKpiHoverDatime } from '../../utils';
 
 const blankKpi = ({
   type = SIGNAL_TYPES.NRQL_QUERY,
@@ -33,9 +42,9 @@ const blankKpi = ({
   nrqlQuery,
 });
 
-const metricFromQuery = (results, index) => ({
-  value: ((results || [])[index] || {}).value || 0,
-  previousValue: ((results || [])[index] || {}).previousValue || '',
+const metricFromQuery = (results) => ({
+  value: results?.value || 0,
+  previousValue: isNaN(results?.previousValue) ? '' : results?.previousValue,
 });
 
 const KpiBar = ({ kpis = [], onChange = () => null, mode = MODES.INLINE }) => {
@@ -232,10 +241,40 @@ const KpiBar = ({ kpis = [], onChange = () => null, mode = MODES.INLINE }) => {
               </span>
             )}
             <div className="kpi-data">
-              <SimpleBillboard
-                metric={metricFromQuery(queryResults, index)}
-                title={{ name: kpi.alias || kpi.name }}
-              />
+              <Popover openOnHover={true}>
+                <PopoverTrigger>
+                  <SimpleBillboard
+                    metric={metricFromQuery(queryResults[index])}
+                    title={{ name: kpi.alias || kpi.name }}
+                  />
+                </PopoverTrigger>
+                <PopoverBody>
+                  <p className="kpi-hover">
+                    <span>
+                      {queryResults[index]?.metadata?.timeWindow?.since
+                        ? `Since ${formatKpiHoverDatime(
+                            queryResults[index]?.metadata?.timeWindow?.since
+                          )}`
+                        : ''}
+                    </span>
+                    <span>
+                      {queryResults[index]?.metadata?.timeWindow?.until !==
+                      'NOW'
+                        ? ` - until ${formatKpiHoverDatime(
+                            queryResults[index]?.metadata?.timeWindow?.until
+                          )}`
+                        : ''}
+                    </span>
+                    <span>
+                      {queryResults[index]?.metadata?.timeWindow?.compareWith
+                        ? ` vs. ${queryResults[
+                            index
+                          ]?.metadata?.timeWindow?.compareWith.toLowerCase()}`
+                        : ''}
+                    </span>
+                  </p>
+                </PopoverBody>
+              </Popover>
             </div>
             {mode === MODES.EDIT && (
               <KpiEditButtons

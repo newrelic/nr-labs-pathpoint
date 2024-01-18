@@ -1,6 +1,7 @@
 import React, {
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useReducer,
   useState,
@@ -9,25 +10,22 @@ import PropTypes from 'prop-types';
 
 import { Spinner, useAccountStorageMutation } from 'nr1';
 
-import { KpiBar, Stages, DeleteConfirmModal } from '../';
+import { KpiBar, Stages, DeleteConfirmModal, EditFlowSettingsModal } from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
 import { useFlowWriter } from '../../hooks';
-import { FlowContext, FlowDispatchContext, useSidebar } from '../../contexts';
+import { AppContext, FlowContext, FlowDispatchContext, useSidebar } from '../../contexts';
 import {
   FLOW_DISPATCH_COMPONENTS,
   FLOW_DISPATCH_TYPES,
   flowReducer,
 } from '../../reducers';
-import { loadAuditLog } from '../../utils';
-import renderAuditLogs from './audit-logs';
 
 const Flow = forwardRef(
   (
     {
       flowDoc = {},
       onClose,
-      accountId,
       mode = MODES.INLINE,
       setMode = () => null,
       flows = [],
@@ -35,6 +33,8 @@ const Flow = forwardRef(
       user,
       showAuditLog = false,
       setShowAuditLog = () => null,
+      editFlowSettings = false,
+      setEditFlowSettings = () => null,
     },
     ref
   ) => {
@@ -43,31 +43,8 @@ const Flow = forwardRef(
     const [kpis, setKpis] = useState([]);
     const [deleteModalHidden, setDeleteModalHidden] = useState(true);
     const [lastSavedTimestamp, setLastSavedTimestamp] = useState();
+    const { account: { id: accountId } = {}, user } = useContext(AppContext);
     const flowWriter = useFlowWriter({ accountId, user });
-    const { openSidebar, closeSidebar, isOpen } = useSidebar();
-
-    useEffect(async () => {
-      if (showAuditLog && flowDoc.id > '') {
-        const { auditLogs, logReadError } = await loadAuditLog(
-          accountId,
-          flowDoc.id
-        );
-
-        if (!logReadError) {
-          openSidebar({
-            content: renderAuditLogs(auditLogs),
-          });
-        }
-      } else {
-        if (isOpen) closeSidebar(); // toggle sidebar
-      }
-    }, [showAuditLog, flowDoc.id]);
-
-    useEffect(() => {
-      if (!isOpen) {
-        setShowAuditLog(false);
-      }
-    }, [isOpen]);
 
     useEffect(
       () =>
@@ -123,11 +100,7 @@ const Flow = forwardRef(
     useEffect(() => {
       const { nerdStorageDeleteDocument: { deleted } = {} } =
         deleteFlowData || {};
-      if (deleted) {
-        closeSidebar();
-        setShowAuditLog(false);
-        onClose();
-      }
+      if (deleted) onClose();
     }, [deleteFlowData]);
 
     useEffect(() => {
@@ -135,19 +108,42 @@ const Flow = forwardRef(
         console.error('Error deleting flow', deleteFlowError);
     }, [deleteFlowError]);
 
+    const exportFlowHandler = useCallback(() => {
+      const { created, ...exportableFlow } = flow || {}; // eslint-disable-line no-unused-vars
+      const exportBtn = document.createElement('a');
+      exportBtn.download = `${(flow?.name || 'flow')
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()}.json`;
+      exportBtn.href = URL.createObjectURL(
+        new Blob([JSON.stringify(exportableFlow)], { type: 'application/json' })
+      );
+      exportBtn.click();
+      exportBtn.remove();
+    }, [flow]);
+
     return (
       <FlowContext.Provider value={flow}>
         <FlowDispatchContext.Provider value={dispatch}>
           <div className="flow" ref={ref}>
-            {mode === MODES.EDIT && (
-              <DeleteConfirmModal
-                name={flow.name}
-                type="flow"
-                hidden={deleteModalHidden}
-                onConfirm={() => deleteFlowHandler()}
-                onClose={() => setDeleteModalHidden(true)}
-                isDeletingFlow={isDeletingFlow}
-              />
+            {flow?.id && (
+              <>
+                <DeleteConfirmModal
+                  name={flow.name}
+                  type="flow"
+                  hidden={deleteModalHidden}
+                  onConfirm={() => deleteFlowHandler()}
+                  onClose={() => setDeleteModalHidden(true)}
+                  isDeletingFlow={isDeletingFlow}
+                />
+                {editFlowSettings && (
+                  <EditFlowSettingsModal
+                    onUpdate={flowUpdateHandler}
+                    onDeleteFlow={() => setDeleteModalHidden(false)}
+                    editFlowSettings={editFlowSettings}
+                    setEditFlowSettings={setEditFlowSettings}
+                  />
+                )}
+              </>
             )}
             {!isDeletingFlow ? (
               <>
@@ -160,9 +156,12 @@ const Flow = forwardRef(
                   setMode={setMode}
                   flows={flows}
                   onSelectFlow={onSelectFlow}
+                  onExportFlow={exportFlowHandler}
                   onDeleteFlow={() => setDeleteModalHidden(false)}
                   lastSavedTimestamp={lastSavedTimestamp}
                   resetLastSavedTimestamp={() => setLastSavedTimestamp(0)}
+                  editFlowSettings={editFlowSettings}
+                  setEditFlowSettings={setEditFlowSettings}
                 />
                 <Stages mode={mode} saveFlow={saveFlow} />
                 <KpiBar kpis={kpis} onChange={updateKpisHandler} mode={mode} />
@@ -180,7 +179,6 @@ const Flow = forwardRef(
 Flow.propTypes = {
   flowDoc: PropTypes.object,
   onClose: PropTypes.func,
-  accountId: PropTypes.number,
   mode: PropTypes.oneOf(Object.values(MODES)),
   setMode: PropTypes.func,
   flows: PropTypes.array,
@@ -188,6 +186,8 @@ Flow.propTypes = {
   user: PropTypes.object,
   showAuditLog: PropTypes.bool,
   setShowAuditLog: PropTypes.func,
+  editFlowSettings: PropTypes.bool,
+  setEditFlowSettings: PropTypes.func,
 };
 
 Flow.displayName = 'Flow';

@@ -1,3 +1,87 @@
+## [1.51.1](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.51.0...v1.51.1) (2024-01-18)
+
+
+### Bug Fixes
+
+* signal selection issues ([672881a](https://github.com/newrelic/nr-labs-hedgehog/commit/672881a254bfc52e43e1247568dbc084467a7177))
+
+# [1.51.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.50.0...v1.51.0) (2024-01-17)
+
+
+### Bug Fixes
+
+* pass accountId and user to flow writer ([ea0fb79](https://github.com/newrelic/nr-labs-hedgehog/commit/ea0fb79d760ab1ec8ed0cf1be4077420980db82f))
+* right align flow header actions ([ddea5ca](https://github.com/newrelic/nr-labs-hedgehog/commit/ddea5cae1b1433f3dd0126151d762866c5a206bd))
+
+
+### Features
+
+* signals context with signals details ([5d8b4a3](https://github.com/newrelic/nr-labs-hedgehog/commit/5d8b4a364de2100e5f9d9e1ef8dd366eb70a1ca4))
+
+# [1.50.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.49.0...v1.50.0) (2024-01-16)
+
+
+### Features
+
+* add actionControlButton for flow settings modal ([ec17cb6](https://github.com/newrelic/nr-labs-hedgehog/commit/ec17cb64b0307772f18cc8774d683d9ba249465a))
+* add flow refresh interval constant ([eef8fda](https://github.com/newrelic/nr-labs-hedgehog/commit/eef8fda940a0055080a12827ca33c80d965dde73))
+* add flow settings modal component ([67e9c7d](https://github.com/newrelic/nr-labs-hedgehog/commit/67e9c7d4746988ec192c3ca55cda1a0d6956e2a2))
+* add hook to obtain account name ([36e44cf](https://github.com/newrelic/nr-labs-hedgehog/commit/36e44cff7f58eb18b0eb69e3d6bf6b80a75a2f8e))
+
+# [1.49.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.48.0...v1.49.0) (2024-01-12)
+
+
+### Bug Fixes
+
+* issue with signal selection nerdlet not closing on save ([2b1b957](https://github.com/newrelic/nr-labs-hedgehog/commit/2b1b9577893e2a4a3ca82e4f41cb75c44d1b0407))
+* remove unused function ([aff75ed](https://github.com/newrelic/nr-labs-hedgehog/commit/aff75ed1f376776c865de651658bb5efa65c5227))
+
+
+### Features
+
+* add accounts to app context ([40a1931](https://github.com/newrelic/nr-labs-hedgehog/commit/40a1931f87c9ed6c81a20aa8555014c99046ff2c))
+* app context ([cf06a0a](https://github.com/newrelic/nr-labs-hedgehog/commit/cf06a0a13dbcf5c2079b441c1d22a1391a254a7f))
+* export flow ([cfcd2f1](https://github.com/newrelic/nr-labs-hedgehog/commit/cfcd2f15728730adf1d2c2b0bc36d035f3f9868c))
+
+# [1.48.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.47.0...v1.48.0) (2024-01-11)
+
+
+### Bug Fixes
+
+* set default values to handle undefined values being passed ([6a1abd8](https://github.com/newrelic/nr-labs-hedgehog/commit/6a1abd8d40911ab6e2bfc01863983f285bf0250a))
+
+
+### Features
+
+* updated signal statuses calculation ([012aca5](https://github.com/newrelic/nr-labs-hedgehog/commit/012aca53a37913ca93d7ac5d78c3836b8d51cd2b))
+
+# [1.47.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.46.0...v1.47.0) (2024-01-11)
+
+
+### Bug Fixes
+
+* distinguish between zero and empty string ([7e54646](https://github.com/newrelic/nr-labs-hedgehog/commit/7e54646de031cf2b46c35f8129419f554c08d0e2))
+
+
+### Features
+
+* add function to format date/time for kpi hover ([d50c6ac](https://github.com/newrelic/nr-labs-hedgehog/commit/d50c6acc8b2c5223bb93536b2f827e132c13ce69))
+
+# [1.46.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.45.0...v1.46.0) (2023-12-29)
+
+
+### Features
+
+* signal selection nerdlet ([56dcaae](https://github.com/newrelic/nr-labs-hedgehog/commit/56dcaae82757222356d2ad60fd965dfd71f0573f))
+
+# [1.45.0](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.44.1...v1.45.0) (2023-12-25)
+
+
+### Features
+
+* add kpi hover for additional kpi info ([326e096](https://github.com/newrelic/nr-labs-hedgehog/commit/326e09675eab5b8585bf5af9153658e2f8924e1d))
+* get metadata for kpi nrql queries ([02eca99](https://github.com/newrelic/nr-labs-hedgehog/commit/02eca993c7ba8ecb524b8ab4701fd0e220277a71))
+
 ## [1.44.1](https://github.com/newrelic/nr-labs-hedgehog/compare/v1.44.0...v1.44.1) (2023-12-12)
 
 

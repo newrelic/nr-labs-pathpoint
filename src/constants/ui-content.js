@@ -8,7 +8,7 @@ export const UI_CONTENT = {
     BUTTON_LABEL_STACKED_MODE: 'Stacked',
   },
   FLOW: {
-    //
+    BUTTON_EXPORT: 'Export JSON',
   },
   STAGE: {
     //
@@ -111,4 +111,15 @@ export const UI_CONTENT = {
       BUTTON_LABEL_NEXT: 'Next',
     },
   },
+  SIGNAL_SELECTION: {
+    ENTITY_TYPE_DROPDOWN_PLACEHOLDER: 'Select entity type',
+    TOO_MANY_ENTITIES_EMPTY_STATE: {
+      TITLE: 'Too many signals',
+      DESCRIPTION:
+        'Please use the filtering options above to load your signal list.',
+    },
+    TOO_MANY_ENTITIES_ERROR_MESSAGE:
+      'Note: You exceeded your signal limit. Remove entities or convert to workload to save changes.',
+  },
+  DUMMY_FILTER: "`tags.displayName` = 'project hedgehog'",
 };

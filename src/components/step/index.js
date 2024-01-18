@@ -1,15 +1,19 @@
 import React, { memo, useContext, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button } from 'nr1';
+import { Button, navigation } from 'nr1';
 import { StatusIconsLayout } from '@newrelic/nr-labs-components';
 
 import Signal from '../signal';
 import StepHeader from './header';
-import EditStepModal from '../edit-step-modal';
 import DeleteConfirmModal from '../delete-confirm-modal';
 import { MODES, STATUSES } from '../../constants';
-import { FlowDispatchContext, StagesContext } from '../../contexts';
+import {
+  FlowContext,
+  FlowDispatchContext,
+  SignalsContext,
+  StagesContext,
+} from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 
 const Step = ({
@@ -24,13 +28,14 @@ const Step = ({
   mode = MODES.INLINE,
   saveFlow,
 }) => {
+  const { id: flowId } = useContext(FlowContext);
   const stages = useContext(StagesContext);
+  const signalsDetails = useContext(SignalsContext);
   const dispatch = useContext(FlowDispatchContext);
   const [title, setTitle] = useState();
   const [signals, setSignals] = useState([]);
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
   const [stageName, setStageName] = useState('');
-  const [editModalHidden, setEditModalHidden] = useState(true);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
@@ -46,13 +51,18 @@ const Step = ({
     setStatus(step.status || STATUSES.UNKNOWN);
   }, [stageId, levelId, stepId, stages]);
 
-  const updateSignalsHandler = (signals) =>
-    dispatch({
-      type: FLOW_DISPATCH_TYPES.UPDATED,
-      component: FLOW_DISPATCH_COMPONENTS.STEP,
-      componentIds: { stageId, levelId, stepId },
-      updates: { signals },
-      saveFlow,
+  const updateSignalsHandler = () =>
+    navigation.openStackedNerdlet({
+      id: 'signal-selection',
+      urlState: {
+        flowId,
+        stageId,
+        stageName,
+        levelId,
+        levelOrder,
+        stepId,
+        stepTitle: title,
+      },
     });
 
   const openDeleteModalHandler = (guid, name) => {
@@ -111,7 +121,7 @@ const Step = ({
       signals.map(({ guid, name, status }) => (
         <Signal
           key={guid}
-          name={name}
+          name={signalsDetails[guid]?.name || name}
           onDelete={() => openDeleteModalHandler(guid, name)}
           status={status}
           mode={mode}
@@ -146,7 +156,7 @@ const Step = ({
               type={Button.TYPE.SECONDARY}
               sizeType={Button.SIZE_TYPE.SMALL}
               iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS__V_ALTERNATE}
-              onClick={() => setEditModalHidden(false)}
+              onClick={updateSignalsHandler}
             >
               Add a signal
             </Button>
@@ -154,15 +164,6 @@ const Step = ({
           <div className="edit-signals-list">
             <SignalsList />
           </div>
-          <EditStepModal
-            stageName={stageName}
-            level={levelOrder}
-            stepTitle={title}
-            existingSignals={signals.map(({ guid }) => guid)}
-            hidden={editModalHidden}
-            onChange={updateSignalsHandler}
-            onClose={() => setEditModalHidden(true)}
-          />
           <DeleteConfirmModal
             name={signalToDelete.current.name}
             hidden={deleteModalHidden}

@@ -1,7 +1,15 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, HeadingText, Modal, PlatformStateContext } from 'nr1';
+import {
+  Button,
+  HeadingText,
+  Modal,
+  PlatformStateContext,
+  Popover,
+  PopoverTrigger,
+  PopoverBody,
+} from 'nr1';
 
 import {
   EditInPlace,
@@ -13,7 +21,12 @@ import KpiModalDeleteContent from './delete';
 import KpiModalEmptyState from './empty';
 import { useFetchKpis } from '../../hooks';
 import { KPI_MODES, UI_CONTENT } from '../../constants';
-import { lexer, NRQL_STYLES } from '../../utils';
+import { lexer, NRQL_STYLES, formatKpiHoverDatime } from '../../utils';
+
+const metricFromQuery = (results) => ({
+  value: results?.value || 0,
+  previousValue: isNaN(results?.previousValue) ? '' : results?.previousValue,
+});
 
 const KpiModal = ({
   kpi = {},
@@ -38,6 +51,7 @@ const KpiModal = ({
   );
 
   const [previewOk, setPreviewOk] = useState(false);
+  const [kpiResults, setKpiResult] = useState({});
 
   useEffect(() => {
     setAccountId(kpi.accountIds?.length ? kpi.accountIds[0] : '');
@@ -62,6 +76,7 @@ const KpiModal = ({
   useEffect(() => {
     if (Number.isInteger(accountId) && nrqlQuery && !hookData?.error) {
       setPreviewOk(true);
+      setKpiResult(hookData?.kpis[0]);
     } else {
       setPreviewOk(false);
     }
@@ -166,20 +181,46 @@ const KpiModal = ({
                   </div>
                 ) : (
                   <div className="kpi-data">
-                    <SimpleBillboard
-                      metric={{
-                        value: (hookData?.kpis || [])[0]?.value,
-                        previousValue: (hookData?.kpis || [])[0]?.previousValue,
-                        className: 'modal-component-metric-value',
-                      }}
-                      statusTrend={{
-                        className: 'modal-component-status-trend',
-                      }}
-                      title={{
-                        name: alias || name,
-                        className: 'modal-component-metric-name',
-                      }}
-                    />
+                    <Popover openOnHover={true}>
+                      <PopoverTrigger>
+                        <SimpleBillboard
+                          metric={{
+                            ...metricFromQuery(kpiResults),
+                            className: 'modal-component-metric-value',
+                          }}
+                          statusTrend={{
+                            className: 'modal-component-status-trend',
+                          }}
+                          title={{
+                            name: alias || name,
+                            className: 'modal-component-metric-name',
+                          }}
+                        />
+                      </PopoverTrigger>
+                      <PopoverBody>
+                        <p className="kpi-hover">
+                          <span>
+                            {kpiResults?.metadata?.timeWindow?.since
+                              ? `Since ${formatKpiHoverDatime(
+                                  kpiResults?.metadata?.timeWindow?.since
+                                )}`
+                              : ''}
+                          </span>
+                          <span>
+                            {kpiResults?.metadata?.timeWindow?.until !== 'NOW'
+                              ? ` - until ${formatKpiHoverDatime(
+                                  kpiResults?.metadata?.timeWindow?.until
+                                )}`
+                              : ''}
+                          </span>
+                          <span>
+                            {kpiResults?.metadata?.timeWindow?.compareWith
+                              ? ` vs. ${kpiResults?.metadata?.timeWindow?.compareWith.toLowerCase()}`
+                              : ''}
+                          </span>
+                        </p>
+                      </PopoverBody>
+                    </Popover>
                   </div>
                 )}
               </>

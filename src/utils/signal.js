@@ -1,4 +1,6 @@
 import { SIGNAL_TYPES, STATUSES } from '../constants';
+import { alertStatus } from './alerts';
+import { entityStatus } from './entities';
 import { serviceLevelStatus } from './service-levels';
 
 const statusesOrder = [
@@ -16,17 +18,24 @@ const statusesOrderIndexLookup = statusesOrder.reduce(
   {}
 );
 
-export const signalStatus = (signal) => {
-  if (!signal) return STATUSES.UNKNOWN;
+export const signalStatus = (signal, entity) => {
+  if (!signal?.type) return STATUSES.UNKNOWN;
 
-  const { type = '' } = signal;
-
-  if (type === SIGNAL_TYPES.SERVICE_LEVEL) {
-    const { attainment, target } = signal;
-    return serviceLevelStatus({ attainment, target });
+  switch (signal.type) {
+    case SIGNAL_TYPES.ENTITY: {
+      return entityStatus(entity);
+    }
+    case SIGNAL_TYPES.ALERT: {
+      return alertStatus(entity);
+    }
+    case SIGNAL_TYPES.SERVICE_LEVEL: {
+      const { attainment, target } = signal;
+      return serviceLevelStatus({ attainment, target });
+    }
+    default: {
+      return STATUSES.UNKNOWN;
+    }
   }
-
-  return STATUSES.UNKNOWN;
 };
 
 export const statusFromStatuses = (statusesArray = []) => {

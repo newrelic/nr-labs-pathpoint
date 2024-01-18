@@ -34,3 +34,19 @@
     }
   }
 }
+
+@mixin fill-colors($statuses...) {
+  @each $status, $name in meta.keywords($statuses) {
+    &.#{$name} {
+      @if $status == 'critical' {
+        fill: $critical;
+      } @else if $status == 'success' {
+        fill: $success;
+      } @else if $status == 'unknown' {
+        fill: $unknown;
+      } @else if $status == 'warning' {
+        fill: $warning;
+      }
+    }
+  }
+}

@@ -1,10 +1,23 @@
 {
-  "lastUpdated": "Tue Mar 28 2023 12:05:17 GMT-0700 (Pacific Daylight Time)",
+  "lastUpdated": "Fri Dec 29 2023 19:55:14 GMT+0000 (Coordinated Universal Time)",
   "projectName": "nr-labs-pathpoint",
   "projectUrl": "https://github.com/newrelic/nr-labs-pathpoint",
   "includeOptDeps": false,
   "includeDev": true,
   "dependencies": {
+    "@newrelic/nr-labs-components@1.21.1": {
+      "name": "@newrelic/nr-labs-components",
+      "version": "1.21.1",
+      "range": "^1.21.1",
+      "licenses": "Apache-2.0",
+      "repoUrl": "https://github.com/newrelic/nr-labs-components",
+      "versionedRepoUrl": "https://github.com/newrelic/nr-labs-components/tree/v1.21.1",
+      "licenseFile": "node_modules/@newrelic/nr-labs-components/LICENSE",
+      "licenseUrl": "https://github.com/newrelic/nr-labs-components/blob/v1.21.1/LICENSE",
+      "licenseTextSource": "file",
+      "publisher": "New Relic Labs - Viz",
+      "url": "https://github.com/orgs/newrelic/teams/labs-viz"
+    },
     "prop-types@15.7.2": {
       "name": "prop-types",
       "version": "15.7.2",

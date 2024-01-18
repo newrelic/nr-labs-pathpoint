@@ -4,17 +4,26 @@ import PropTypes from 'prop-types';
 import { Icon } from 'nr1';
 import { StatusIcon } from '@newrelic/nr-labs-components';
 
-import { MODES, STATUSES } from '../../constants';
+import IconsLib from '../icons-lib';
+import { MODES, SIGNAL_TYPES, STATUSES } from '../../constants';
 
 const Signal = ({
   name,
+  type = SIGNAL_TYPES.ENTITY,
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
 }) => (
   <div className={`signal ${mode === MODES.EDIT ? 'edit' : ''}`}>
     <div className="status">
-      <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
+      {type === SIGNAL_TYPES.ALERT ? (
+        <IconsLib
+          className={mode === MODES.EDIT ? STATUSES.UNKNOWN : status}
+          type={IconsLib.TYPES.ALERT}
+        />
+      ) : (
+        <StatusIcon status={mode === MODES.EDIT ? STATUSES.UNKNOWN : status} />
+      )}
     </div>
     {name ? (
       <span className="name">{name}</span>
@@ -34,6 +43,7 @@ const Signal = ({
 
 Signal.propTypes = {
   name: PropTypes.string,
+  type: PropTypes.oneOf(Object.values(SIGNAL_TYPES)),
   onDelete: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),

@@ -12,7 +12,9 @@ import {
   nerdlet,
   PlatformStateContext,
   Spinner,
+  useAccountsQuery,
   useNerdletState,
+  usePlatformState,
 } from 'nr1';
 
 import {
@@ -28,8 +30,8 @@ import {
   useFetchUser,
   useReadUserPreferences,
 } from '../../src/hooks';
-import { MODES, UI_CONTENT } from '../../src/constants';
-import { SidebarProvider } from '../../src/contexts';
+import { MODES, REFRESH_INTERVALS, UI_CONTENT } from '../../src/constants';
+import { AppContext, SidebarProvider } from '../../src/contexts';
 import { uuid } from '../../src/utils';
 
 const createFlowButtonAttributes = {
@@ -50,12 +52,20 @@ const showAuditLogAttributes = {
   iconType: Icon.TYPE.DATE_AND_TIME__DATE_AND_TIME__DATE,
 };
 
+const editButtonFlowSettingsAttributes = {
+  type: Button.TYPE.PRIMARY,
+  iconType: Icon.TYPE.INTERFACE__OPERATIONS__CONFIGURE,
+};
+
 const HomeNerdlet = () => {
+  const [app, setApp] = useState({});
   const [mode, setMode] = useState(MODES.INLINE);
   const [flows, setFlows] = useState([]);
   const [currentFlowIndex, setCurrentFlowIndex] = useState(-1);
   const [showAuditLog, setShowAuditLog] = useState(false);
+  const [editFlowSettings, setEditFlowSettings] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
+  const [{ filters: platformStateFilters }] = usePlatformState();
   const [nerdletState] = useNerdletState();
   const { user } = useFetchUser();
   const { userPreferences, loading: userPreferencesLoading } =
@@ -64,8 +74,23 @@ const HomeNerdlet = () => {
     flows: flowsData,
     error: flowsError,
     loading: flowsLoading,
+    refetch: flowsRefetch,
   } = useFlowLoader({ accountId });
   const flowWriter = useFlowWriter({ accountId, user });
+  const { data: accounts = [] } = useAccountsQuery();
+
+  useEffect(
+    () =>
+      setApp({
+        account: {
+          id: accountId,
+          name: accounts.find(({ id }) => id === accountId)?.name,
+        },
+        accounts: accounts.map(({ id, name }) => ({ id, name })),
+        user,
+      }),
+    [accountId, accounts, user]
+  );
 
   useEffect(() => {
     nerdlet.setConfig({
@@ -82,7 +107,10 @@ const HomeNerdlet = () => {
                 ...showAuditLogAttributes,
                 onClick: () => {
                   setShowAuditLog((sal) => !sal);
-                },
+              },
+              {
+                ...editButtonFlowSettingsAttributes,
+                onClick: () => setEditFlowSettings(true),
               },
               {
                 ...editButtonAttributes,
@@ -98,7 +126,13 @@ const HomeNerdlet = () => {
       headerType: nerdlet.HEADER_TYPE.CUSTOM,
       headerTitle: 'Project Hedgehog 🦔',
     });
-  }, [user, newFlowHandler, currentFlowIndex, showAuditLog]);
+  }, [user, newFlowHandler, currentFlowIndex, editFlowSettings, showAuditLog]);
+
+  useEffect(() => {
+    if (platformStateFilters === UI_CONTENT.DUMMY_FILTER) {
+      flowsRefetch();
+    }
+  }, [platformStateFilters]);
 
   useEffect(() => setFlows(flowsData || []), [flowsData]);
 
@@ -113,6 +147,7 @@ const HomeNerdlet = () => {
       document: {
         id,
         name: 'Untitled',
+        refreshInterval: REFRESH_INTERVALS[0].value,
         stages: [],
         kpis: [],
         created: {
@@ -130,7 +165,6 @@ const HomeNerdlet = () => {
 
   const backToFlowsHandler = useCallback(() => {
     setCurrentFlowIndex(-1);
-    setShowAuditLog(false);
     setMode(MODES.INLINE);
   }, []);
 
@@ -152,12 +186,11 @@ const HomeNerdlet = () => {
 
     if (currentFlowIndex > -1 && flows?.[currentFlowIndex]?.document) {
       return (
-        <SidebarProvider>
-          <>
+        <AppContext.Provider value={app}>
+          <SidebarProvider>
             <Flow
               flowDoc={flows[currentFlowIndex].document}
               onClose={backToFlowsHandler}
-              accountId={accountId}
               mode={mode}
               setMode={setMode}
               flows={flows}
@@ -165,10 +198,12 @@ const HomeNerdlet = () => {
               user={user}
               showAuditLog={showAuditLog}
               setShowAuditLog={setShowAuditLog}
+              editFlowSettings={editFlowSettings}
+              setEditFlowSettings={setEditFlowSettings}
             />
             <Sidebar />
-          </>
-        </SidebarProvider>
+          </SidebarProvider>
+        </AppContext.Provider>
       );
     }
     if (flows && flows.length) {
@@ -188,6 +223,7 @@ const HomeNerdlet = () => {
     mode,
     flowClickHandler,
     showAuditLog,
+    editFlowSettings,
   ]);
 
   return <div className="container">{currentView}</div>;

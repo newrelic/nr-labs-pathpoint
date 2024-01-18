@@ -18,9 +18,15 @@ const kpisFromData = ({ actor = {} } = {}) =>
   Object.keys(actor).reduce((acc, key) => {
     if (!key.startsWith('q') || !actor[key]) return acc;
     const index = key.substring(1);
-    const { results: [first, second, ...rest] = [] } = actor[key] || {};
+    const {
+      metadata: { timeWindow: { compareWith, since, until } = {} } = {},
+      results: [first, second, ...rest] = [],
+    } = actor[key] || {};
     if (!rest?.length) {
       acc[index] = {
+        metadata: {
+          timeWindow: { compareWith, since, until },
+        },
         value: '',
         previousValue: '',
         ...valueFromResult(first),
