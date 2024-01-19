@@ -23,7 +23,7 @@
       display: flex;
       gap: 8px;
     }
-
+    
     .back {
       cursor: pointer;
     }
@@ -61,4 +61,31 @@
 .flow-listing-dropdown {
   width: 450px;
   height: 270px;
+}
+
+.audit-log-content {
+  margin-left: 0.75rem;
+
+  .audit-log-header {
+    margin: 1rem 0;
+  }
+
+  .audit-log-items {
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+
+    .audit-log-item {
+      font-family: Inter;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 16px;
+      padding: 8px;
+
+      .change-date {
+        font-weight: 400;
+      }
+    }
+  }
 }

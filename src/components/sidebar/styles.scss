@@ -4,7 +4,8 @@
   margin-left: 8px;
   background-color: #fff;
   border-top: 5px solid transparent;
-
+  overflow-y: scroll;
+  
   @include border-colors(
     $critical: 'critical',
     $success: 'success',

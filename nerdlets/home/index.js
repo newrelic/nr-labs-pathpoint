@@ -46,6 +46,12 @@ const editButtonAttributes = {
   iconType: Icon.TYPE.INTERFACE__OPERATIONS__EDIT,
 };
 
+const showAuditLogAttributes = {
+  label: UI_CONTENT.GLOBAL.BUTTON_LABEL_AUDIT_LOG,
+  type: Button.TYPE.PRIMARY,
+  iconType: Icon.TYPE.DATE_AND_TIME__DATE_AND_TIME__DATE,
+};
+
 const editButtonFlowSettingsAttributes = {
   type: Button.TYPE.PRIMARY,
   iconType: Icon.TYPE.INTERFACE__OPERATIONS__CONFIGURE,
@@ -56,6 +62,7 @@ const HomeNerdlet = () => {
   const [mode, setMode] = useState(MODES.INLINE);
   const [flows, setFlows] = useState([]);
   const [currentFlowIndex, setCurrentFlowIndex] = useState(-1);
+  const [showAuditLog, setShowAuditLog] = useState(false);
   const [editFlowSettings, setEditFlowSettings] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
   const [{ filters: platformStateFilters }] = usePlatformState();
@@ -101,6 +108,12 @@ const HomeNerdlet = () => {
                 onClick: () => setEditFlowSettings(true),
               },
               {
+                ...showAuditLogAttributes,
+                onClick: () => {
+                  setShowAuditLog((sal) => !sal);
+                },
+              },
+              {
                 ...editButtonAttributes,
                 onClick: () => setMode(MODES.EDIT),
               },
@@ -114,7 +127,7 @@ const HomeNerdlet = () => {
       headerType: nerdlet.HEADER_TYPE.CUSTOM,
       headerTitle: 'Project Hedgehog 🦔',
     });
-  }, [user, newFlowHandler, currentFlowIndex, editFlowSettings]);
+  }, [user, newFlowHandler, currentFlowIndex, editFlowSettings, showAuditLog]);
 
   useEffect(() => {
     if (platformStateFilters === UI_CONTENT.DUMMY_FILTER) {
@@ -153,6 +166,7 @@ const HomeNerdlet = () => {
 
   const backToFlowsHandler = useCallback(() => {
     setCurrentFlowIndex(-1);
+    setShowAuditLog(false);
     setMode(MODES.INLINE);
   }, []);
 
@@ -183,6 +197,8 @@ const HomeNerdlet = () => {
               setMode={setMode}
               flows={flows}
               onSelectFlow={flowClickHandler}
+              showAuditLog={showAuditLog}
+              setShowAuditLog={setShowAuditLog}
               editFlowSettings={editFlowSettings}
               setEditFlowSettings={setEditFlowSettings}
             />
@@ -208,6 +224,7 @@ const HomeNerdlet = () => {
     mode,
     flowClickHandler,
     editFlowSettings,
+    showAuditLog,
   ]);
 
   return <div className="container">{currentView}</div>;

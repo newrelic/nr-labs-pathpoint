@@ -8,3 +8,4 @@ export * from './entities';
 export * from './nrql';
 export * from './kpi';
 export * from './alerts';
+export * from './load-audit-log';

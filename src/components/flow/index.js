@@ -10,16 +10,28 @@ import PropTypes from 'prop-types';
 
 import { Spinner, useAccountStorageMutation } from 'nr1';
 
-import { KpiBar, Stages, DeleteConfirmModal, EditFlowSettingsModal } from '../';
+import {
+  KpiBar,
+  Stages,
+  DeleteConfirmModal,
+  EditFlowSettingsModal,
+  AuditLog,
+} from '../';
 import FlowHeader from './header';
 import { MODES, NERD_STORAGE } from '../../constants';
 import { useFlowWriter } from '../../hooks';
-import { AppContext, FlowContext, FlowDispatchContext } from '../../contexts';
+import {
+  AppContext,
+  FlowContext,
+  FlowDispatchContext,
+  useSidebar,
+} from '../../contexts';
 import {
   FLOW_DISPATCH_COMPONENTS,
   FLOW_DISPATCH_TYPES,
   flowReducer,
 } from '../../reducers';
+import { loadAuditLog } from '../../utils';
 
 const Flow = forwardRef(
   (
@@ -32,6 +44,8 @@ const Flow = forwardRef(
       onSelectFlow = () => null,
       editFlowSettings = false,
       setEditFlowSettings = () => null,
+      showAuditLog = false,
+      setShowAuditLog = () => null,
     },
     ref
   ) => {
@@ -42,6 +56,31 @@ const Flow = forwardRef(
     const [lastSavedTimestamp, setLastSavedTimestamp] = useState();
     const { account: { id: accountId } = {}, user } = useContext(AppContext);
     const flowWriter = useFlowWriter({ accountId, user });
+    const { openSidebar, closeSidebar, isOpen } = useSidebar();
+
+    useEffect(async () => {
+      if (showAuditLog && flowDoc.id > '') {
+        const { auditLogs, logReadError } = await loadAuditLog(
+          accountId,
+          flowDoc.id
+        );
+
+        const renderAuditLogs = () => <AuditLog auditLogs={auditLogs} />;
+        if (!logReadError) {
+          openSidebar({
+            content: renderAuditLogs(),
+          });
+        }
+      } else {
+        if (isOpen) closeSidebar(); // toggle sidebar
+      }
+    }, [showAuditLog, flowDoc.id]);
+
+    useEffect(() => {
+      if (!isOpen) {
+        setShowAuditLog(false);
+      }
+    }, [isOpen]);
 
     useEffect(
       () =>
@@ -97,7 +136,11 @@ const Flow = forwardRef(
     useEffect(() => {
       const { nerdStorageDeleteDocument: { deleted } = {} } =
         deleteFlowData || {};
-      if (deleted) onClose();
+      if (deleted) {
+        closeSidebar();
+        setShowAuditLog(false);
+        onClose();
+      }
     }, [deleteFlowData]);
 
     useEffect(() => {
@@ -182,6 +225,8 @@ Flow.propTypes = {
   onSelectFlow: PropTypes.func,
   editFlowSettings: PropTypes.bool,
   setEditFlowSettings: PropTypes.func,
+  showAuditLog: PropTypes.bool,
+  setShowAuditLog: PropTypes.func,
 };
 
 Flow.displayName = 'Flow';

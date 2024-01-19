@@ -19,3 +19,4 @@ export { default as LastSavedMessage } from './last-saved-message';
 export { default as Sidebar } from './sidebar';
 export { default as GetStarted } from './get-started';
 export { default as EditFlowSettingsModal } from './flow-settings-modal';
+export { default as AuditLog } from './audit-log';
