@@ -14,6 +14,7 @@
         color: #FAFBFB;
       } @else if $status == 'warning' {
         background-color: $warning;
+        color: #FAFBFB;
       }
     }
   }
