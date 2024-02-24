@@ -35,6 +35,14 @@
       color: $warning;
     }
 
+    &.success :hover {
+      color: $success;
+    }
+
+    &.unknown :hover {
+      color: $unknown;
+    }
+
     &.selected {
 
       &.critical {
@@ -49,7 +57,23 @@
         }
       }
 
+      &.success {
+        .name {
+          color: $success;
+        }
+      }
+
+      &.unknown {
+        .name {
+          color: $unknown;
+        }
+      }
+
     }
+  }
+
+  &.faded {
+    opacity: 0.3;
   }
 
   .name {

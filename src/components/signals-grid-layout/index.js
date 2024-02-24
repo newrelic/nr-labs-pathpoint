@@ -1,22 +1,38 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import PropTypes from 'prop-types';
 
 import IconsLib from '../icons-lib';
-import { SIGNAL_TYPES } from '../../constants';
+import { COMPONENTS, SIGNAL_TYPES } from '../../constants';
+import { SelectionsContext } from '../../contexts';
 
 const SignalsGridLayout = ({ statuses }) => {
+  const { selections: { [COMPONENTS.SIGNAL]: selectedSignal } = {} } =
+    useContext(SelectionsContext);
   const [grid, setGridData] = useState({ entities: [], alerts: [] });
   const [width, setWidth] = useState(null);
   const wrapperRef = useRef();
 
   useEffect(() => {
-    const renderSignalIcon = ({ style, type, status, ...statusProps }, i) => (
+    const renderSignalIcon = (
+      { guid, type, style, status, ...statusProps },
+      i
+    ) => (
       <IconsLib
         key={i}
-        className={status}
+        className={`${status} signal detail ${status} ${
+          selectedSignal === guid ? 'selected' : ''
+        }`}
+        guid={guid}
         type={type}
+        style={{ ...style, margin: 1, marginBottom: -3 }}
+        displayMode={'grid'}
         {...statusProps}
-        style={{ style, margin: 1, marginBottom: -3 }}
       />
     );
     if (statuses) {

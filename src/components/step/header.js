@@ -17,7 +17,6 @@ const StepHeader = ({
   onDragHandle,
   mode = MODES.INLINE,
   saveFlow,
-  handleStepHeaderClick = () => null,
 }) => {
   const stages = useContext(StagesContext);
   const dispatch = useContext(FlowDispatchContext);
@@ -75,10 +74,8 @@ const StepHeader = ({
       />
     </div>
   ) : (
-    <div className="step-header" onClick={() => handleStepHeaderClick()}>
-      <HeadingText type={HeadingText.TYPE.HEADING_6} className="title">
-        {title}
-      </HeadingText>
+    <div className="step-header">
+      <h6 className="title">{title}</h6>
     </div>
   );
 };
@@ -90,7 +87,6 @@ StepHeader.propTypes = {
   onDragHandle: PropTypes.func,
   mode: PropTypes.oneOf(Object.values(MODES)),
   saveFlow: PropTypes.func,
-  handleStepHeaderClick: PropTypes.func,
 };
 
 export default StepHeader;

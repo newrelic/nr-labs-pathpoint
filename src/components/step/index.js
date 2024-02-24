@@ -43,6 +43,8 @@ const Step = ({
   const signalsDetails = useContext(SignalsContext);
   const {
     selections: {
+      [COMPONENTS.STAGE]: selectedStage,
+      [COMPONENTS.LEVEL]: selectedLevel,
       [COMPONENTS.STEP]: selectedStep,
       [COMPONENTS.SIGNAL]: selectedSignal,
     } = {},
@@ -54,6 +56,7 @@ const Step = ({
   const [stageName, setStageName] = useState('');
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const [signalsListView, setSignalsListView] = useState(false);
+  const [stepBackgroundIsSet, setStepBackground] = useState(false);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
 
@@ -65,8 +68,16 @@ const Step = ({
     setStageName(name);
     setTitle(step.title);
     setStatus(step.status || STATUSES.UNKNOWN);
+
+    const clickedSignal = selectedSignal
+      ? step.signals.find((signal) => signal.guid === selectedSignal)
+      : false;
+    setStepBackground(clickedSignal);
+  }, [stageId, levelId, stepId, stages, signals, selectedSignal]);
+
+  useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
-  }, [stageId, levelId, stepId, stages, signals]);
+  }, [status]);
 
   const updateSignalsHandler = () =>
     navigation.openStackedNerdlet({
@@ -125,16 +136,27 @@ const Step = ({
     () => (
       <SignalsGridLayout
         statuses={signals.map(
-          ({ status = STATUSES.UNKNOWN, type = SIGNAL_TYPES.ENTITY } = {}) => ({
+          ({
+            status = STATUSES.UNKNOWN,
+            type = SIGNAL_TYPES.ENTITY,
+            guid = '',
+            mode,
+            stageId,
+          } = {}) => ({
             status,
             type,
+            guid,
+            mode,
+            stageId,
+            style: {
+              opacity: selectedSignal && selectedSignal !== guid ? 0.3 : 1.0,
+            },
           })
         )}
       />
     ),
     [signals, mode, signalExpandOption]
   );
-
   SignalsGrid.displayName = 'SignalsGrid';
 
   const SignalsList = memo(
@@ -148,6 +170,7 @@ const Step = ({
           onDelete={() => openDeleteModalHandler(guid, name)}
           status={status}
           mode={mode}
+          stageId={stageId}
         />
       )),
     [signals, mode, signalExpandOption]
@@ -155,21 +178,52 @@ const Step = ({
   SignalsList.displayName = 'SignalsList';
 
   const handleStepHeaderClick = () => {
-    if (
-      signals.length &&
-      [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-    )
+    if (signals.length) {
       setSignalsListView((slw) => !slw);
+    }
+  };
+
+  const setStepClassName = () => {
+    let className = `step ${mode} detail`;
+
+    if (mode !== MODES.EDIT && (selectedStep || selectedSignal)) {
+      if (selectedStep === stepId || stepBackgroundIsSet) {
+        className += ` selected ${status}`;
+      } else {
+        className += ' faded';
+      }
+    }
+
+    return className;
   };
 
   return (
     <div
-      className={`step ${mode === MODES.STACKED ? 'stacked' : ''} ${status} ${
-        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status) ? 'detail' : ''
-      } ${
-        selectedStep === stepId && selectedSignal ? ` selected ${status}` : ''
-      }`}
-      onClick={() => toggleSelection(COMPONENTS.STEP, stepId)}
+      className={setStepClassName()}
+      onClick={(evt) => {
+        evt.stopPropagation();
+
+        if (mode === MODES.INLINE) {
+          handleStepHeaderClick();
+        } else if (mode === MODES.STACKED) {
+          if (
+            (selectedStep === stepId && selectedStage === stageId) ||
+            (selectedStep !== stepId && selectedStage !== stageId)
+          ) {
+            toggleSelection(COMPONENTS.STAGE, stageId);
+          }
+          if (
+            (selectedStep === stepId && selectedLevel === levelId) ||
+            (selectedStep !== stepId && selectedLevel !== levelId)
+          ) {
+            toggleSelection(COMPONENTS.LEVEL, levelId);
+          }
+          if (selectedSignal) {
+            toggleSelection(COMPONENTS.SIGNAL, selectedSignal);
+          }
+          toggleSelection(COMPONENTS.STEP, stepId);
+        }
+      }}
       draggable={mode === MODES.EDIT}
       onDragStart={dragStartHandler}
       onDragOver={onDragOver}
@@ -184,7 +238,6 @@ const Step = ({
         onDragHandle={dragHandleHandler}
         mode={mode}
         saveFlow={saveFlow}
-        handleStepHeaderClick={handleStepHeaderClick}
       />
       {mode === MODES.EDIT ? (
         <>

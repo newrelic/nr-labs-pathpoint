@@ -35,8 +35,12 @@ const Level = ({
 }) => {
   const stages = useContext(StagesContext);
   const dispatch = useContext(FlowDispatchContext);
-  const { selections: { [COMPONENTS.SIGNAL]: selectedSignal } = {} } =
-    useContext(SelectionsContext);
+  const {
+    selections: {
+      [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.SIGNAL]: selectedSignal,
+    } = {},
+  } = useContext(SelectionsContext);
   const [steps, setSteps] = useState([]);
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
@@ -112,19 +116,27 @@ const Level = ({
           });
 
         const isLastStep = index + 1 === arr.length;
+
+        const setStepCellClassName = () => {
+          let className = 'step-cell';
+
+          if (mode === MODES.EDIT) {
+            className += ' edit';
+          } else if (mode === MODES.STACKED && signals?.length) {
+            if (
+              [STATUSES.SUCCESS, STATUSES.UNKNOWN].includes(status) &&
+              filteredSortedSignals.find(({ guid }) => guid === selectedSignal)
+            ) {
+              className += ' healthy';
+            }
+            className += ` ${status}`;
+          }
+
+          return className;
+        };
+
         const cell = (
-          <div
-            className={`step-cell ${
-              mode === MODES.EDIT
-                ? 'edit'
-                : mode === MODES.STACKED &&
-                  signals?.length &&
-                  [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-                ? status
-                : ''
-            }`}
-            key={id}
-          >
+          <div key={id} className={setStepCellClassName()}>
             <Step
               stageId={stageId}
               levelId={levelId}
@@ -200,7 +212,7 @@ const Level = ({
       },
       { rows: [], cols: [] }
     );
-  }, [steps, mode, signalExpandOption]);
+  }, [steps, mode, signalExpandOption, selectedSignal]);
 
   const deleteHandler = () => {
     setDeleteModalHidden(true);
@@ -258,6 +270,30 @@ const Level = ({
     dragOverItemIndex.current = null;
   };
 
+  const setLevelClassName = () => {
+    let className = `order ${status}`;
+
+    const isLevelFaded = selectedSignal
+      ? !steps.reduce(
+          (acc, { signals }) =>
+            acc |
+            signals.reduce((acc, { guid }) => {
+              return Boolean(acc | (guid === selectedSignal));
+            }, false),
+          false
+        )
+      : false;
+
+    className += `${
+      (mode !== MODES.EDIT && isLevelFaded) ||
+      (selectedLevel && selectedLevel !== levelId)
+        ? ' faded'
+        : ''
+    }`;
+
+    return className;
+  };
+
   return mode === MODES.EDIT || stepsRows.length ? (
     <div
       className="level"
@@ -296,7 +332,7 @@ const Level = ({
           />
         </>
       ) : (
-        <div className={`order ${status}`}>{order}</div>
+        <div className={setLevelClassName()}>{order}</div>
       )}
       <div className="steps">{stepsRows}</div>
     </div>

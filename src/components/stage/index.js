@@ -37,8 +37,14 @@ const Stage = ({
   const stages = useContext(StagesContext);
   const signalsDetails = useContext(SignalsContext);
   const dispatch = useContext(FlowDispatchContext);
-  const { selections: { [COMPONENTS.SIGNAL]: selectedSignal } = {} } =
-    useContext(SelectionsContext);
+  const {
+    selections: {
+      [COMPONENTS.STAGE]: selectedStage,
+      [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.STEP]: selectedStep,
+      [COMPONENTS.SIGNAL]: selectedSignal,
+    } = {},
+  } = useContext(SelectionsContext);
   const [name, setName] = useState('Stage');
   const [levels, setLevels] = useState([]);
   const [related, setRelated] = useState({});
@@ -60,7 +66,7 @@ const Stage = ({
     () =>
       setSignals(
         levels.reduce(
-          (acc, { steps = [] }) => ({
+          (acc, { steps = [], id: levelId }) => ({
             ...acc,
             ...steps.reduce(
               (acc, { signals = [] }) => ({
@@ -73,6 +79,7 @@ const Stage = ({
                       status,
                       guid,
                       type,
+                      levelId,
                     },
                   }),
                   {}
@@ -102,6 +109,17 @@ const Stage = ({
         ? signalExpandOption ^ SIGNAL_EXPAND.ALL
         : signalExpandOption;
 
+    // array of signal guids for selectedStep -- used for sorting signals and displaying them for selected step on top of the signal list
+    let selectedStepSignalGuids = [];
+    let sortFactor = 0;
+
+    if (selectedStep && stageId === selectedStage) {
+      const level = levels?.find((level) => level.id === selectedLevel);
+      const step = level?.steps?.find((step) => step.id === selectedStep);
+      selectedStepSignalGuids = step.signals.map((signal) => signal.guid);
+      if (selectedStepSignalGuids.length) sortFactor = orderedStatuses.length;
+    }
+
     return Object.values(signals)
       .filter((s) => {
         switch (expandOption) {
@@ -126,12 +144,16 @@ const Stage = ({
         const a1 =
           a.status === STATUSES.UNKNOWN && a.guid === selectedSignal
             ? 1.5 + signalTypes.indexOf(a.type) * 0.1
+            : selectedStep && selectedStepSignalGuids?.includes(a.guid)
+            ? orderedStatuses.indexOf(a.status) - sortFactor
             : orderedStatuses.indexOf(a.status) +
               signalTypes.indexOf(a.type) * 0.1;
 
         const b1 =
           b.status === STATUSES.UNKNOWN && b.guid === selectedSignal
             ? 1.5 + signalTypes.indexOf(b.type) * 0.1
+            : selectedStep && selectedStepSignalGuids.includes(b.guid)
+            ? orderedStatuses.indexOf(b.status) - sortFactor
             : orderedStatuses.indexOf(b.status) +
               signalTypes.indexOf(b.type) * 0.1;
 
@@ -145,9 +167,11 @@ const Stage = ({
           type={signal.type}
           status={signal.status}
           mode={mode}
+          stageId={stageId}
+          levelId={signal.levelId}
         />
       ));
-  }, [signals]);
+  }, [signals, selectedSignal]);
   SignalsList.displayName = 'SignalsList';
 
   const updateStageHandler = (updates = {}) =>

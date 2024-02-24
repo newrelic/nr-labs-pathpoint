@@ -5,7 +5,7 @@ import { Icon } from 'nr1';
 
 import IconsLib from '../icons-lib';
 import { COMPONENTS, MODES, SIGNAL_TYPES, STATUSES } from '../../constants';
-import { SelectionsContext } from '../../contexts';
+import { SelectionsContext, SignalsContext } from '../../contexts';
 
 const Signal = ({
   name,
@@ -14,24 +14,70 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  stageId = '',
 }) => {
-  const { selections, toggleSelection } = useContext(SelectionsContext);
+  const {
+    selections: {
+      [COMPONENTS.STAGE]: selectedStage,
+      [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.STEP]: selectedStep,
+      [COMPONENTS.SIGNAL]: selectedSignal,
+    } = {},
+    toggleSelection,
+  } = useContext(SelectionsContext);
+  const signalsDetails = useContext(SignalsContext);
+
+  const setSignalClassName = () => {
+    let className = `signal ${mode === MODES.EDIT ? 'edit' : ''}`;
+
+    className +=
+      mode !== MODES.EDIT &&
+      ((selectedSignal && selectedSignal !== guid) ||
+        (selectedStep && selectedStage && selectedStage !== stageId) ||
+        (selectedStep &&
+          !signalsDetails[guid]?.stepRefs?.includes(selectedStep)))
+        ? ' faded'
+        : '';
+
+    className +=
+      mode !== MODES.EDIT
+        ? ` detail ${status} ${
+            (selectedSignal === guid && selectedStage && !selectedStep) ||
+            (selectedStep &&
+              signalsDetails[guid]?.stepRefs?.includes(selectedStep))
+              ? 'selected'
+              : ''
+          }`
+        : '';
+
+    return className;
+  };
 
   return (
     <div
-      className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
-        [MODES.INLINE, MODES.STACKED].includes(mode) &&
-        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-          ? `detail ${status} ${
-              selections[COMPONENTS.SIGNAL]?.[guid] ? 'selected' : ''
-            }`
-          : ''
-      }`}
-      onClick={() => {
+      className={setSignalClassName()}
+      onClick={(evt) => {
+        evt.stopPropagation();
+
+        if (
+          (selectedSignal === guid && selectedStage === stageId) ||
+          (selectedSignal !== guid && selectedStage !== stageId)
+        ) {
+          toggleSelection(COMPONENTS.STAGE, stageId);
+        }
+
+        if (selectedLevel) {
+          toggleSelection(COMPONENTS.LEVEL, selectedLevel);
+        }
+
+        if (selectedStep) {
+          toggleSelection(COMPONENTS.STEP, selectedStep);
+        }
+
         toggleSelection(COMPONENTS.SIGNAL, guid);
       }}
     >
-      <div className="status">
+      <div className={`status ${status}`}>
         {type === SIGNAL_TYPES.ALERT ? (
           <IconsLib
             className={mode === MODES.EDIT ? STATUSES.UNKNOWN : status}
@@ -68,6 +114,7 @@ Signal.propTypes = {
   onDelete: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  stageId: PropTypes.string,
 };
 
 export default Signal;

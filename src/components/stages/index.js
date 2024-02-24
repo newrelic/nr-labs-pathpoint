@@ -18,6 +18,7 @@ import {
   alertsTree,
   annotateStageWithStatuses,
   entitiesDetailsFromQueryResults,
+  updateSignalsWithStepsRefs,
   guidsToArray,
   uniqueSignalGuidsInStages,
 } from '../../utils';
@@ -60,7 +61,12 @@ const Stages = ({ mode = MODES.INLINE, saveFlow }) => {
       const { data: { actor = {} } = {} } = await NerdGraphQuery.query({
         query,
       });
-      setSignalsDetails(entitiesDetailsFromQueryResults(actor));
+      setSignalsDetails(
+        updateSignalsWithStepsRefs(
+          stages,
+          entitiesDetailsFromQueryResults(actor)
+        )
+      );
     };
 
     if (arrayOfGuids.length) fetchSignalsDetails();
