@@ -41,6 +41,22 @@ export const entitiesDetailsFromQueryResults = (res = {}) =>
   Object.keys(res).reduce((acc, cur) => {
     const signalsArray = res[cur];
     if (!Array.isArray(signalsArray)) return acc;
-    signalsArray.forEach(({ guid, name }) => (acc[guid] = { name }));
+    signalsArray.forEach(
+      ({ guid, name }) => (acc[guid] = { name, stepRefs: [] })
+    );
     return acc;
   }, {});
+
+export const updateSignalsWithStepsRefs = (stages = [], entitiesDetails) => {
+  stages.forEach((stage) =>
+    stage.levels.forEach((level) =>
+      level.steps.forEach((step) =>
+        step.signals.forEach((signal) => {
+          if (entitiesDetails[signal.guid] && step.id)
+            entitiesDetails[signal.guid].stepRefs.push(step.id);
+        })
+      )
+    )
+  );
+  return entitiesDetails;
+};
