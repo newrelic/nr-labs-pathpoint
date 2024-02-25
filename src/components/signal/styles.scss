@@ -5,6 +5,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 2px;
+  cursor: pointer;
 
   &.edit {
     grid-template-columns: min-content auto min-content;
@@ -25,8 +26,6 @@
   }
 
   &.detail {
-    cursor: pointer;
-
     &.critical :hover {
       color: $critical;
     }

@@ -38,6 +38,7 @@ const Level = ({
   const {
     selections: {
       [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.STEP]: selectedStep,
       [COMPONENTS.SIGNAL]: selectedSignal,
     } = {},
   } = useContext(SelectionsContext);
@@ -122,10 +123,13 @@ const Level = ({
 
           if (mode === MODES.EDIT) {
             className += ' edit';
-          } else if (mode === MODES.STACKED && signals?.length) {
+          } else if (mode === MODES.STACKED) {
             if (
               [STATUSES.SUCCESS, STATUSES.UNKNOWN].includes(status) &&
-              filteredSortedSignals.find(({ guid }) => guid === selectedSignal)
+              ((selectedStep && id === selectedStep) ||
+                filteredSortedSignals.find(
+                  ({ guid }) => guid === selectedSignal
+                ))
             ) {
               className += ' healthy';
             }
@@ -212,7 +216,7 @@ const Level = ({
       },
       { rows: [], cols: [] }
     );
-  }, [steps, mode, signalExpandOption, selectedSignal]);
+  }, [steps, mode, signalExpandOption, selectedSignal, selectedStep]);
 
   const deleteHandler = () => {
     setDeleteModalHidden(true);
@@ -271,9 +275,7 @@ const Level = ({
   };
 
   const setLevelClassName = () => {
-    let className = `order ${status}`;
-
-    const isLevelFaded = selectedSignal
+    const shouldLevelBeFaded = selectedSignal
       ? !steps.reduce(
           (acc, { signals }) =>
             acc |
@@ -284,9 +286,11 @@ const Level = ({
         )
       : false;
 
+    let className = `order ${status}`;
+
     className += `${
-      (mode !== MODES.EDIT && isLevelFaded) ||
-      (selectedLevel && selectedLevel !== levelId)
+      mode === MODES.STACKED &&
+      (shouldLevelBeFaded || (selectedLevel && selectedLevel !== levelId))
         ? ' faded'
         : ''
     }`;

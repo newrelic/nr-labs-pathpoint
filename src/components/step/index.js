@@ -186,7 +186,7 @@ const Step = ({
   const setStepClassName = () => {
     let className = `step ${mode} detail`;
 
-    if (mode !== MODES.EDIT && (selectedStep || selectedSignal)) {
+    if (mode === MODES.STACKED && (selectedStep || selectedSignal)) {
       if (selectedStep === stepId || stepBackgroundIsSet) {
         className += ` selected ${status}`;
       } else {

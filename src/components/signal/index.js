@@ -30,25 +30,28 @@ const Signal = ({
   const setSignalClassName = () => {
     let className = `signal ${mode === MODES.EDIT ? 'edit' : ''}`;
 
-    className +=
-      mode !== MODES.EDIT &&
-      ((selectedSignal && selectedSignal !== guid) ||
-        (selectedStep && selectedStage && selectedStage !== stageId) ||
-        (selectedStep &&
+    if (
+      (mode !== MODES.EDIT && selectedSignal && selectedSignal !== guid) ||
+      (mode === MODES.STACKED &&
+        selectedStep &&
+        selectedStage &&
+        (selectedStage !== stageId ||
           !signalsDetails[guid]?.stepRefs?.includes(selectedStep)))
-        ? ' faded'
-        : '';
-
-    className +=
-      mode !== MODES.EDIT
-        ? ` detail ${status} ${
-            (selectedSignal === guid && selectedStage && !selectedStep) ||
-            (selectedStep &&
-              signalsDetails[guid]?.stepRefs?.includes(selectedStep))
-              ? 'selected'
-              : ''
-          }`
-        : '';
+    ) {
+      className += ' faded';
+    } else {
+      if (mode !== MODES.EDIT) {
+        className += ` detail ${status}`;
+        if (
+          (selectedSignal === guid && selectedStage && !selectedStep) ||
+          (mode === MODES.STACKED &&
+            selectedStep &&
+            signalsDetails[guid]?.stepRefs?.includes(selectedStep))
+        ) {
+          className += ' selected';
+        }
+      }
+    }
 
     return className;
   };
