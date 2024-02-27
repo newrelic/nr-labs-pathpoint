@@ -31,7 +31,7 @@
     }
 
     &.warning :hover {
-      color: $warning;
+      color: $signalWarningText;
     }
 
     &.success :hover {
@@ -39,7 +39,7 @@
     }
 
     &.unknown :hover {
-      color: $unknown;
+      color: $signalUnknownText;
     }
 
     &.selected {
@@ -52,7 +52,7 @@
 
       &.warning {
         .name {
-          color: $warning;
+          color: $signalWarningText;
         }
       }
 
@@ -64,7 +64,7 @@
 
       &.unknown {
         .name {
-          color: $unknown;
+          color: $signalUnknownText;
         }
       }
 

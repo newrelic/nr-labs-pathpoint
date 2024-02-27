@@ -145,7 +145,9 @@ const Stage = ({
           a.status === STATUSES.UNKNOWN && a.guid === selectedSignal
             ? 1.5 + signalTypes.indexOf(a.type) * 0.1
             : selectedStep && selectedStepSignalGuids?.includes(a.guid)
-            ? orderedStatuses.indexOf(a.status) - sortFactor
+            ? orderedStatuses.indexOf(a.status) -
+              sortFactor +
+              signalTypes.indexOf(a.type) * 0.1
             : orderedStatuses.indexOf(a.status) +
               signalTypes.indexOf(a.type) * 0.1;
 
@@ -153,7 +155,9 @@ const Stage = ({
           b.status === STATUSES.UNKNOWN && b.guid === selectedSignal
             ? 1.5 + signalTypes.indexOf(b.type) * 0.1
             : selectedStep && selectedStepSignalGuids.includes(b.guid)
-            ? orderedStatuses.indexOf(b.status) - sortFactor
+            ? orderedStatuses.indexOf(b.status) -
+              sortFactor +
+              signalTypes.indexOf(b.type) * 0.1
             : orderedStatuses.indexOf(b.status) +
               signalTypes.indexOf(b.type) * 0.1;
 

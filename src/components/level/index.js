@@ -36,6 +36,7 @@ const Level = ({
   const stages = useContext(StagesContext);
   const dispatch = useContext(FlowDispatchContext);
   const {
+    selections,
     selections: {
       [COMPONENTS.LEVEL]: selectedLevel,
       [COMPONENTS.STEP]: selectedStep,
@@ -102,16 +103,12 @@ const Level = ({
           .filter((s) => validStatuses.includes(s.status))
           .sort((a, b) => {
             const a1 =
-              a.status === STATUSES.UNKNOWN && a.guid === selectedSignal
-                ? 1.5 + signalTypes.indexOf(a.type) * 0.1
-                : orderedStatuses.indexOf(a.status) +
-                  signalTypes.indexOf(a.type) * 0.1;
+              orderedStatuses.indexOf(a.status) +
+              signalTypes.indexOf(a.type) * 0.1;
 
             const b1 =
-              b.status === STATUSES.UNKNOWN && b.guid === selectedSignal
-                ? 1.5 + signalTypes.indexOf(b.type) * 0.1
-                : orderedStatuses.indexOf(b.status) +
-                  signalTypes.indexOf(b.type) * 0.1;
+              orderedStatuses.indexOf(b.status) +
+              signalTypes.indexOf(b.type) * 0.1;
 
             return a1 - b1;
           });
@@ -134,6 +131,14 @@ const Level = ({
               className += ' healthy';
             }
             className += ` ${status}`;
+
+            if (
+              (selectedStep && selectedStep !== id) ||
+              (selectedSignal &&
+                !signals.find((signal) => signal.guid === selectedSignal))
+            ) {
+              className += ' faded';
+            }
           }
 
           return className;
