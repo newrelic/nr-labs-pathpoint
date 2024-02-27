@@ -36,7 +36,6 @@ const Level = ({
   const stages = useContext(StagesContext);
   const dispatch = useContext(FlowDispatchContext);
   const {
-    selections,
     selections: {
       [COMPONENTS.LEVEL]: selectedLevel,
       [COMPONENTS.STEP]: selectedStep,
