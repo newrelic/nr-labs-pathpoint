@@ -1,0 +1,141 @@
+.signal-sidebar {
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  .signal-header {
+    // margin: 0;
+
+    .signal-header-card-body {
+      margin: 0;
+    }
+  }
+
+  .detail-link {
+    color: #0C74DF;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .alert-incidents {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .timerange-badge {
+      padding: 16px;
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      background: #f6fafd;
+      margin-bottom: -16px;
+  
+      .badge-title {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+      }
+  
+      .badge-message {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+      }
+
+      .dismiss-banner {
+        cursor: pointer;
+      }
+    }
+    
+    .alert-incident {
+      .incident-header {
+        margin: 4px 0px;
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        justify-items: center;
+
+        .square {
+          height: 8px;
+          width: 8px;
+          margin: 4px 0;
+          &.critical {
+            background: $critical;
+          }
+      
+          &.warning {
+            background: $warning;
+          }
+      
+          &.success {
+            background: $success;
+          }
+      
+          &.unknown {
+            background: $unknown;
+          }
+        }
+
+        .signal-status {
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 16px;
+      
+          &.critical {
+            color: $critical;
+          }
+      
+          &.warning {
+            color: $signalWarningText;
+          }
+      
+          &.success {
+            color: $success;
+          }
+      
+          &.unknown {
+            color: $signalUnknownText;
+          }
+        }
+
+      }
+
+      .incident-links {
+        display: flex;
+        gap: 4px;
+      }
+    }
+  }
+
+  .incidents-footer {
+    display: block;
+    margin: 0 auto;
+  }
+
+    .incident-card-body {
+    margin: 0;
+  }
+
+  .golden-metric-card {
+    .golden-metric-card-header {
+      margin: 16px 0 4px;
+
+      h4 {
+        font-size: 14px;
+      }
+
+      p {
+        font-size: 10px;
+      }
+    }
+
+    .golden-metric-card-body {
+      margin: 4px 0 16px;
+    }
+  }
+
+}

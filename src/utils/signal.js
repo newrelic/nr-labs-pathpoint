@@ -49,3 +49,49 @@ export const statusFromStatuses = (statusesArray = []) => {
   const leastStatusValue = valuesArray.length ? Math.min(...valuesArray) : 0;
   return statusesOrder[leastStatusValue];
 };
+
+export const capitalize = (word) => {
+  if (!word) return '';
+  const lower = word.toLowerCase();
+  return word.charAt(0).toUpperCase() + lower.slice(1);
+};
+
+export const getIncidentDuration = (openTime, durationSeconds = 0) => {
+  if (!openTime) return '';
+  const incidentDuration = durationSeconds || (Date.now() - openTime) / 1000;
+  return incidentDuration < 60
+    ? `lestt then 1 m`
+    : incidentDuration < 3600
+    ? `${Number(incidentDuration / 60).toFixed()} m`
+    : incidentDuration < 86400
+    ? `${Number(incidentDuration / 3600).toFixed()} h ${Number(
+        (incidentDuration % 3600) / 60
+      ).toFixed()} m`
+    : `${Number(incidentDuration / 86400).toFixed()} d ${Number(
+        (incidentDuration % 86400) / 3600
+      ).toFixed()} h ${Number((incidentDuration % 3600) / 60).toFixed()} m`;
+};
+
+const TIMESTAMP_FORMATTER = new Intl.DateTimeFormat('default', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+export const formatTimestamp = (timestamp) =>
+  TIMESTAMP_FORMATTER.format(new Date(timestamp));
+
+export const getGoldenMetricName = (query, pattern) => {
+  let re = new RegExp(`${pattern}`, 'i');
+  const result = re.exec(query);
+  if (result) {
+    re = /'/i;
+    return query
+      .slice(result.index + result[0].length)
+      .substring(
+        0,
+        re.exec(query.slice(result.index + result[0].length)).index
+      );
+  } else {
+    return '';
+  }
+};

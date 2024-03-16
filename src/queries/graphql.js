@@ -20,7 +20,7 @@ const queryFragment = (alias, accounts, query) => `
   }
 `;
 
-const queriesGQL = (queries = [], fields = {}) => {
+const queriesGQL = (queries = [], fields = {}, acctId = 0) => {
   if (!queries.length) return ngql`{ actor { user { id } } }`;
 
   const queriesFragment = queries.reduce((acc, qry) => {
@@ -29,7 +29,9 @@ const queriesGQL = (queries = [], fields = {}) => {
     return [...acc, queryFragment(alias, accounts, query)];
   }, []);
 
-  return ngql`{ actor { ${queriesFragment.join(' ')} } }`;
+  return ngql`{ actor { ${
+    acctId ? 'account(id: ' + acctId + ') { id name }' : ''
+  } ${queriesFragment.join(' ')} } }`;
 };
 
 export { queriesGQL };
