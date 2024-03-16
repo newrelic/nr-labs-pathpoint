@@ -195,7 +195,7 @@ const KpiBar = ({ onChange = () => null, mode = MODES.INLINE }) => {
     <div className="kpi-bar">
       <div className="kpi-bar-heading">
         <div className={`heading-title heading${modeClassText}ModeWidth`}>
-          <HeadingText type={HeadingText.TYPE.HEADING_4}>
+          <HeadingText type={HeadingText.TYPE.HEADING_5}>
             {UI_CONTENT.KPI_BAR.TITLE}
           </HeadingText>
           <Tooltip text={UI_CONTENT.KPI_BAR.TITLE_TOOLTIP}>
