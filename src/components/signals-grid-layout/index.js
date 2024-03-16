@@ -11,6 +11,7 @@ const renderSignalIcon = (
     style,
     name = UI_CONTENT.SIGNAL.DEFAULT_NAME,
     type,
+    guid,
     status,
     ...statusProps
   },
@@ -19,11 +20,12 @@ const renderSignalIcon = (
   <Tooltip text={name}>
     <IconsLib
       key={i}
-      className={status}
+      className={`${status}`}
       type={type}
+      guid={guid}
       shouldShowTitle={false}
       {...statusProps}
-      style={{ style, margin: 1, marginBottom: -3 }}
+      style={{ ...style, margin: 1, marginBottom: -3 }}
     />
   </Tooltip>
 );

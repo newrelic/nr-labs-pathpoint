@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import { Icon } from 'nr1';
 
+import SignalDetail from './../signal-detail';
 import IconsLib from '../icons-lib';
 import {
   COMPONENTS,
@@ -11,7 +12,7 @@ import {
   STATUSES,
   UI_CONTENT,
 } from '../../constants';
-import { SelectionsContext } from '../../contexts';
+import { SelectionsContext, SignalsContext, useSidebar } from '../../contexts';
 
 const Signal = ({
   name,
@@ -20,24 +21,93 @@ const Signal = ({
   onDelete,
   status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  stageId = '',
 }) => {
-  const { selections, toggleSelection } = useContext(SelectionsContext);
+  const {
+    selections: {
+      [COMPONENTS.STAGE]: selectedStage,
+      [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.STEP]: selectedStep,
+      [COMPONENTS.SIGNAL]: selectedSignal,
+    } = {},
+    toggleSelection,
+  } = useContext(SelectionsContext);
+  const signalsDetails = useContext(SignalsContext);
+  const { openSidebar, closeSidebar } = useSidebar();
+
+  const setSignalClassName = () => {
+    let className = `signal ${mode === MODES.EDIT ? 'edit' : ''}`;
+
+    if (
+      (mode !== MODES.EDIT && selectedSignal && selectedSignal !== guid) ||
+      (mode === MODES.STACKED &&
+        selectedStep &&
+        selectedStage &&
+        (selectedStage !== stageId ||
+          !signalsDetails[guid]?.stepRefs?.includes(selectedStep)))
+    ) {
+      className += ' faded';
+    } else {
+      if (mode !== MODES.EDIT) {
+        className += ` detail ${status}`;
+        if (
+          (selectedSignal === guid && selectedStage && !selectedStep) ||
+          (mode === MODES.STACKED &&
+            selectedStep &&
+            signalsDetails[guid]?.stepRefs?.includes(selectedStep))
+        ) {
+          className += ' selected';
+        }
+      }
+    }
+
+    return className;
+  };
 
   return (
     <div
-      className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
-        [MODES.INLINE, MODES.STACKED].includes(mode) &&
-        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-          ? `detail ${status} ${
-              selections[COMPONENTS.SIGNAL]?.[guid] ? 'selected' : ''
-            }`
-          : ''
-      }`}
-      onClick={() => {
-        toggleSelection(COMPONENTS.SIGNAL, guid);
+      className={setSignalClassName()}
+      onClick={(evt) => {
+        evt.stopPropagation();
+
+        if (mode !== MODES.EDIT) {
+          if (
+            (selectedSignal === guid && selectedStage === stageId) ||
+            (selectedSignal !== guid && selectedStage !== stageId)
+          ) {
+            toggleSelection(COMPONENTS.STAGE, stageId);
+          }
+
+          if (selectedLevel) {
+            toggleSelection(COMPONENTS.LEVEL, selectedLevel);
+          }
+
+          if (selectedStep) {
+            toggleSelection(COMPONENTS.STEP, selectedStep);
+          }
+
+          if (selectedSignal !== guid) {
+            toggleSelection(COMPONENTS.SIGNAL, guid);
+            openSidebar({
+              content: (
+                <SignalDetail
+                  guid={guid}
+                  name={signalsDetails[guid]?.name}
+                  type={type}
+                  status={status}
+                />
+              ),
+              onClose: closeSidebar(),
+              status: status,
+            });
+          } else {
+            toggleSelection(COMPONENTS.SIGNAL, guid);
+            closeSidebar();
+          }
+        }
       }}
     >
-      <div className="status">
+      <div className={`status ${status}`}>
         <IconsLib
           className={mode === MODES.EDIT ? STATUSES.UNKNOWN : status}
           type={
@@ -49,7 +119,9 @@ const Signal = ({
         />
       </div>
       {name ? (
-        <span className={`name ${status}`}>{name}</span>
+        <span className={`name`} title={name}>
+          {name}
+        </span>
       ) : (
         <span className="name unknown">{UI_CONTENT.SIGNAL.DEFAULT_NAME}</span>
       )}
@@ -72,6 +144,7 @@ Signal.propTypes = {
   onDelete: PropTypes.func,
   status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  stageId: PropTypes.string,
 };
 
 export default Signal;

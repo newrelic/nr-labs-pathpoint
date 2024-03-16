@@ -30,6 +30,10 @@
         cursor: pointer;
       }
     }
+
+    &.faded {
+      opacity: 0.3;
+    }
     
     @include status-colors(
       $critical: 'critical',
@@ -84,6 +88,22 @@
       }
 
       .step-cell {
+        @include border-colors(
+          $critical: 'critical',
+          $warning: 'warning',
+        );
+
+        &.healthy {
+          @include border-colors(
+            $success: 'success',
+            $unknown: 'unknown',
+          );
+        }
+
+        &.faded {
+          opacity: 0.3;
+        }
+
         box-sizing: border-box;
         border: 0.25px solid #dedede;
       }

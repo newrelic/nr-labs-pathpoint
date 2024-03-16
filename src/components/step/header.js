@@ -75,7 +75,15 @@ const StepHeader = ({
       />
     </div>
   ) : (
-    <div className="step-header" onClick={() => handleStepHeaderClick()}>
+    <div
+      className="step-header"
+      onClick={(evt) => {
+        if (mode === MODES.INLINE) {
+          evt.stopPropagation();
+          handleStepHeaderClick();
+        }
+      }}
+    >
       <HeadingText type={HeadingText.TYPE.HEADING_6} className="title">
         {title}
       </HeadingText>

@@ -5,6 +5,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 2px;
+  cursor: pointer;
 
   &.edit {
     grid-template-columns: min-content auto min-content;
@@ -25,14 +26,20 @@
   }
 
   &.detail {
-    cursor: pointer;
-
     &.critical :hover {
       color: $critical;
     }
 
     &.warning :hover {
-      color: $warning;
+      color: $signalWarningText;
+    }
+
+    &.success :hover {
+      color: $success;
+    }
+
+    &.unknown :hover {
+      color: $signalUnknownText;
     }
 
     &.selected {
@@ -45,11 +52,27 @@
 
       &.warning {
         .name {
-          color: $warning;
+          color: $signalWarningText;
+        }
+      }
+
+      &.success {
+        .name {
+          color: $success;
+        }
+      }
+
+      &.unknown {
+        .name {
+          color: $signalUnknownText;
         }
       }
 
     }
+  }
+
+  &.faded {
+    opacity: 0.3;
   }
 
   .name {

@@ -26,6 +26,7 @@ import {
   alertsTree,
   annotateStageWithStatuses,
   entitiesDetailsFromQueryResults,
+  updateSignalsWithStepsRefs,
   guidsToArray,
   uniqueSignalGuidsInStages,
 } from '../../utils';
@@ -73,7 +74,12 @@ const Stages = forwardRef(({ mode = MODES.INLINE, saveFlow }, ref) => {
       const { data: { actor = {} } = {} } = await NerdGraphQuery.query({
         query,
       });
-      setSignalsDetails(entitiesDetailsFromQueryResults(actor));
+      setSignalsDetails(
+        updateSignalsWithStepsRefs(
+          stages,
+          entitiesDetailsFromQueryResults(actor)
+        )
+      );
     };
 
     if (arrayOfGuids.length) fetchSignalsDetails();
@@ -206,7 +212,7 @@ const Stages = forwardRef(({ mode = MODES.INLINE, saveFlow }, ref) => {
         <SelectionsContext.Provider value={{ selections, toggleSelection }}>
           <NoAccessGuidsContext.Provider value={guids[SIGNAL_TYPES.NO_ACCESS]}>
             <div className="stages-header">
-              <HeadingText type={HeadingText.TYPE.HEADING_4}>
+              <HeadingText type={HeadingText.TYPE.HEADING_5}>
                 Stages
               </HeadingText>
               {mode === MODES.EDIT ? (

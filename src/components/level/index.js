@@ -36,8 +36,13 @@ const Level = ({
 }) => {
   const stages = useContext(StagesContext);
   const dispatch = useContext(FlowDispatchContext);
-  const { selections: { [COMPONENTS.SIGNAL]: selectedSignal } = {} } =
-    useContext(SelectionsContext);
+  const {
+    selections: {
+      [COMPONENTS.LEVEL]: selectedLevel,
+      [COMPONENTS.STEP]: selectedStep,
+      [COMPONENTS.SIGNAL]: selectedSignal,
+    } = {},
+  } = useContext(SelectionsContext);
   const noAccessGuids = useContext(NoAccessGuidsContext);
   const [steps, setSteps] = useState([]);
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
@@ -102,34 +107,49 @@ const Level = ({
           )
           .sort((a, b) => {
             const a1 =
-              a.status === STATUSES.UNKNOWN && a.guid === selectedSignal
-                ? 1.5 + signalTypes.indexOf(a.type) * 0.1
-                : orderedStatuses.indexOf(a.status) +
-                  signalTypes.indexOf(a.type) * 0.1;
+              orderedStatuses.indexOf(a.status) +
+              signalTypes.indexOf(a.type) * 0.1;
 
             const b1 =
-              b.status === STATUSES.UNKNOWN && b.guid === selectedSignal
-                ? 1.5 + signalTypes.indexOf(b.type) * 0.1
-                : orderedStatuses.indexOf(b.status) +
-                  signalTypes.indexOf(b.type) * 0.1;
+              orderedStatuses.indexOf(b.status) +
+              signalTypes.indexOf(b.type) * 0.1;
 
             return a1 - b1;
           });
 
         const isLastStep = index + 1 === arr.length;
+
+        const setStepCellClassName = () => {
+          let className = 'step-cell';
+
+          if (mode === MODES.EDIT) {
+            className += ' edit';
+          } else if (mode === MODES.STACKED) {
+            if (
+              [STATUSES.SUCCESS, STATUSES.UNKNOWN].includes(status) &&
+              ((selectedStep && id === selectedStep) ||
+                filteredSortedSignals.find(
+                  ({ guid }) => guid === selectedSignal
+                ))
+            ) {
+              className += ' healthy';
+            }
+            className += ` ${status}`;
+
+            if (
+              (selectedStep && selectedStep !== id) ||
+              (selectedSignal &&
+                !signals.find((signal) => signal.guid === selectedSignal))
+            ) {
+              className += ' faded';
+            }
+          }
+
+          return className;
+        };
+
         const cell = (
-          <div
-            className={`step-cell ${
-              mode === MODES.EDIT
-                ? 'edit'
-                : mode === MODES.STACKED &&
-                  signals?.length &&
-                  [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-                ? status
-                : ''
-            }`}
-            key={id}
-          >
+          <div key={id} className={setStepCellClassName()}>
             <Step
               stageId={stageId}
               levelId={levelId}
@@ -205,7 +225,7 @@ const Level = ({
       },
       { rows: [], cols: [] }
     );
-  }, [steps, mode, signalExpandOption]);
+  }, [steps, mode, signalExpandOption, selectedSignal, selectedStep]);
 
   const deleteHandler = () => {
     setDeleteModalHidden(true);
@@ -263,6 +283,30 @@ const Level = ({
     dragOverItemIndex.current = null;
   };
 
+  const setLevelClassName = () => {
+    const shouldLevelBeFaded = selectedSignal
+      ? !steps.reduce(
+          (acc, { signals }) =>
+            acc |
+            signals.reduce((acc, { guid }) => {
+              return Boolean(acc | (guid === selectedSignal));
+            }, false),
+          false
+        )
+      : false;
+
+    let className = `order ${status}`;
+
+    className += `${
+      mode === MODES.STACKED &&
+      (shouldLevelBeFaded || (selectedLevel && selectedLevel !== levelId))
+        ? ' faded'
+        : ''
+    }`;
+
+    return className;
+  };
+
   return mode === MODES.EDIT || stepsRows.length ? (
     <div
       className="level"
@@ -301,7 +345,7 @@ const Level = ({
           />
         </>
       ) : (
-        <div className={`order ${status}`}>{order}</div>
+        <div className={setLevelClassName()}>{order}</div>
       )}
       <div className="steps">{stepsRows}</div>
     </div>

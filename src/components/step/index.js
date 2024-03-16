@@ -44,6 +44,8 @@ const Step = ({
   const signalsDetails = useContext(SignalsContext);
   const {
     selections: {
+      [COMPONENTS.STAGE]: selectedStage,
+      [COMPONENTS.LEVEL]: selectedLevel,
       [COMPONENTS.STEP]: selectedStep,
       [COMPONENTS.SIGNAL]: selectedSignal,
     } = {},
@@ -55,6 +57,7 @@ const Step = ({
   const [stageName, setStageName] = useState('');
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const [signalsListView, setSignalsListView] = useState(false);
+  const [stepBackgroundIsSet, setStepBackground] = useState(false);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
 
@@ -66,8 +69,16 @@ const Step = ({
     setStageName(name);
     setTitle(step.title);
     setStatus(step.status || STATUSES.UNKNOWN);
+
+    const clickedSignal = selectedSignal
+      ? step.signals.find((signal) => signal.guid === selectedSignal)
+      : false;
+    setStepBackground(clickedSignal);
+  }, [stageId, levelId, stepId, stages, signals, selectedSignal]);
+
+  useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
-  }, [stageId, levelId, stepId, stages, signals]);
+  }, [status]);
 
   const updateSignalsHandler = () =>
     navigation.openStackedNerdlet({
@@ -140,8 +151,13 @@ const Step = ({
             type = SIGNAL_TYPES.ENTITY,
           } = {}) => ({
             name: signalDisplayName({ name, guid }),
+            guid,
             status,
             type,
+            style: {
+              opacity: selectedSignal && selectedSignal !== guid ? 0.3 : 1.0,
+              cursor: 'pointer',
+            },
           })
         )}
       />
@@ -162,6 +178,7 @@ const Step = ({
           onDelete={() => openDeleteModalHandler(guid, name)}
           status={status}
           mode={mode}
+          stageId={stageId}
         />
       )),
     [signals, mode, signalExpandOption]
@@ -169,21 +186,50 @@ const Step = ({
   SignalsList.displayName = 'SignalsList';
 
   const handleStepHeaderClick = () => {
-    if (
-      signals.length &&
-      [STATUSES.CRITICAL, STATUSES.WARNING].includes(status)
-    )
+    if (signals.length) {
       setSignalsListView((slw) => !slw);
+    }
+  };
+
+  const setStepClassName = () => {
+    let className = `step ${mode} detail`;
+
+    if (mode === MODES.STACKED && (selectedStep || selectedSignal)) {
+      if (selectedStep === stepId || stepBackgroundIsSet) {
+        className += ` selected ${status}`;
+      } else {
+        className += ' faded';
+      }
+    }
+
+    return className;
   };
 
   return (
     <div
-      className={`step ${mode === MODES.STACKED ? 'stacked' : ''} ${status} ${
-        [STATUSES.CRITICAL, STATUSES.WARNING].includes(status) ? 'detail' : ''
-      } ${
-        selectedStep === stepId && selectedSignal ? ` selected ${status}` : ''
-      }`}
-      onClick={() => toggleSelection(COMPONENTS.STEP, stepId)}
+      className={setStepClassName()}
+      onClick={(evt) => {
+        evt.stopPropagation();
+
+        if (mode === MODES.STACKED) {
+          if (
+            (selectedStep === stepId && selectedStage === stageId) ||
+            (selectedStep !== stepId && selectedStage !== stageId)
+          ) {
+            toggleSelection(COMPONENTS.STAGE, stageId);
+          }
+          if (
+            (selectedStep === stepId && selectedLevel === levelId) ||
+            (selectedStep !== stepId && selectedLevel !== levelId)
+          ) {
+            toggleSelection(COMPONENTS.LEVEL, levelId);
+          }
+          if (selectedSignal) {
+            toggleSelection(COMPONENTS.SIGNAL, selectedSignal);
+          }
+          toggleSelection(COMPONENTS.STEP, stepId);
+        }
+      }}
       draggable={mode === MODES.EDIT}
       onDragStart={dragStartHandler}
       onDragOver={onDragOver}
