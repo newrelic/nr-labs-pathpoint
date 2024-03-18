@@ -50,24 +50,25 @@ const GoldenMetrics = ({ guid = null }) => {
 
   return (
     <>
-      {goldenMetricInfo?.metrics?.length &&
-        goldenMetricInfo.metrics?.map(({ query }, idx) => {
-          return (
-            <Card key={idx} className="golden-metric-card">
-              <CardHeader
-                className="golden-metric-card-header"
-                title={getGoldenMetricName(query, " AS *'")}
-                subtitle={formatTimeRange(timeRangeToNrql(platformState))}
-              />
-              <CardBody className="golden-metric-card-body">
-                <LineChart
-                  accountIds={[goldenMetricInfo.accountId]}
-                  query={`${query} ${timeRangeToNrql(platformState)}`}
+      {goldenMetricInfo?.metrics?.length
+        ? goldenMetricInfo.metrics?.map(({ query }, idx) => {
+            return (
+              <Card key={idx} className="golden-metric-card">
+                <CardHeader
+                  className="golden-metric-card-header"
+                  title={getGoldenMetricName(query, " AS *'")}
+                  subtitle={formatTimeRange(timeRangeToNrql(platformState))}
                 />
-              </CardBody>
-            </Card>
-          );
-        })}
+                <CardBody className="golden-metric-card-body">
+                  <LineChart
+                    accountIds={[goldenMetricInfo.accountId]}
+                    query={`${query} ${timeRangeToNrql(platformState)}`}
+                  />
+                </CardBody>
+              </Card>
+            );
+          })
+        : ''}
     </>
   );
 };

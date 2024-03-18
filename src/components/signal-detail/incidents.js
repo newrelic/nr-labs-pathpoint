@@ -135,101 +135,104 @@ const Incidents = ({ guid, name, status = STATUSES.UNKNOWN, type }) => {
         </div>
         <div className="alert-incidents">
           {bannerMessage && <SectionMessage description={bannerMessage} />}
-          {incidentsList?.length > 0 &&
-            Array.from(
-              {
-                length:
-                  type === SIGNAL_TYPES.ENTITY &&
-                  incidentDisplayCount <= incidentsList.length
-                    ? incidentDisplayCount
-                    : incidentsList.length,
-              },
-              (_, i) => {
-                return (
-                  <>
-                    <div key={i} className="alert-incident">
-                      <Card>
-                        <CardBody className="incident-card-body">
-                          <div className="incident-header">
-                            <div
-                              className={`square ${incidentsList[i]?.priority}`}
-                            ></div>
-                            <div
-                              className={`signal-status ${incidentsList[i]?.priority}`}
-                            >
-                              <span>
-                                {`${capitalize(
-                                  incidentsList[i]?.priority
-                                )} Issue ${capitalize(incidentsList[i].event)}`}
-                              </span>
-                            </div>
-                          </div>
-                          <HeadingText type={HeadingText.TYPE.HEADING_5}>
-                            {incidentsList[i].title}
-                          </HeadingText>
-                          <div className="incident-links">
-                            <Link to={incidentsList[i].incidentLink}>
-                              View incident
-                            </Link>
-                            {type === SIGNAL_TYPES.ENTITY && (
-                              <Link
-                                className="detail-link"
-                                onClick={() =>
-                                  navigation.openStackedEntity(
-                                    btoa(
-                                      `${incidentsList[i].accountId}|AIOPS|CONDITION|${incidentsList[i].conditionId}`
-                                    ).replace(/=+$/, '')
-                                  )
-                                }
+          {incidentsList?.length
+            ? Array.from(
+                {
+                  length:
+                    type === SIGNAL_TYPES.ENTITY &&
+                    incidentDisplayCount <= incidentsList.length
+                      ? incidentDisplayCount
+                      : incidentsList.length,
+                },
+                (_, i) => {
+                  return (
+                    <>
+                      <div key={i} className="alert-incident">
+                        <Card>
+                          <CardBody className="incident-card-body">
+                            <div className="incident-header">
+                              <div
+                                className={`square ${incidentsList[i]?.priority}`}
+                              ></div>
+                              <div
+                                className={`signal-status ${incidentsList[i]?.priority}`}
                               >
-                                View condition
+                                <span>
+                                  {`${capitalize(
+                                    incidentsList[i]?.priority
+                                  )} Issue ${capitalize(
+                                    incidentsList[i].event
+                                  )}`}
+                                </span>
+                              </div>
+                            </div>
+                            <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                              {incidentsList[i].title}
+                            </HeadingText>
+                            <div className="incident-links">
+                              <Link to={incidentsList[i].incidentLink}>
+                                View incident
                               </Link>
-                            )}
-                          </div>
-                          <div>
-                            {`Started: ${formatTimestamp(
-                              incidentsList[i].openTime
-                            )}`}
-                          </div>
-                          <div>
-                            Duration:&nbsp;
-                            {getIncidentDuration(
-                              incidentsList[i].openTime,
-                              incidentsList[i].durationSeconds
-                            )}
-                          </div>
-                        </CardBody>
-                      </Card>
-                    </div>
-                    {type === SIGNAL_TYPES.ENTITY &&
-                    (incidentDisplayCount === 1 ||
-                      i === incidentsList?.length - 1) &&
-                    (incidentDisplayCount !== 1 ||
-                      incidentsList?.length !== 1) ? (
-                      <div className="incidents-footer">
-                        <Button
-                          type={Button.TYPE.PLAIN_NEUTRAL}
-                          onClick={() => {
-                            toggleIncidentDisplayCount((idc) =>
-                              idc === 1 ? incidentsList.length : 1
-                            );
-                          }}
-                        >
-                          {incidentDisplayCount === 1 &&
-                          incidentsList?.length > 1 ? (
-                            `Show ${incidentsList?.length - 1} more incidents`
-                          ) : (
-                            <span>Show less incidents</span>
-                          )}
-                        </Button>
+                              {type === SIGNAL_TYPES.ENTITY && (
+                                <Link
+                                  className="detail-link"
+                                  onClick={() =>
+                                    navigation.openStackedEntity(
+                                      btoa(
+                                        `${incidentsList[i].accountId}|AIOPS|CONDITION|${incidentsList[i].conditionId}`
+                                      ).replace(/=+$/, '')
+                                    )
+                                  }
+                                >
+                                  View condition
+                                </Link>
+                              )}
+                            </div>
+                            <div>
+                              {`Started: ${formatTimestamp(
+                                incidentsList[i].openTime
+                              )}`}
+                            </div>
+                            <div>
+                              Duration:&nbsp;
+                              {getIncidentDuration(
+                                incidentsList[i].openTime,
+                                incidentsList[i].durationSeconds
+                              )}
+                            </div>
+                          </CardBody>
+                        </Card>
                       </div>
-                    ) : (
-                      ''
-                    )}
-                  </>
-                );
-              }
-            )}
+                      {type === SIGNAL_TYPES.ENTITY &&
+                      (incidentDisplayCount === 1 ||
+                        i === incidentsList?.length - 1) &&
+                      (incidentDisplayCount !== 1 ||
+                        incidentsList?.length !== 1) ? (
+                        <div className="incidents-footer">
+                          <Button
+                            type={Button.TYPE.PLAIN_NEUTRAL}
+                            onClick={() => {
+                              toggleIncidentDisplayCount((idc) =>
+                                idc === 1 ? incidentsList.length : 1
+                              );
+                            }}
+                          >
+                            {incidentDisplayCount === 1 &&
+                            incidentsList?.length > 1 ? (
+                              `Show ${incidentsList?.length - 1} more incidents`
+                            ) : (
+                              <span>Show less incidents</span>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        ''
+                      )}
+                    </>
+                  );
+                }
+              )
+            : ''}
         </div>
       </>
     )
