@@ -39,6 +39,26 @@
       align-items: center;
       padding: 0 16px;
       gap: 8px;
+
+      .flow-status-badge {
+        border-radius: 3px;
+        box-sizing: border-box;
+        display: inline-block;
+        font-family: Inter,Segoe UI,Tahoma,sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: .02em;
+        line-height: 16px;
+        max-width: 24ch;
+        overflow: hidden;
+        padding: 0 4px;
+        text-overflow: ellipsis;
+        -webkit-text-stroke: initial;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-color: #e1edff;
+        color: #0b6acb;
+      }
     }
 
     .logo-image {
