@@ -189,7 +189,11 @@ const FlowHeader = ({
         </PopoverBody>
       </Popover>
       <div className="flow-status">
-        <Badge type={Badge.TYPE.INFO}>{UI_CONTENT.FLOW.CURRENT_STATUS}</Badge>
+        <Tooltip text="Flow shows active incidents affecting the configured signals">
+          <div className="flow-status-badge">
+            {UI_CONTENT.FLOW.CURRENT_STATUS}
+          </div>
+        </Tooltip>
         <Tooltip text="Refresh data in flow">
           <Button
             variant={Button.VARIANT.TERTIARY}
