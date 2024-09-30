@@ -120,6 +120,15 @@ const ListingTable = ({
       } else if (removed.size === 1) {
         onSelect?.(type, false, items[removed.keys().next().value]);
       }
+      if (added.size > 1) {
+        items.map((i) => {
+          onSelect?.(type, true, i);
+        });
+      } else if (removed.size > 1) {
+        items.map((i) => {
+          onSelect?.(type, false, i);
+        });
+      }
     },
     [type, entities, alerts, onSelect]
   );
