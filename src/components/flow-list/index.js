@@ -39,7 +39,6 @@ const FlowList = forwardRef(({ flows = [], onClick = () => null }, ref) => {
   }, [userPreferences, userPreferencesLoading]);
 
   useEffect(() => {
-    console.log(flows)
     setFilteredFlows(
       flows.length && searchPattern
         ? flows.filter((item) =>
