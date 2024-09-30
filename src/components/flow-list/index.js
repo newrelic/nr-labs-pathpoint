@@ -48,10 +48,6 @@ const FlowList = forwardRef(({ flows = [], onClick = () => null }, ref) => {
            ${item.document.stages.map((s) => s.name).join(' ')}`
            .toLowerCase()
            .includes(searchPattern.toLowerCase())
-              .map((s) => s.name)
-              .join(' ')}`
-              .toLowerCase()
-              .includes(searchPattern.toLowerCase())
           )
         : flows
     );
