@@ -10,6 +10,9 @@ const MINUTE = 60000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
+export const threeDaysAgo = (d = new Date()) =>
+  dayjs(d).subtract(3, 'day').valueOf();
+
 export const formatTimestamp = (timestamp) =>
   DEFAULT_DATETIME_FORMATTER.format(new Date(timestamp));
 

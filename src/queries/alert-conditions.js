@@ -1,6 +1,6 @@
 import { ngql } from 'nr1';
 
-const threeDaysAgo = (d = new Date()) => d.setDate(d.getDate() - 3);
+import { threeDaysAgo } from '../utils';
 
 const nrqlConditions = `
   nextCursor
@@ -92,7 +92,7 @@ latest(durationSeconds) as durationSeconds FROM NrAiIncident where event in ('op
 where latestEvent = 'open'
   ${timeClause} order by openTime desc ${limitStatement}`.replace(/\s+/g, ' ');
 
-const conditionsDetailsQuery = (acctId, condIds) => `{
+const conditionsDetailsQuery = (acctId, condIds) => ngql`{
   actor {
     account(id: ${acctId}) {
       alerts {
@@ -112,15 +112,17 @@ const conditionsDetailsQuery = (acctId, condIds) => `{
   }
 }`;
 
-const issuesForConditionsQuery = (acctId, condIds, timeWindow) => `{
+const issuesTW = (timeWindow) =>
+  timeWindow ? '' : `, states: [ACTIVATED, CREATED]`;
+
+const issuesForConditionsQuery = (acctId, condIds, timeWindow) => ngql`{
   actor {
     account(id: ${acctId}) {
       aiIssues {
         issues(
           filter: {
-            conditionIds: [${condIds.join(
-              ', '
-            )}], states: [ACTIVATED, CREATED]} 
+            conditionIds: [${condIds.join(', ')}]${issuesTW(timeWindow)}
+          } 
             ${
               timeWindow?.start && timeWindow?.end
                 ? `timeWindow: {endTime: ${timeWindow.end}, startTime: ${timeWindow.start}}`
@@ -137,12 +139,16 @@ const issuesForConditionsQuery = (acctId, condIds, timeWindow) => `{
   }
 }`;
 
-const incidentsSearchQuery = (acctId, incidentIds, timeWindow) => `{
+const incidentsTW = (timeWindow) => (timeWindow ? '' : `, states: CREATED`);
+
+const incidentsSearchQuery = (acctId, incidentIds, timeWindow) => ngql`{
   actor {
     account(id: ${acctId}) {
       aiIssues {
         incidents(
-          filter: {ids: ["${incidentIds.join('", "')}"], states: CREATED}
+          filter: {
+            ids: ["${incidentIds.join('", "')}"]${incidentsTW(timeWindow)}
+          }
           ${
             timeWindow?.start && timeWindow?.end
               ? `timeWindow: {endTime: ${timeWindow.end}, startTime: ${timeWindow.start}}`

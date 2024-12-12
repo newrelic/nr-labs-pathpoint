@@ -126,6 +126,31 @@ export const incidentsFromIncidentsBlocks = (
   return acc;
 };
 
+export const alertsStatusesObjFromData = (data = {}, { start, end }) =>
+  Object.keys(data).reduce((acc, key) => {
+    const { incidents: incids = [], ...alertData } = data[key] || {};
+    const incidents = incids.filter(
+      ({ closedAt, createdAt }) =>
+        (!closedAt || start < closedAt) && createdAt < end
+    );
+    const inferredPriority = (incidents || []).reduce(
+      (p, { priority, closedAt }) =>
+        calculatePriority(
+          { priority, closedAt: closedAt > end ? null : closedAt },
+          p
+        ),
+      ALERT_STATUSES.NOT_ALERTING
+    );
+    return {
+      ...acc,
+      [key]: {
+        ...alertData,
+        incidents,
+        inferredPriority,
+      },
+    };
+  }, {});
+
 export const alertConditionsStatusGQL = (alerts = {}) => {
   const queries = Object.keys(alerts).map((acctId) => ({
     accounts: acctId,

@@ -39,6 +39,7 @@ import {
 } from '../../queries';
 import {
   addSignalStatuses,
+  alertsStatusesObjFromData,
   annotateStageWithStatuses,
   batchAlertConditionsByAccount,
   batchedIncidentIdsFromIssuesQuery,
@@ -47,6 +48,7 @@ import {
   incidentsFromIncidentsBlocks,
   signalDetailsObject,
   statusFromStatuses,
+  threeDaysAgo,
   uniqueSignalGuidsInStages,
   validRefreshInterval,
 } from '../../utils';
@@ -87,6 +89,7 @@ const Stages = forwardRef(({ mode = MODES.INLINE, saveFlow }, ref) => {
   const alertsGuidsLastState = useRef([]);
   const noAccessGuidsLastState = useRef([]);
   const timeBandDataCache = useRef(new Map());
+  const timeWindowAlertsCache = useRef(new Map());
   const playbackTimeWindow = useRef(null);
   const statusTimeoutDelay = useRef(validRefreshInterval(refreshInterval));
   const entitiesStatusTimeoutId = useRef();
@@ -487,18 +490,38 @@ const Stages = forwardRef(({ mode = MODES.INLINE, saveFlow }, ref) => {
         fetchStatuses(guids);
       },
       preload: async (timeBands = [], callback) => {
+        const { [SIGNAL_TYPES.ALERT]: alertsGuids = [] } = guids;
+        const timeWindow = {
+          start: threeDaysAgo(timeBands?.[0]?.start),
+          end: timeBands?.[timeBands.length - 1]?.end,
+        };
+        const key = keyFromTimeWindow(timeWindow);
+        const timeWindowCachedAlerts = timeWindowAlertsCache.current.get(key);
+        let timeBandsDataArray;
+        if (!timeWindowCachedAlerts) {
+          const alertsData = alertsGuids.length
+            ? await fetchAlertsStatus(alertsGuids, timeWindow, true)
+            : {};
+          timeBandsDataArray = timeBands.map((timeWindow) => ({
+            key: keyFromTimeWindow(timeWindow),
+            alertsStatusesObj: alertsStatusesObjFromData(
+              alertsData,
+              timeWindow
+            ),
+          }));
+          timeWindowAlertsCache.current.set(key, timeBandsDataArray);
+        } else {
+          timeBandsDataArray = timeWindowCachedAlerts;
+        }
+
         timeBands.forEach(async (timeWindow, idx) => {
-          const key = keyFromTimeWindow(timeWindow);
+          const { key, alertsStatusesObj } = timeBandsDataArray[idx] || {};
           const timeWindowCachedData = timeBandDataCache.current.get(key);
           if (!timeWindowCachedData) {
-            const {
-              [SIGNAL_TYPES.ENTITY]: entitiesGuids = [],
-              [SIGNAL_TYPES.ALERT]: alertsGuids = [],
-            } = guids;
-            const [entitiesStatusesObj, alertsStatusesObj] = await Promise.all([
-              fetchEntitiesStatus(entitiesGuids, timeWindow, true),
-              fetchAlertsStatus(alertsGuids, timeWindow, true),
-            ]);
+            const { [SIGNAL_TYPES.ENTITY]: entitiesGuids = [] } = guids;
+            const entitiesStatusesObj = entitiesGuids.length
+              ? await fetchEntitiesStatus(entitiesGuids, timeWindow, true)
+              : {};
             const timeWindowStatuses = {
               [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
               [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
