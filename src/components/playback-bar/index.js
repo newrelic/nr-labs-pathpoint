@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, Dropdown, DropdownItem, Icon } from 'nr1';
+import { Button, Dropdown, DropdownItem, Icon, useNerdletState } from 'nr1';
 
 import { TimeRangePicker } from '@newrelic/nr-labs-components';
 import { uuid } from '../../utils';
@@ -78,6 +78,7 @@ const PlaybackBar = ({ isLoading, onPreload, onSeek, onChange }) => {
   const seekDragStartX = useRef(0);
   const isMouseDownOnSeeker = useRef(false);
   const showingTimeWindow = useRef({ start: 0, end: 0 });
+  const [nerdletState, setNerdletState] = useNerdletState();
 
   const loadDataCache = useCallback(async (tbs) => {
     if (!onPreload) return;
@@ -125,11 +126,23 @@ const PlaybackBar = ({ isLoading, onPreload, onSeek, onChange }) => {
   }, []);
 
   const timeRangeChangeHandler = useCallback((selectedTimeRange) => {
-    setTimeRange(selectedTimeRange);
-    setSelectedIncrement(
-      playbackIncrementForSelectedDuration(selectedTimeRange)
-    );
+    setNerdletState({
+      playbackTimeRange: selectedTimeRange,
+      playbackIncrement:
+        playbackIncrementForSelectedDuration(selectedTimeRange),
+    });
   }, []);
+
+  useEffect(() => {
+    if (nerdletState.playbackTimeRange) {
+      setTimeRange(nerdletState.playbackTimeRange);
+      setSelectedIncrement(
+        nerdletState.playbackIncrement
+          ? nerdletState.playbackIncrement
+          : playbackIncrementForSelectedDuration(nerdletState.playbackTimeRange)
+      );
+    }
+  }, [nerdletState.playbackTimeRange]);
 
   useEffect(() => {
     const mouseUpHandler = () => {
@@ -293,7 +306,7 @@ const PlaybackBar = ({ isLoading, onPreload, onSeek, onChange }) => {
             <DropdownItem
               key={item.timeInSeconds}
               disabled={isPlaybackIncrementDisabled(item, timeRange)}
-              onClick={() => setSelectedIncrement(item)}
+              onClick={() => setNerdletState({ playbackIncrement: item })}
             >
               {item.display}
             </DropdownItem>
