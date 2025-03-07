@@ -199,13 +199,24 @@ const HomeNerdlet = () => {
     });
 
   const flowClickHandler = useCallback(
-    (id) => setNerdletState({ flow: { id } }),
+    (id) =>
+      setNerdletState({
+        flow: { id },
+        isPlayback: false,
+        signalExpandOption: 0,
+        playbackTimeRange: null,
+        playbackIncrement: null,
+      }),
     []
   );
 
   const backToFlowsHandler = useCallback(() => {
     setNerdletState({
       flow: {},
+      isPlayback: false,
+      signalExpandOption: 0,
+      playbackTimeRange: null,
+      playbackIncrement: null,
       mode: MODES.INLINE,
     });
     flowsRefetch?.();

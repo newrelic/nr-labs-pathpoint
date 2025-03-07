@@ -398,6 +398,10 @@ const Stages = forwardRef(
     }, [nerdletState.staging]);
 
     useEffect(() => {
+      setSignalExpandOption(nerdletState.signalExpandOption);
+    }, [nerdletState.signalExpandOption]);
+
+    useEffect(() => {
       if (selections.type === COMPONENTS.SIGNAL && selections.id) {
         openSidebar({
           content: (
@@ -670,9 +674,10 @@ const Stages = forwardRef(
                         }
                         label="Unhealthy only"
                         onChange={() =>
-                          setSignalExpandOption(
-                            (seo) => seo ^ SIGNAL_EXPAND.UNHEALTHY_ONLY
-                          )
+                          setNerdletState({
+                            signalExpandOption:
+                              signalExpandOption ^ SIGNAL_EXPAND.UNHEALTHY_ONLY,
+                          })
                         }
                       />
                       <Switch
@@ -681,9 +686,10 @@ const Stages = forwardRef(
                         }
                         label="Critical only"
                         onChange={() =>
-                          setSignalExpandOption(
-                            (seo) => seo ^ SIGNAL_EXPAND.CRITICAL_ONLY
-                          )
+                          setNerdletState({
+                            signalExpandOption:
+                              signalExpandOption ^ SIGNAL_EXPAND.CRITICAL_ONLY,
+                          })
                         }
                       />
                     </>
@@ -693,7 +699,10 @@ const Stages = forwardRef(
                       checked={signalExpandOption & SIGNAL_EXPAND.ALL}
                       label="Expand all steps"
                       onChange={() =>
-                        setSignalExpandOption((seo) => seo ^ SIGNAL_EXPAND.ALL)
+                        setNerdletState({
+                          signalExpandOption:
+                            signalExpandOption ^ SIGNAL_EXPAND.ALL,
+                        })
                       }
                     />
                   )}

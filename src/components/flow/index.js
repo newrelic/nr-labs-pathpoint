@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Spinner } from 'nr1';
+import { Spinner, useNerdletState } from 'nr1';
 
 import {
   KpiBar,
@@ -77,6 +77,7 @@ const Flow = forwardRef(
     const { debugLogJson } = useDebugLogger({ allowDebug: debugMode });
     const stagesRef = useRef();
     const flowIdRef = useRef();
+    const [nerdletState, setNerdletState] = useNerdletState();
 
     useEffect(() => {
       dispatch({
@@ -110,6 +111,10 @@ const Flow = forwardRef(
           onClose: onAuditLogClose,
         });
     }, [isAuditLogShown, flowDoc]);
+
+    useEffect(() => {
+      setIsPlayback(nerdletState.isPlayback);
+    }, [nerdletState.isPlayback]);
 
     const saveFlow = useCallback(
       async (document) => {
@@ -177,7 +182,11 @@ const Flow = forwardRef(
       onClose?.();
     }, [flowWriter, onClose]);
 
-    const togglePlayback = useCallback(() => setIsPlayback((p) => !p), []);
+    const togglePlayback = useCallback(() => {
+      setNerdletState((prevState) => {
+        return { isPlayback: !prevState.isPlayback };
+      });
+    }, []);
 
     const togglePreview = () => {
       if (isPreview && mode !== MODES.EDIT) setMode(MODES.EDIT);
