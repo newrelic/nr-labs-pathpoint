@@ -193,9 +193,13 @@ const Step = ({
         );
       });
     }
-    const filteredSignals = !hideHealthy
-      ? signals
-      : signals.filter((s) => s.status !== 'success' && s.status !== 'unknown');
+    const filteredSignals =
+      !hideHealthy ||
+      !signals.some((s) => s.status === 'critical' || s.status === 'warning')
+        ? signals
+        : signals.filter(
+            (s) => s.status !== 'success' && s.status !== 'unknown'
+          );
 
     return filteredSignals.map(({ guid, name, status, type }) => {
       return (
@@ -325,9 +329,13 @@ const Step = ({
           signalsListView ? (
             <div className="list">
               <SignalsList />
-              {signals.filter(
+              {signals.some(
                 (s) => s.status === 'success' || s.status === 'unknown'
-              ).length > 0 && signalExpandOption !== SIGNAL_EXPAND.ALL ? (
+              ) &&
+              signals.some(
+                (s) => s.status === 'critical' || s.status === 'warning'
+              ) &&
+              signalExpandOption !== SIGNAL_EXPAND.ALL ? (
                 <Button
                   className="show-healthy-btn"
                   iconType={
