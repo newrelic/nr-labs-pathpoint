@@ -82,6 +82,10 @@ export const UI_CONTENT = {
   },
   STEP: {
     DEFAULT_TITLE: 'Untitled step',
+    PANEL: {
+      CONFIG_TITLE: 'Step Configuration',
+      EXCLUDE_MESSAGE: '*step excluded from level health',
+    },
     NO_SIGNALS: {
       TITLE: 'No signals yet',
       DESCRIPTION:
