@@ -133,8 +133,10 @@ const Stage = ({
     const sigs = levels.reduce(
       (acc, { steps = [] }) => ({
         ...acc,
-        ...steps.reduce(
-          (acc, { id, signals = [] }) => ({
+        ...steps.reduce((acc, { id, signals = [], excluded, status }) => {
+          const isInExcludedStep = excluded === true;
+          const isInHealthyStep = status === 'unknown' || status === 'success';
+          return {
             ...acc,
             ...signals.reduce((acc, { guid, name, status, type }) => {
               const isInSelectedStep =
@@ -150,12 +152,13 @@ const Stage = ({
                   statusIndex: ORDERED_STATUSES.indexOf(status),
                   typeIndex: ORDERED_SIGNAL_TYPES.indexOf(type),
                   isInSelectedStep,
+                  isInExcludedStep,
+                  isInHealthyStep,
                 },
               };
             }, {}),
-          }),
-          {}
-        ),
+          };
+        }, {}),
       }),
       {}
     );
@@ -175,10 +178,23 @@ const Stage = ({
       .filter((s) => {
         switch (expandOption) {
           case SIGNAL_EXPAND.UNHEALTHY_ONLY:
-            return s.statusIndex < SUCCESS_STATUS_INDEX;
+            return (
+              !s.isInExcludedStep &&
+              !s.isInHealthyStep &&
+              s.statusIndex < SUCCESS_STATUS_INDEX
+            );
           case SIGNAL_EXPAND.CRITICAL_ONLY:
+            return (
+              !s.isInExcludedStep &&
+              !s.isInHealthyStep &&
+              s.statusIndex === CRITICAL_STATUS_INDEX
+            );
           case SIGNAL_EXPAND.UNHEALTHY_ONLY | SIGNAL_EXPAND.CRITICAL_ONLY:
-            return s.statusIndex === CRITICAL_STATUS_INDEX;
+            return (
+              !s.isInExcludedStep &&
+              !s.isInHealthyStep &&
+              s.statusIndex === CRITICAL_STATUS_INDEX
+            );
           default:
             return true;
         }
