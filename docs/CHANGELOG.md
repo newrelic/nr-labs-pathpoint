@@ -1,3 +1,10 @@
+## [2.3.23](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.22...v2.3.23) (2025-07-16)
+
+
+### Bug Fixes
+
+* set min-width for stage ([f620dea](https://github.com/newrelic/nr-labs-pathpoint/commit/f620dea290337401e5c4294f1e9dcd9b2c013c4e))
+
 ## [2.3.22](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.21...v2.3.22) (2025-05-21)
 
 
