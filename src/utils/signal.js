@@ -195,7 +195,7 @@ const incidentFromIncident = ({
   closed: closedAt,
   opened: createdAt,
   link: `https://aiops.service.${
-    window.location.href.includes('one.eu.newrelic') ? 'eu.' : ''
+    document.referrer.includes('.eu.') ? 'eu.' : ''
   }newrelic.com/accounts/${accountIds}/incidents/${incidentId}/redirect`,
   state: closedAt ? 'closed' : 'open',
   curStatus: priority,
