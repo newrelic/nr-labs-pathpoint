@@ -1,3 +1,10 @@
+## [2.3.25](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.24...v2.3.25) (2025-07-17)
+
+
+### Bug Fixes
+
+* correct eu determination for inc link ([b6e41d6](https://github.com/newrelic/nr-labs-pathpoint/commit/b6e41d64930a04a163686e7aad020278e263c863))
+
 ## [2.3.24](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.23...v2.3.24) (2025-07-17)
 
 
