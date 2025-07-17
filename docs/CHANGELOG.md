@@ -1,3 +1,10 @@
+## [2.3.24](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.23...v2.3.24) (2025-07-17)
+
+
+### Bug Fixes
+
+* add eu support to alert signal incident uri ([011d5a2](https://github.com/newrelic/nr-labs-pathpoint/commit/011d5a26e8cf1b5f69f13835394dece8f9d7b3f3))
+
 ## [2.3.23](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.22...v2.3.23) (2025-07-16)
 
 
