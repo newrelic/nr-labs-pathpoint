@@ -461,7 +461,20 @@ const Stages = forwardRef(
           fetchStatuses(guids);
         },
         preload: async (timeBands = [], callback) => {
-          const { [SIGNAL_TYPES.ALERT]: alertsGuids = [] } = guids;
+          let {
+            [SIGNAL_TYPES.ALERT]: alertsGuids = [],
+            [SIGNAL_TYPES.ENTITY]: entitiesGuids = [],
+          } = guids;
+
+          if (alertsGuids.length === 0 && entitiesGuids.length === 0) {
+            const recalculatedGuids = uniqueSignalGuidsInStages(
+              stages,
+              accounts
+            );
+            alertsGuids = recalculatedGuids[SIGNAL_TYPES.ALERT] || [];
+            entitiesGuids = recalculatedGuids[SIGNAL_TYPES.ENTITY] || [];
+          }
+
           const timeWindow = {
             start: threeDaysAgo(timeBands?.[0]?.start),
             end: timeBands?.[timeBands.length - 1]?.end,
@@ -486,7 +499,6 @@ const Stages = forwardRef(
           }
           setIsLoading(true);
 
-          const { [SIGNAL_TYPES.ENTITY]: entitiesGuids = [] } = guids;
           const workloads = entitiesGuids?.reduce((acc, cur) => {
             const [acctId, domain, type] = atob(cur)?.split('|') || [];
             return acctId && isWorkload({ domain, type })
