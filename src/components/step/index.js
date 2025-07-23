@@ -1,15 +1,25 @@
-import React, { memo, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, navigation } from 'nr1';
+import { Button, navigation, useEntitySearchQuery } from 'nr1';
 
-import { EmptyBlock, DeleteConfirmModal, Signal, SignalsGridLayout } from '../';
+import { EmptyBlock, DeleteConfirmModal } from '../';
+import SignalsGrid from './signals-grid';
+import SignalsList from './signals-list';
 import StepHeader from './header';
 import {
   COMPONENTS,
   MODES,
   SIGNAL_EXPAND,
   SIGNAL_TYPES,
+  SKIP_ENTITY_TYPES_NRQL,
   STATUSES,
   UI_CONTENT,
 } from '../../constants';
@@ -36,45 +46,83 @@ const Step = ({
   mode = MODES.INLINE,
   saveFlow,
 }) => {
-  const { id: flowId } = useContext(FlowContext);
-  const { stages, updateStagesDataRef } = useContext(StagesContext);
-  const signalsDetails = useContext(SignalsContext);
-  const { selections, markSelection } = useContext(SelectionsContext);
+  const { id: flowId, stages: flowStages } = useContext(FlowContext);
+  const { stages, updateStagesDataRef, setDynamicEntities } =
+    useContext(StagesContext);
+  const { selections = {}, markSelection } = useContext(SelectionsContext);
   const dispatch = useContext(FlowDispatchContext);
   const [thisStep, setThisStep] = useState();
-  const [title, setTitle] = useState();
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
   const [stageName, setStageName] = useState('');
   const [isFaded, setIsFaded] = useState(false);
-  const [isSelected, setIsSelected] = useState(false);
   const [deleteModalHidden, setDeleteModalHidden] = useState(true);
   const [signalsListView, setSignalsListView] = useState(false);
   const [hideHealthy, setHideHealthy] = useState(true);
   const [hideSignals, setHideSignals] = useState(false);
+  const [entitiesQuery, setEntitiesQuery] = useState('');
+  const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
+  const { data: { entities: dynamicEntities = [] } = {} } =
+    useEntitySearchQuery({
+      filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
+      limit: entitiesQuery ? 26 : 0,
+    });
 
   useEffect(() => {
-    const { name, levels = [] } =
+    const { name: stgName, levels = [] } =
       (stages || []).find(({ id }) => id === stageId) || {};
     const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
-    const step = steps.find(({ id }) => id === stepId) || {};
-    setIsFaded(() => {
-      if (selections.type === COMPONENTS.STEP) {
-        return selections.id !== step.id;
-      } else if (selections.type === COMPONENTS.SIGNAL) {
-        return !step.signals?.some(({ guid }) => selections.id === guid);
-      }
-      return false;
-    });
-    setIsSelected(
-      () => selections.type === COMPONENTS.STEP && selections.id === step.id
-    );
-    setStageName(name);
-    setTitle(step.title);
+    const { queries, ...step } = steps.find(({ id }) => id === stepId) || {};
+    if (queries?.length) {
+      setEntitiesQuery(
+        queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY)?.query || ''
+      );
+    }
+    setStageName(stgName);
     setStatus(step.status || STATUSES.UNKNOWN);
-    setThisStep(step);
-  }, [stageId, levelId, stepId, stages, signals, selections]);
+  }, [stageId, levelId, stepId, stages]);
+
+  useEffect(
+    () =>
+      setIsFaded(() => {
+        if (selections.type === COMPONENTS.STEP) {
+          return selections.id !== stepId;
+        } else if (selections.type === COMPONENTS.SIGNAL) {
+          return !signals?.some(({ guid }) => selections.id === guid);
+        }
+        return false;
+      }),
+    [signals, selections, stepId]
+  );
+
+  useEffect(() => {
+    if (!flowStages || !stageId || !levelId || !stepId) return;
+    const flowStep =
+      (
+        (
+          (
+            ((flowStages || []).find(({ id }) => id === stageId) || {})
+              .levels || []
+          ).find(({ id }) => id === levelId) || {}
+        ).steps || []
+      ).find(({ id }) => id === stepId) || {};
+    if (flowStep) setThisStep(flowStep);
+  }, [flowStages, stageId, levelId, stepId]);
+
+  useEffect(() => {
+    console.log('dynamic entities in step', dynamicEntities);
+    if (!stepId || dynamicEntities.length > 25) return;
+    setDynamicEntities((des) => ({
+      ...des,
+      [stepId]: dynamicEntities.map(({ guid, name }) => ({
+        guid,
+        name,
+        included: true,
+        type: SIGNAL_TYPES.ENTITY,
+      })),
+    }));
+  }, [stepId, dynamicEntities]);
 
   useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
@@ -97,11 +145,7 @@ const Step = ({
         stageName,
         levelId,
         levelOrder,
-        step: {
-          id: stepId,
-          title,
-          signals,
-        },
+        step: thisStep,
       },
     });
   };
@@ -145,77 +189,20 @@ const Step = ({
     isDragHandleClicked.current = false;
   };
 
-  const signalDisplayName = ({ name = '', guid }) => {
-    const latestName = signalsDetails?.[guid]?.name;
-    if (latestName && latestName !== UI_CONTENT.SIGNAL.DEFAULT_NAME)
-      return latestName;
-    return name || UI_CONTENT.SIGNAL.DEFAULT_NAME;
-  };
-
-  const SignalsGrid = memo(
-    () => (
-      <SignalsGridLayout
-        statuses={signals.map(
-          ({
-            name,
-            guid,
-            status = STATUSES.UNKNOWN,
-            type = SIGNAL_TYPES.ENTITY,
-          } = {}) => ({
-            name: signalDisplayName({ name, guid }),
-            guid,
-            status,
-            type,
-            isFaded:
-              selections.type === COMPONENTS.SIGNAL && selections.id !== guid,
-          })
-        )}
-      />
-    ),
-    [signals, mode, signalExpandOption]
+  const signalDisplayName = useCallback(
+    ({ name = '', guid }) => {
+      const latestName = signalsDetails?.[guid]?.name;
+      if (latestName && latestName !== UI_CONTENT.SIGNAL.DEFAULT_NAME)
+        return latestName;
+      return name || UI_CONTENT.SIGNAL.DEFAULT_NAME;
+    },
+    [signalsDetails]
   );
 
-  SignalsGrid.displayName = 'SignalsGrid';
-
-  const SignalsList = memo(() => {
-    if (mode === MODES.EDIT || signalExpandOption === SIGNAL_EXPAND.ALL) {
-      return signals.map(({ guid, name, status, type }) => {
-        return (
-          <Signal
-            key={guid}
-            guid={guid}
-            type={type}
-            name={signalDisplayName({ name, guid })}
-            onDelete={() => openDeleteModalHandler(guid, name)}
-            status={status}
-            mode={mode}
-          />
-        );
-      });
-    }
-    const filteredSignals =
-      !hideHealthy ||
-      !signals.some((s) => s.status === 'critical' || s.status === 'warning')
-        ? signals
-        : signals.filter(
-            (s) => s.status !== 'success' && s.status !== 'unknown'
-          );
-
-    return filteredSignals.map(({ guid, name, status, type }) => {
-      return (
-        <Signal
-          key={guid}
-          guid={guid}
-          type={type}
-          name={signalDisplayName({ name, guid })}
-          onDelete={() => openDeleteModalHandler(guid, name)}
-          status={status}
-          mode={mode}
-        />
-      );
-    });
-  }, [signals, mode, signalExpandOption, hideHealthy, signalCollapseOption]);
-  SignalsList.displayName = 'SignalsList';
+  const isSelected = useMemo(
+    () => selections.type === COMPONENTS.STEP && selections.id === stepId,
+    [selections, stepId]
+  );
 
   const handleStepExpandCollapse = (e) => {
     if (mode === MODES.INLINE) {
@@ -305,7 +292,14 @@ const Step = ({
               </Button>
               {hideSignals ? (
                 <div className="edit-signals-list">
-                  <SignalsList />
+                  <SignalsList
+                    signals={signals}
+                    mode={mode}
+                    signalExpandOption={signalExpandOption}
+                    hideHealthy={hideHealthy}
+                    signalDisplayName={signalDisplayName}
+                    openDeleteModalHandler={openDeleteModalHandler}
+                  />
                 </div>
               ) : (
                 ''
@@ -313,7 +307,14 @@ const Step = ({
             </>
           ) : (
             <div className="edit-signals-list">
-              <SignalsList />
+              <SignalsList
+                signals={signals}
+                mode={mode}
+                signalExpandOption={signalExpandOption}
+                hideHealthy={hideHealthy}
+                signalDisplayName={signalDisplayName}
+                openDeleteModalHandler={openDeleteModalHandler}
+              />
             </div>
           )}
           <DeleteConfirmModal
@@ -328,7 +329,14 @@ const Step = ({
           {Boolean(signalExpandOption & SIGNAL_EXPAND.ALL) ||
           signalsListView ? (
             <div className="list">
-              <SignalsList />
+              <SignalsList
+                signals={signals}
+                mode={mode}
+                signalExpandOption={signalExpandOption}
+                hideHealthy={hideHealthy}
+                signalDisplayName={signalDisplayName}
+                openDeleteModalHandler={openDeleteModalHandler}
+              />
               {signals.some(
                 (s) => s.status === 'success' || s.status === 'unknown'
               ) &&
@@ -357,7 +365,11 @@ const Step = ({
             </div>
           ) : (
             <div className="grid">
-              <SignalsGrid />
+              <SignalsGrid
+                signals={signals}
+                selections={selections}
+                signalDisplayName={signalDisplayName}
+              />
             </div>
           )}
         </div>
