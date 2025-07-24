@@ -10,19 +10,10 @@ import PropTypes from 'prop-types';
 
 import { Button, navigation, useEntitySearchQuery } from 'nr1';
 
-import { EmptyBlock, DeleteConfirmModal } from '../';
 import SignalsGrid from './signals-grid';
 import SignalsList from './signals-list';
 import StepHeader from './header';
-import {
-  COMPONENTS,
-  MODES,
-  SIGNAL_EXPAND,
-  SIGNAL_TYPES,
-  SKIP_ENTITY_TYPES_NRQL,
-  STATUSES,
-  UI_CONTENT,
-} from '../../constants';
+import { EmptyBlock, DeleteConfirmModal } from '../';
 import {
   FlowContext,
   FlowDispatchContext,
@@ -31,6 +22,17 @@ import {
   StagesContext,
 } from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
+import {
+  COMPONENTS,
+  MODES,
+  OK_STATUSES,
+  SIGNAL_EXPAND,
+  SIGNAL_TYPES,
+  SKIP_ENTITY_TYPES_NRQL,
+  STATUSES,
+  UI_CONTENT,
+  UNHEALTHY_STATUSES,
+} from '../../constants';
 
 const Step = ({
   stageId,
@@ -98,20 +100,14 @@ const Step = ({
 
   useEffect(() => {
     if (!flowStages || !stageId || !levelId || !stepId) return;
-    const flowStep =
-      (
-        (
-          (
-            ((flowStages || []).find(({ id }) => id === stageId) || {})
-              .levels || []
-          ).find(({ id }) => id === levelId) || {}
-        ).steps || []
-      ).find(({ id }) => id === stepId) || {};
-    if (flowStep) setThisStep(flowStep);
+    const { levels = [] } =
+      (flowStages || []).find(({ id }) => id === stageId) || {};
+    const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
+    const currentStep = steps.find(({ id }) => id === stepId);
+    if (currentStep) setThisStep(currentStep);
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    console.log('dynamic entities in step', dynamicEntities);
     if (!stepId || dynamicEntities.length > 25) return;
     setDynamicEntities((des) => ({
       ...des,
@@ -337,11 +333,9 @@ const Step = ({
                 signalDisplayName={signalDisplayName}
                 openDeleteModalHandler={openDeleteModalHandler}
               />
-              {signals.some(
-                (s) => s.status === 'success' || s.status === 'unknown'
-              ) &&
-              signals.some(
-                (s) => s.status === 'critical' || s.status === 'warning'
+              {signals.some(({ status }) => OK_STATUSES.includes(status)) &&
+              signals.some(({ status }) =>
+                UNHEALTHY_STATUSES.includes(status)
               ) &&
               signalExpandOption !== SIGNAL_EXPAND.ALL ? (
                 <Button

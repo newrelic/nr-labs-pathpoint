@@ -2,7 +2,12 @@ import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 
 import { Signal } from '../';
-import { MODES, SIGNAL_EXPAND, STATUSES } from '../../constants';
+import {
+  MODES,
+  OK_STATUSES,
+  SIGNAL_EXPAND,
+  UNHEALTHY_STATUSES,
+} from '../../constants';
 
 const SignalsList = memo(
   ({
@@ -28,15 +33,13 @@ const SignalsList = memo(
         );
       });
     }
+
     const filteredSignals =
       !hideHealthy ||
-      !signals.some(
-        (s) => s.status === STATUSES.CRITICAL || s.status === STATUSES.WARNING
-      )
+      !signals.some(({ status }) => UNHEALTHY_STATUSES.includes(status))
         ? signals
-        : signals.filter(
-            (s) =>
-              s.status !== STATUSES.SUCCESS && s.status !== STATUSES.UNKNOWN
+        : signals.filter(({ status }) =>
+            OK_STATUSES.every((s) => s !== status)
           );
 
     return filteredSignals.map(({ guid, name, status, type }) => {
