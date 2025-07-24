@@ -109,7 +109,12 @@ const Step = ({
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    if (!stepId || dynamicEntities.length > MAX_ENTITIES_IN_STEP) return;
+    if (
+      !stepId ||
+      dynamicEntities.length > MAX_ENTITIES_IN_STEP ||
+      !setDynamicEntities
+    )
+      return;
     setDynamicEntities((des) => ({
       ...des,
       [stepId]: dynamicEntities.map(({ guid, name }) => ({
