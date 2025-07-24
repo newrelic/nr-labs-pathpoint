@@ -38,9 +38,7 @@ const SignalsList = memo(
       !hideHealthy ||
       !signals.some(({ status }) => UNHEALTHY_STATUSES.includes(status))
         ? signals
-        : signals.filter(({ status }) =>
-            OK_STATUSES.every((s) => s !== status)
-          );
+        : signals.filter(({ status }) => !OK_STATUSES.includes(status));
 
     return filteredSignals.map(({ guid, name, status, type }) => {
       return (

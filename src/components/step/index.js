@@ -24,6 +24,7 @@ import {
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 import {
   COMPONENTS,
+  MAX_ENTITIES_IN_STEP,
   MODES,
   OK_STATUSES,
   SIGNAL_EXPAND,
@@ -68,7 +69,7 @@ const Step = ({
   const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
       filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
-      limit: entitiesQuery ? 26 : 0,
+      limit: entitiesQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
     });
 
   useEffect(() => {
@@ -108,7 +109,7 @@ const Step = ({
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    if (!stepId || dynamicEntities.length > 25) return;
+    if (!stepId || dynamicEntities.length > MAX_ENTITIES_IN_STEP) return;
     setDynamicEntities((des) => ({
       ...des,
       [stepId]: dynamicEntities.map(({ guid, name }) => ({
@@ -200,20 +201,19 @@ const Step = ({
     [selections, stepId]
   );
 
+  const showHideOkText = useMemo(
+    () =>
+      `${hideHealthy ? 'Show' : 'Hide'} ${
+        signals.filter(({ status }) => OK_STATUSES.includes(status))?.length
+      } healthy/unknown signal(s)`,
+    [hideHealthy, signals]
+  );
+
   const handleStepExpandCollapse = (e) => {
     if (mode === MODES.INLINE) {
       e.stopPropagation();
       if (signals.length) setSignalsListView((slw) => !slw);
     }
-  };
-
-  const renderButtonText = () => {
-    const healthySignalCount = signals.filter(
-      (s) => s.status === 'success' || s.status === 'unknown'
-    ).length;
-    const firstWord = hideHealthy ? 'Show' : 'Hide';
-
-    return `${firstWord} ${healthySignalCount} healthy/unknown signal(s)`;
   };
 
   return (
@@ -351,7 +351,7 @@ const Step = ({
                     setHideHealthy((prevHideHealthy) => !prevHideHealthy)
                   }
                 >
-                  {renderButtonText()}
+                  {showHideOkText}
                 </Button>
               ) : (
                 ''
