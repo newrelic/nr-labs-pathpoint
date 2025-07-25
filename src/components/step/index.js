@@ -66,6 +66,7 @@ const Step = ({
   const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
+  const dynamicEntitiesQueryId = useRef(null);
   const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
       filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
@@ -76,11 +77,13 @@ const Step = ({
     const { name: stgName, levels = [] } =
       (stages || []).find(({ id }) => id === stageId) || {};
     const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
-    const { queries, ...step } = steps.find(({ id }) => id === stepId) || {};
-    if (queries?.length) {
-      setEntitiesQuery(
-        queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY)?.query || ''
-      );
+    const { queries = [], ...step } =
+      steps.find(({ id }) => id === stepId) || {};
+    const { query, id } =
+      queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY) || {};
+    if (query) {
+      dynamicEntitiesQueryId.current = id;
+      setEntitiesQuery(query);
     }
     setStageName(stgName);
     setStatus(step.status || STATUSES.UNKNOWN);
@@ -122,6 +125,7 @@ const Step = ({
         name,
         included: true,
         type: SIGNAL_TYPES.ENTITY,
+        queryId: dynamicEntitiesQueryId.current,
       })),
     }));
   }, [stepId, dynamicEntities]);
@@ -221,6 +225,19 @@ const Step = ({
     }
   };
 
+  const queriesWithResults = useMemo(
+    () =>
+      (thisStep?.queries || []).map((query) => {
+        if (query.type === SIGNAL_TYPES.ENTITY)
+          return {
+            ...query,
+            results: dynamicEntities,
+          };
+        return query;
+      }),
+    [thisStep, dynamicEntities]
+  );
+
   return (
     <div
       className={`step ${mode === MODES.STACKED ? 'stacked' : ''} ${
@@ -294,7 +311,8 @@ const Step = ({
               {hideSignals ? (
                 <div className="edit-signals-list">
                   <SignalsList
-                    signals={signals}
+                    signals={thisStep?.signals || []}
+                    queries={queriesWithResults}
                     mode={mode}
                     signalExpandOption={signalExpandOption}
                     hideHealthy={hideHealthy}
@@ -309,7 +327,8 @@ const Step = ({
           ) : (
             <div className="edit-signals-list">
               <SignalsList
-                signals={signals}
+                signals={thisStep?.signals || []}
+                queries={queriesWithResults}
                 mode={mode}
                 signalExpandOption={signalExpandOption}
                 hideHealthy={hideHealthy}
