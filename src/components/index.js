@@ -31,3 +31,4 @@ export { default as StepDetailSidebar } from './step-detail-sidebar';
 export { default as EditInPlace } from './edit-in-place';
 export { default as Modal } from './modal';
 export { default as ExportFlowModal } from './export-flow-modal';
+export { default as QueryTree } from './query-tree';
