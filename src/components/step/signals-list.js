@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { QueryTree, Signal } from '../';
@@ -9,40 +9,19 @@ import {
   UNHEALTHY_STATUSES,
 } from '../../constants';
 
-const SignalsList = memo(
-  ({
-    signals,
-    queries,
-    mode,
-    signalExpandOption,
-    hideHealthy,
-    signalDisplayName,
-    openDeleteModalHandler,
-  }) => {
-    if (mode === MODES.EDIT) {
-      return (
-        <>
-          {signals.map(({ guid, name, status, type }) => (
-            <Signal
-              key={guid}
-              guid={guid}
-              type={type}
-              name={signalDisplayName({ name, guid })}
-              onDelete={() => openDeleteModalHandler(guid, name)}
-              status={status}
-              mode={mode}
-            />
-          ))}
-          {queries.map(({ id, query, results }) => (
-            <QueryTree query={query} results={results} key={id} />
-          ))}
-        </>
-      );
-    }
-
-    if (signalExpandOption === SIGNAL_EXPAND.ALL) {
-      return signals.map(({ guid, name, status, type }) => {
-        return (
+const SignalsList = ({
+  signals,
+  queries,
+  mode,
+  signalExpandOption,
+  hideHealthy,
+  signalDisplayName,
+  openDeleteModalHandler,
+}) => {
+  if (mode === MODES.EDIT) {
+    return (
+      <>
+        {signals.map(({ guid, name, status, type }) => (
           <Signal
             key={guid}
             guid={guid}
@@ -52,17 +31,16 @@ const SignalsList = memo(
             status={status}
             mode={mode}
           />
-        );
-      });
-    }
+        ))}
+        {queries.map(({ id, query, results }) => (
+          <QueryTree query={query} results={results} key={id} />
+        ))}
+      </>
+    );
+  }
 
-    const filteredSignals =
-      !hideHealthy ||
-      !signals.some(({ status }) => UNHEALTHY_STATUSES.includes(status))
-        ? signals
-        : signals.filter(({ status }) => !OK_STATUSES.includes(status));
-
-    return filteredSignals.map(({ guid, name, status, type }) => {
+  if (signalExpandOption === SIGNAL_EXPAND.ALL) {
+    return signals.map(({ guid, name, status, type }) => {
       return (
         <Signal
           key={guid}
@@ -76,8 +54,27 @@ const SignalsList = memo(
       );
     });
   }
-);
-SignalsList.displayName = 'SignalsList';
+
+  const filteredSignals =
+    !hideHealthy ||
+    !signals.some(({ status }) => UNHEALTHY_STATUSES.includes(status))
+      ? signals
+      : signals.filter(({ status }) => !OK_STATUSES.includes(status));
+
+  return filteredSignals.map(({ guid, name, status, type }) => {
+    return (
+      <Signal
+        key={guid}
+        guid={guid}
+        type={type}
+        name={signalDisplayName({ name, guid })}
+        onDelete={() => openDeleteModalHandler(guid, name)}
+        status={status}
+        mode={mode}
+      />
+    );
+  });
+};
 
 SignalsList.propTypes = {
   signals: PropTypes.array,

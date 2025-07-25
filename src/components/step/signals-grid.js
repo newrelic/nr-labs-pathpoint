@@ -1,11 +1,11 @@
-import React, { memo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import { SignalsGridLayout } from '../';
 
 import { COMPONENTS, SIGNAL_TYPES, STATUSES } from '../../constants';
 
-const SignalsGrid = memo(({ signals, selections, signalDisplayName }) => (
+const SignalsGrid = ({ signals, selections, signalDisplayName }) => (
   <SignalsGridLayout
     statuses={signals.map(
       ({
@@ -23,8 +23,7 @@ const SignalsGrid = memo(({ signals, selections, signalDisplayName }) => (
       })
     )}
   />
-));
-SignalsGrid.displayName = 'SignalsGrid';
+);
 
 SignalsGrid.propTypes = {
   signals: PropTypes.array,
