@@ -44,7 +44,7 @@ const FlowList = forwardRef(({ flows = [], onClick = () => null }, ref) => {
         ? flows.filter((item) =>
             `${item.document?.name || ''}
            ${item.document?.created?.user?.name || ''}
-           ${(item.document?.stages || []).map((s) => s.name).join(' ')}`
+           ${(item.document?.stages || []).map((s) => s?.name || '').join(' ')}`
               .toLowerCase()
               .includes(searchPattern.toLowerCase())
           )
