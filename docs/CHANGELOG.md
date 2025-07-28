@@ -1,3 +1,11 @@
+## [2.3.26](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.25...v2.3.26) (2025-07-28)
+
+
+### Bug Fixes
+
+* optional chaining for search in flow list ([37e35ab](https://github.com/newrelic/nr-labs-pathpoint/commit/37e35ab9b1f626da88a26df18ca0b63f721e49f0))
+* optional chaining in map ([3a82d4c](https://github.com/newrelic/nr-labs-pathpoint/commit/3a82d4c7b4bbffdccdbd3ef0e277f97f5ebf23dd))
+
 ## [2.3.25](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.24...v2.3.25) (2025-07-17)
 
 
