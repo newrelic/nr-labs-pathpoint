@@ -52,9 +52,9 @@ import {
   incidentsFromIncidentsBlocks,
   isWorkload,
   signalDetailsObject,
+  stagesSignalGuidsSetsByType,
   statusFromStatuses,
   threeDaysAgo,
-  uniqueSignalGuidsInStages,
   validRefreshInterval,
 } from '../../utils';
 import {
@@ -80,6 +80,7 @@ const Stages = forwardRef(
     const [statuses, setStatuses] = useState({});
     const [stagesData, setStagesData] = useState({ stages });
     const [signalsDetails, setSignalsDetails] = useState({});
+    const [dynamicEntities, setDynamicEntities] = useState({});
     const [selections, setSelections] = useState({});
     const [classifications, setClassifications] = useState({});
     const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
@@ -99,12 +100,13 @@ const Stages = forwardRef(
     const statusTimeoutDelay = useRef(validRefreshInterval(refreshInterval));
     const entitiesStatusTimeoutId = useRef();
     const alertsStatusTimeoutId = useRef();
+    const stepsDynamicEntities = useRef({});
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
 
     useEffect(() => {
       return () => {
-        clearInterval(entitiesStatusTimeoutId.current);
+        clearTimeout(entitiesStatusTimeoutId.current);
         clearTimeout(alertsStatusTimeoutId.current);
       };
     }, []);
@@ -115,11 +117,45 @@ const Stages = forwardRef(
 
     useEffect(() => {
       if (!accounts?.length) return;
-      clearInterval(entitiesStatusTimeoutId.current);
+      clearTimeout(entitiesStatusTimeoutId.current);
       clearTimeout(alertsStatusTimeoutId.current);
-      setGuids(uniqueSignalGuidsInStages(stages, accounts));
+      const uniqueGuidsSetsByType = stagesSignalGuidsSetsByType(
+        stages,
+        accounts
+      );
+      setGuids((gs) => ({
+        ...gs,
+        ...Object.keys(uniqueGuidsSetsByType)?.reduce(
+          (types, type) => ({
+            ...types,
+            [type]: [
+              ...(gs[type] || []).reduce(
+                (acc, cur) => acc.add(cur),
+                uniqueGuidsSetsByType[type]
+              ),
+            ],
+          }),
+          {}
+        ),
+      }));
       setStagesData(() => ({ stages: [...stages] }));
     }, [stages, accounts]);
+
+    useEffect(() => {
+      stepsDynamicEntities.current = dynamicEntities;
+      setGuids((gs) => {
+        const entitiesGuidsSet = new Set(gs[SIGNAL_TYPES.ENTITY] || []);
+        Object.keys(dynamicEntities).forEach((stp) =>
+          dynamicEntities[stp]?.forEach(({ guid }) =>
+            entitiesGuidsSet.add(guid)
+          )
+        );
+        return {
+          ...gs,
+          [SIGNAL_TYPES.ENTITY]: [...entitiesGuidsSet],
+        };
+      });
+    }, [dynamicEntities]);
 
     const fetchEntitiesStatus = useCallback(
       async (entitiesGuids, timeWindow, isForCache) => {
@@ -344,12 +380,25 @@ const Stages = forwardRef(
     }, [fetchStatuses, guids]);
 
     useEffect(() => {
+      const updatedStages = stages.map((stg) => ({
+        ...stg,
+        levels: stg.levels.map((lvl) => ({
+          ...lvl,
+          steps: lvl.steps.map((stp) => ({
+            ...stp,
+            signals: [
+              ...stp.signals,
+              ...(stepsDynamicEntities.current?.[stp.id] || []),
+            ],
+          })),
+        })),
+      }));
       const {
         entitiesInStepCount,
         signalsWithNoAccess,
         signalsWithNoStatus,
         signalsWithStatuses,
-      } = addSignalStatuses([...stages], statuses);
+      } = addSignalStatuses(updatedStages, statuses);
       setStagesData(() => ({
         stages: signalsWithStatuses.map(annotateStageWithStatuses),
       }));
@@ -364,7 +413,13 @@ const Stages = forwardRef(
 
     useEffect(() => {
       if (nerdletState.staging) {
-        const { stageId, levelId, stepId, signals = [] } = nerdletState.staging;
+        const {
+          stageId,
+          levelId,
+          stepId,
+          signals = [],
+          queries = [],
+        } = nerdletState.staging;
         const updates = (stagesDataRef.current || []).reduce(
           (acc, stage) =>
             stage.id === stageId
@@ -379,6 +434,7 @@ const Stages = forwardRef(
                               ? {
                                   ...step,
                                   signals,
+                                  queries,
                                 }
                               : step
                           ),
@@ -638,7 +694,12 @@ const Stages = forwardRef(
 
     return (
       <StagesContext.Provider
-        value={{ stages: stagesData.stages, updateStagesDataRef }}
+        value={{
+          stages: stagesData.stages,
+          updateStagesDataRef,
+          dynamicEntities,
+          setDynamicEntities,
+        }}
       >
         <SignalsContext.Provider value={signalsDetails}>
           <SelectionsContext.Provider value={{ selections, markSelection }}>
