@@ -163,7 +163,7 @@ export const annotateStageWithStatuses = (stage = {}) => {
   return { ...stage, levels, status };
 };
 
-export const uniqueSignalGuidsInStages = (stages = [], accounts = []) => {
+export const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
   const guids = Object.values(SIGNAL_TYPES).reduce(
     (acc, type) => ({ ...acc, [type]: new Set() }),
     {}
@@ -185,7 +185,7 @@ export const uniqueSignalGuidsInStages = (stages = [], accounts = []) => {
   );
   return Object.keys(guids).reduce(
     (acc, type) =>
-      guids[type] instanceof Set ? { ...acc, [type]: [...guids[type]] } : acc,
+      guids[type] instanceof Set ? { ...acc, [type]: guids[type] } : acc,
     {}
   );
 };
