@@ -1,3 +1,19 @@
+## [2.3.27](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.26...v2.3.27) (2025-07-29)
+
+
+### Bug Fixes
+
+* adding a query tree for use in step ([60af2d8](https://github.com/newrelic/nr-labs-pathpoint/commit/60af2d8ab44741e192ea10f46c047c298c34970a))
+* adding check for setter fn in step ([b48ef91](https://github.com/newrelic/nr-labs-pathpoint/commit/b48ef91ef0a108dd9ad36d360a1298a7b673fba8))
+* memo issues in step; setting up for dynamic entities ([f459275](https://github.com/newrelic/nr-labs-pathpoint/commit/f4592756888fb08802f6b090afbe28b5fc45a435))
+
+
+### Performance Improvements
+
+* minor fixes ([26e4119](https://github.com/newrelic/nr-labs-pathpoint/commit/26e4119f5988d8d7abe9d47d5ef5c3fa5bc44e06))
+* minor fixes to step ([90fb8f5](https://github.com/newrelic/nr-labs-pathpoint/commit/90fb8f54fb9a599930e49d1fa16ce8dde092d932))
+* removing memo from signal listing components ([1948e39](https://github.com/newrelic/nr-labs-pathpoint/commit/1948e39603a4011fbc67b6538c70f1c22c5ca289))
+
 ## [2.3.26](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.25...v2.3.26) (2025-07-28)
 
 
