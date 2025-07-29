@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.27...v2.4.0) (2025-07-29)
+
+
+### Features
+
+* update stages to handle dynamic entities ([680e579](https://github.com/newrelic/nr-labs-pathpoint/commit/680e57992454fb60fd0ae42406a12b981489ca5e))
+
 ## [2.3.27](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.26...v2.3.27) (2025-07-29)
 
 
