@@ -1,3 +1,48 @@
+## [2.3.27](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.26...v2.3.27) (2025-07-29)
+
+
+### Bug Fixes
+
+* adding a query tree for use in step ([60af2d8](https://github.com/newrelic/nr-labs-pathpoint/commit/60af2d8ab44741e192ea10f46c047c298c34970a))
+* adding check for setter fn in step ([b48ef91](https://github.com/newrelic/nr-labs-pathpoint/commit/b48ef91ef0a108dd9ad36d360a1298a7b673fba8))
+* memo issues in step; setting up for dynamic entities ([f459275](https://github.com/newrelic/nr-labs-pathpoint/commit/f4592756888fb08802f6b090afbe28b5fc45a435))
+
+
+### Performance Improvements
+
+* minor fixes ([26e4119](https://github.com/newrelic/nr-labs-pathpoint/commit/26e4119f5988d8d7abe9d47d5ef5c3fa5bc44e06))
+* minor fixes to step ([90fb8f5](https://github.com/newrelic/nr-labs-pathpoint/commit/90fb8f54fb9a599930e49d1fa16ce8dde092d932))
+* removing memo from signal listing components ([1948e39](https://github.com/newrelic/nr-labs-pathpoint/commit/1948e39603a4011fbc67b6538c70f1c22c5ca289))
+
+## [2.3.26](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.25...v2.3.26) (2025-07-28)
+
+
+### Bug Fixes
+
+* optional chaining for search in flow list ([37e35ab](https://github.com/newrelic/nr-labs-pathpoint/commit/37e35ab9b1f626da88a26df18ca0b63f721e49f0))
+* optional chaining in map ([3a82d4c](https://github.com/newrelic/nr-labs-pathpoint/commit/3a82d4c7b4bbffdccdbd3ef0e277f97f5ebf23dd))
+
+## [2.3.25](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.24...v2.3.25) (2025-07-17)
+
+
+### Bug Fixes
+
+* correct eu determination for inc link ([b6e41d6](https://github.com/newrelic/nr-labs-pathpoint/commit/b6e41d64930a04a163686e7aad020278e263c863))
+
+## [2.3.24](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.23...v2.3.24) (2025-07-17)
+
+
+### Bug Fixes
+
+* add eu support to alert signal incident uri ([011d5a2](https://github.com/newrelic/nr-labs-pathpoint/commit/011d5a26e8cf1b5f69f13835394dece8f9d7b3f3))
+
+## [2.3.23](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.22...v2.3.23) (2025-07-16)
+
+
+### Bug Fixes
+
+* set min-width for stage ([f620dea](https://github.com/newrelic/nr-labs-pathpoint/commit/f620dea290337401e5c4294f1e9dcd9b2c013c4e))
+
 ## [2.3.22](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.21...v2.3.22) (2025-05-21)
 
 

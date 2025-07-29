@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "nr-labs-pathpoint",
-    "version": "2.3.22",
+    "version": "2.3.27",
     "scripts": {
         "start": "nr1 nerdpack:serve",
         "eslint-check": "eslint nerdlets/ src/",
