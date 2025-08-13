@@ -97,12 +97,6 @@ const Step = ({
         if (query) setAlertsQuery(query);
       }
     });
-    // const { query, id } =
-    //   queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY) || {};
-    // if (query) {
-    //   dynamicEntitiesQueryId.current = id;
-    //   setEntitiesQuery(query);
-    // }
     setStageName(stgName);
     setStatus(step.status || STATUSES.UNKNOWN);
   }, [stageId, levelId, stepId, stages]);

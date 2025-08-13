@@ -32,7 +32,7 @@ const SelectedSignals = ({
         <div className="title">
           <HeadingText type={HeadingText.TYPE.HEADING_6}>Entities</HeadingText>
           <Badge>{`${
-            entitySelections.length + dynamicEntities.length || 0
+            entitySelections.length + dynamicEntities.length
           }/25`}</Badge>
         </div>
         <div className="list">
@@ -63,9 +63,7 @@ const SelectedSignals = ({
         <hr className="rule" />
         <div className="title">
           <HeadingText type={HeadingText.TYPE.HEADING_6}>Alerts</HeadingText>
-          <Badge>{`${
-            alertSelections.length + dynamicAlerts.length || 0
-          }/25`}</Badge>
+          <Badge>{`${alertSelections.length + dynamicAlerts.length}/25`}</Badge>
         </div>
         <div className="list">
           {alertSelections.map(({ name, guid }) => (

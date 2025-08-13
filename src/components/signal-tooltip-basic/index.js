@@ -30,7 +30,8 @@ const SignalTooltipBasic = ({ name, guid, children }) => {
       );
     if (sigDomain && sigType)
       setSignalType(() =>
-        sigDomain === CONDITION_DOMAIN_TYPE.domain && CONDITION_DOMAIN_TYPE.type
+        sigDomain === CONDITION_DOMAIN_TYPE.domain &&
+        sigType === CONDITION_DOMAIN_TYPE.type
           ? 'Alert Condition'
           : types.find(
               ({ domain, type }) => domain === sigDomain && type === sigType

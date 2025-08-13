@@ -294,6 +294,12 @@ const SignalSelectionNerdlet = () => {
     return { ...entitiesSelectionsObj, ...dynamicSelectionsObj };
   }, [signalSelections[SIGNAL_TYPES.ALERT], entities, dynamicAlerts]);
 
+  const isAddFilterDisabled = useMemo(
+    () =>
+      dynamicQueries[currentTab] || entities.length > 25 || !entities.length,
+    [dynamicQueries, currentTab, entities]
+  );
+
   const accountChangeHandler = useCallback((_, a) => setAccountId(a), []);
 
   const cancelHandler = useCallback(() => navigation.closeNerdlet(), []);
@@ -481,11 +487,7 @@ const SignalSelectionNerdlet = () => {
                 <Button
                   sizeType={Button.SIZE_TYPE.SMALL}
                   iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS}
-                  disabled={
-                    dynamicQueries[currentTab] ||
-                    entities.length > 25 ||
-                    !entities.length
-                  }
+                  disabled={isAddFilterDisabled}
                   onClick={() => {
                     if (currentTab === SIGNAL_TYPES.ENTITY) {
                       const qry = dynamicEntitiesQuery.current;
