@@ -12,19 +12,21 @@ import {
   UI_CONTENT,
 } from '../../constants';
 import { SelectionsContext } from '../../contexts';
+import SignalTooltipBasic from '../signal-tooltip-basic';
 
 const Signal = ({
   name,
   guid,
-  type = SIGNAL_TYPES.ENTITY,
-  onDelete,
-  status = STATUSES.UNKNOWN,
   isInSelectedStep,
+  hasTooltip,
+  type = SIGNAL_TYPES.ENTITY,
+  status = STATUSES.UNKNOWN,
   mode = MODES.INLINE,
+  onDelete,
 }) => {
   const { selections, markSelection } = useContext(SelectionsContext);
 
-  return (
+  const signalUI = (
     <div
       className={`signal ${mode === MODES.EDIT ? 'edit' : ''} ${
         [MODES.INLINE, MODES.STACKED].includes(mode)
@@ -63,7 +65,7 @@ const Signal = ({
         />
       </div>
       {name ? (
-        <span className={`name`} title={name}>
+        <span className={`name`} title={hasTooltip ? null : name}>
           {name}
         </span>
       ) : (
@@ -79,16 +81,26 @@ const Signal = ({
       ) : null}
     </div>
   );
+
+  if (hasTooltip)
+    return (
+      <SignalTooltipBasic name={name} guid={guid}>
+        {signalUI}
+      </SignalTooltipBasic>
+    );
+
+  return signalUI;
 };
 
 Signal.propTypes = {
   name: PropTypes.string,
   guid: PropTypes.string,
-  type: PropTypes.oneOf(Object.values(SIGNAL_TYPES)),
-  onDelete: PropTypes.func,
-  status: PropTypes.oneOf(Object.values(STATUSES)),
   isInSelectedStep: PropTypes.bool,
+  hasTooltip: PropTypes.bool,
+  type: PropTypes.oneOf(Object.values(SIGNAL_TYPES)),
+  status: PropTypes.oneOf(Object.values(STATUSES)),
   mode: PropTypes.oneOf(Object.values(MODES)),
+  onDelete: PropTypes.func,
 };
 
 export default Signal;
