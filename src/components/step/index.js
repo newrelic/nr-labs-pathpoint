@@ -23,6 +23,7 @@ import {
 } from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 import {
+  ALERTS_DOMAIN_TYPE_NRQL,
   COMPONENTS,
   MAX_ENTITIES_IN_STEP,
   MODES,
@@ -50,7 +51,7 @@ const Step = ({
   saveFlow,
 }) => {
   const { id: flowId, stages: flowStages } = useContext(FlowContext);
-  const { stages, updateStagesDataRef, setDynamicEntities } =
+  const { stages, updateStagesDataRef, setDynamicEntities, setDynamicAlerts } =
     useContext(StagesContext);
   const { selections = {}, markSelection } = useContext(SelectionsContext);
   const dispatch = useContext(FlowDispatchContext);
@@ -63,15 +64,21 @@ const Step = ({
   const [hideHealthy, setHideHealthy] = useState(true);
   const [hideSignals, setHideSignals] = useState(false);
   const [entitiesQuery, setEntitiesQuery] = useState('');
+  const [alertsQuery, setAlertsQuery] = useState('');
   const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
   const dynamicEntitiesQueryId = useRef(null);
+  const dynamicAlertsQueryId = useRef(null);
   const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
       filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
       limit: entitiesQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
     });
+  const { data: { entities: dynamicAlerts = [] } = {} } = useEntitySearchQuery({
+    filters: `${ALERTS_DOMAIN_TYPE_NRQL} AND ${alertsQuery}`,
+    limit: alertsQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
+  });
 
   useEffect(() => {
     const { name: stgName, levels = [] } =
@@ -79,12 +86,23 @@ const Step = ({
     const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
     const { queries = [], ...step } =
       steps.find(({ id }) => id === stepId) || {};
-    const { query, id } =
-      queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY) || {};
-    if (query) {
-      dynamicEntitiesQueryId.current = id;
-      setEntitiesQuery(query);
-    }
+    [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
+      const { query, id } =
+        queries.find(({ type: qType }) => qType === type) || {};
+      if (type === SIGNAL_TYPES.ENTITY) {
+        dynamicEntitiesQueryId.current = id || null;
+        if (query) setEntitiesQuery(query);
+      } else if (type === SIGNAL_TYPES.ALERT) {
+        dynamicAlertsQueryId.current = id || null;
+        if (query) setAlertsQuery(query);
+      }
+    });
+    // const { query, id } =
+    //   queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY) || {};
+    // if (query) {
+    //   dynamicEntitiesQueryId.current = id;
+    //   setEntitiesQuery(query);
+    // }
     setStageName(stgName);
     setStatus(step.status || STATUSES.UNKNOWN);
   }, [stageId, levelId, stepId, stages]);
@@ -129,6 +147,25 @@ const Step = ({
       })),
     }));
   }, [stepId, dynamicEntities]);
+
+  useEffect(() => {
+    if (
+      !stepId ||
+      dynamicAlerts.length > MAX_ENTITIES_IN_STEP ||
+      !setDynamicAlerts
+    )
+      return;
+    setDynamicAlerts((das) => ({
+      ...das,
+      [stepId]: dynamicAlerts.map(({ guid, name }) => ({
+        guid,
+        name,
+        included: true,
+        type: SIGNAL_TYPES.ALERT,
+        queryId: dynamicAlertsQueryId.current,
+      })),
+    }));
+  }, [stepId, dynamicAlerts]);
 
   useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
@@ -233,9 +270,14 @@ const Step = ({
             ...query,
             results: dynamicEntities,
           };
+        if (query.type === SIGNAL_TYPES.ALERT)
+          return {
+            ...query,
+            results: dynamicAlerts,
+          };
         return query;
       }),
-    [thisStep, dynamicEntities]
+    [thisStep, dynamicEntities, dynamicAlerts]
   );
 
   return (

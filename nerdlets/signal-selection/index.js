@@ -7,208 +7,402 @@ import React, {
 } from 'react';
 
 import {
+  AccountPicker,
+  Button,
   navigation,
-  nerdlet,
-  useEntitiesByDomainTypeQuery,
+  Tabs,
+  TabsItem,
   useEntitySearchQuery,
   useNerdletState,
   usePlatformState,
 } from 'nr1';
 
-import Listing from './listing';
-import Header from './header';
-import TabBar from './tab-bar';
-import Filters from './filters';
-import Footer from './footer';
-import useEntitiesTypesList from './use-entities-types-list';
+import { FilterBar } from '@newrelic/nr-labs-components';
+
 import {
-  CONDITION_DOMAIN_TYPE,
+  AlertsDataTable,
+  EntitiesDataTable,
+  FiltersInfoPopover,
+  Footer,
+  Header,
+  SelectedSignals,
+} from './components';
+import { useEntitiesTypesList, usePoliciesList } from './hooks';
+import { filtersArrayToNrql } from './utils';
+import { uuid } from '../../src/utils';
+import {
+  ALERTS_DOMAIN_TYPE_NRQL,
   MODES,
-  POLICY_DOMAIN_TYPE,
   SIGNAL_TYPES,
-  UI_CONTENT,
+  SKIP_ENTITY_TYPES_NRQL,
 } from '../../src/constants';
 
-const uniqueGuidsArray = (arr = [], item = {}, shouldRemove) => {
-  const idx = arr.findIndex(({ guid }) => guid === item.guid);
-  if (shouldRemove)
-    return idx < 0 ? [...arr] : [...arr.slice(0, idx), ...arr.slice(idx + 1)];
-  return idx < 0 ? [...arr, item] : [...arr];
+const DEFAULT_FILTER_OPTIONS = {
+  [SIGNAL_TYPES.ENTITY]: [
+    { option: 'name', type: 'string', values: [] },
+    { option: 'entity type', type: 'string', values: [] },
+  ],
+  [SIGNAL_TYPES.ALERT]: [{ option: 'name', type: 'string', values: [] }],
 };
-
-const entitySearchFilters = (accountId, { domain, type } = {}, name, tag) => {
-  let filters = accountId ? `accountId = ${accountId}` : '';
-  if (domain) filters += `${filters.length ? ' AND ' : ''}domain = '${domain}'`;
-  if (type) filters += `${filters.length ? ' AND ' : ''}type = '${type}'`;
-  if (name) filters += `${filters.length ? ' AND ' : ''}name like '%${name}%'`;
-  if (tag)
-    filters += `${filters.length ? ' AND ' : ''}\`tags.${tag.key}\` = '${
-      tag.value
-    }'`;
-  return filters;
-};
-
-const idFromGuid = (guid) => atob(guid).split('|')[3];
 
 const SignalSelectionNerdlet = () => {
+  const [accountId, setAccountId] = useState();
+  const [entities, setEntities] = useState([]);
+  const [entitiesFilters, setEntitiesFilters] = useState([]);
+  const [entitySearchFilter, setEntitySearchFilter] = useState(
+    SKIP_ENTITY_TYPES_NRQL
+  );
   const [currentTab, setCurrentTab] = useState(SIGNAL_TYPES.ENTITY);
-  const [acctId, setAcctId] = useState();
-  const [selectedEntityType, setSelectedEntityType] = useState();
-  const [selectedEntities, setSelectedEntities] = useState([]);
-  const [selectedPolicy, setSelectedPolicy] = useState();
-  const [selectedAlerts, setSelectedAlerts] = useState([]);
-  const [searchText, setSearchText] = useState('');
-  const [entitySearchName, setEntitySearchName] = useState('');
-  const [{ accountId }] = usePlatformState();
+  const [filterOptions, setFilterOptions] = useState({
+    [SIGNAL_TYPES.ENTITY]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ENTITY],
+    [SIGNAL_TYPES.ALERT]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ALERT],
+  });
+  const [signalSelections, setSignalSelections] = useState({
+    [SIGNAL_TYPES.ENTITY]: [],
+    [SIGNAL_TYPES.ALERT]: [],
+  });
+  const [dynamicQueries, setDynamicQueries] = useState({
+    [SIGNAL_TYPES.ENTITY]: '',
+    [SIGNAL_TYPES.ALERT]: '',
+  });
+  const [{ accountId: platformAccountId }] = usePlatformState();
   const [{ flowId, levelId, levelOrder, stageId, stageName, step }] =
     useNerdletState();
   const { entitiesCount, entitiesTypesList } = useEntitiesTypesList({
-    accountId: acctId,
+    accountId,
   });
-  const lastSelectedDomainType = useRef(null);
-  const searchTimeoutId = useRef(null);
-  const acctPolicies = useRef({});
-  const {
-    data: { count: rowCount = 0, entities = [] } = {},
-    error: entitySearchError,
-    fetchMore,
-    loading: entitySearchLoading,
-  } = useEntitySearchQuery({
-    filters: entitySearchFilters(
-      acctId,
-      selectedEntityType,
-      entitySearchName,
-      currentTab === SIGNAL_TYPES.ALERT &&
-        selectedPolicy && {
-          key: 'policyId',
-          value: idFromGuid(selectedPolicy.guid),
-        }
-    ),
-    includeTags: true,
+  const { data: { count: alertsCount = 0 } = {} } = useEntitySearchQuery({
+    filters: ALERTS_DOMAIN_TYPE_NRQL,
+    includeCount: true,
+    includeResults: false,
   });
-  const { data: { count: alertCount = 0 } = {}, error: alertCountError } =
+  const { policies } = usePoliciesList({ accountId });
+  const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
-      filters: entitySearchFilters(acctId, CONDITION_DOMAIN_TYPE),
-      includeCount: true,
-      includeResults: false,
+      filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${
+        dynamicQueries[SIGNAL_TYPES.ENTITY]
+      }`,
     });
-  const {
-    data: { entities: policiesData = [] } = {},
-    error: policiesError,
-    fetchMore: policiesFetchMore,
-  } = useEntitiesByDomainTypeQuery({
-    ...POLICY_DOMAIN_TYPE,
-    filters: acctId ? `accountId = ${acctId}` : '',
+  const { data: { entities: dynamicAlerts = [] } = {} } = useEntitySearchQuery({
+    filters: `${ALERTS_DOMAIN_TYPE_NRQL} AND ${
+      dynamicQueries[SIGNAL_TYPES.ALERT]
+    }`,
   });
+  const entitiesSelections = useRef({});
+  const alertsSelections = useRef({});
+  const dynamicEntitiesQuery = useRef(null);
+  const dynamicEntitiesGuids = useRef(new Set());
+  const dynamicEntitiesQueryId = useRef(null);
+  const dynamicAlertsQuery = useRef(null);
+  const dynamicAlertsGuids = useRef(new Set());
+  const dynamicAlertsQueryId = useRef(null);
+  const selectingStepId = useRef(null);
+
+  useEffect(() => setAccountId(platformAccountId), [platformAccountId]);
 
   useEffect(() => {
-    nerdlet.setConfig({
-      timePicker: false,
-    });
-  }, []);
-
-  useEffect(() => setAcctId(accountId), [accountId]);
-
-  useEffect(() => {
-    acctPolicies.current = policiesData.reduce(
-      (acc, { guid, name }) => ({ ...acc, [idFromGuid(guid)]: name }),
-      {}
-    );
-  }, [policiesData]);
-
-  useEffect(() => policiesFetchMore?.(), [policiesFetchMore]);
-
-  useEffect(() => {
-    if (alertCountError)
-      console.log('Error fetching alerts count', alertCountError);
-  }, [alertCountError]);
-
-  useEffect(() => {
-    if (entitySearchError)
-      console.error('Error fetching entities/conditions', entitySearchError);
-  }, [entitySearchError]);
-
-  useEffect(() => {
-    if (policiesError)
-      console.error('Error fetching policies list', policiesError);
-  }, [policiesError]);
-
-  useEffect(() => {
-    if (!step?.signals?.length) return;
-    const { ents, alts } = step.signals.reduce(
-      (acc, sig) => {
-        if (sig.type === SIGNAL_TYPES.ENTITY)
-          return {
-            ...acc,
-            ents: [...acc.ents, sig],
-          };
-        if (sig.type === SIGNAL_TYPES.ALERT)
-          return {
-            ...acc,
-            alts: [...acc.alts, sig],
-          };
+    if (
+      !step ||
+      !Array.isArray(step.signals) ||
+      step.id === selectingStepId.current
+    )
+      return;
+    selectingStepId.current = step.id;
+    const stepQueries = (step.queries || [])?.reduce(
+      (acc, { type, query, id }) => {
+        if (type === SIGNAL_TYPES.ENTITY && query) {
+          dynamicEntitiesQueryId.current = id;
+          return { ...acc, [SIGNAL_TYPES.ENTITY]: query };
+        } else if (type === SIGNAL_TYPES.ALERT && query) {
+          dynamicAlertsQueryId.current = id;
+          return { ...acc, [SIGNAL_TYPES.ALERT]: query };
+        }
         return acc;
       },
-      { ents: [], alts: [] }
+      {}
     );
-    setSelectedEntities(ents);
-    setSelectedAlerts(alts);
+    if (Object.keys(stepQueries).length) {
+      setDynamicQueries(stepQueries);
+    }
+    setSignalSelections(() =>
+      step.signals.reduce(
+        (acc, { type: signalType, ...signal }) => {
+          if (!(signalType in acc)) return acc;
+          return {
+            ...acc,
+            [signalType]: [...acc[signalType], signal],
+          };
+        },
+        {
+          [SIGNAL_TYPES.ENTITY]: [],
+          [SIGNAL_TYPES.ALERT]: [],
+        }
+      )
+    );
   }, [step]);
 
   useEffect(() => {
-    if (currentTab === SIGNAL_TYPES.ENTITY) {
-      setSelectedEntityType(
-        lastSelectedDomainType.current || entitiesTypesList?.[0]
-      );
-    } else if (currentTab === SIGNAL_TYPES.ALERT) {
-      setSelectedEntityType((et) => {
-        lastSelectedDomainType.current = et;
-        return CONDITION_DOMAIN_TYPE;
-      });
-    }
-  }, [currentTab, entitiesTypesList]);
+    const entitiesGuids = new Set(dynamicEntities.map(({ guid }) => guid));
+    dynamicEntitiesGuids.current = entitiesGuids;
+    if (entitiesGuids.size)
+      setSignalSelections((sigs) => ({
+        ...sigs,
+        [SIGNAL_TYPES.ENTITY]: sigs[SIGNAL_TYPES.ENTITY].filter(
+          ({ guid }) => guid && !entitiesGuids.has(guid)
+        ),
+      }));
+  }, [dynamicEntities]);
 
   useEffect(() => {
-    clearTimeout(searchTimeoutId.current);
-    searchTimeoutId.current = setTimeout(
-      () => setEntitySearchName(searchText),
-      1000
-    );
-  }, [searchText]);
+    const alertsGuids = new Set(dynamicAlerts.map(({ guid }) => guid));
+    dynamicAlertsGuids.current = alertsGuids;
+    if (alertsGuids.size)
+      setSignalSelections((sigs) => ({
+        ...sigs,
+        [SIGNAL_TYPES.ALERT]: sigs[SIGNAL_TYPES.ALERT].filter(
+          ({ guid }) => guid && !alertsGuids.has(guid)
+        ),
+      }));
+  }, [dynamicAlerts]);
 
-  const accountChangeHandler = useCallback((_, ai) => setAcctId(ai), []);
+  useEffect(() => {
+    const filtersStr = filtersArrayToNrql(entitiesFilters);
+    const entitiesSearchNRQL = [
+      ...(typeof accountId === 'number' ? [`accountId = ${accountId}`] : []),
+      ...(filtersStr ? [filtersStr] : []),
+    ].join(' AND ');
+    if (currentTab === SIGNAL_TYPES.ENTITY) {
+      dynamicEntitiesQuery.current = entitiesSearchNRQL;
+    } else if (currentTab === SIGNAL_TYPES.ALERT) {
+      dynamicAlertsQuery.current = entitiesSearchNRQL;
+    }
+    setEntitySearchFilter(entitiesSearchNRQL);
+  }, [accountId, currentTab, entitiesFilters]);
 
-  const entityTypeChangeHandler = useCallback(
-    (e) => setSelectedEntityType(e),
-    []
-  );
-
-  const policyChangeHandler = useCallback((e) => setSelectedPolicy(e), []);
-
-  const entityTypeTitle = useMemo(
+  useEffect(
     () =>
-      selectedEntityType
-        ? selectedEntityType.displayName ||
-          `${selectedEntityType.domain}/${selectedEntityType.type}`
-        : UI_CONTENT.SIGNAL_SELECTION.ENTITY_TYPE_DROPDOWN_PLACEHOLDER,
-    [selectedEntityType]
+      setFilterOptions(({ [SIGNAL_TYPES.ENTITY]: fos, ...opts }) => ({
+        ...opts,
+        [SIGNAL_TYPES.ENTITY]: fos.map((fo) =>
+          fo.option === 'entity type'
+            ? {
+                ...fo,
+                values: entitiesTypesList?.map((et) => ({
+                  ...et,
+                  value: et.displayName,
+                })),
+              }
+            : fo
+        ),
+      })),
+    [entitiesTypesList]
   );
 
-  const selectItemHandler = useCallback((type, checked, item) => {
-    if (type === SIGNAL_TYPES.ENTITY)
-      setSelectedEntities((se) => uniqueGuidsArray(se, item, !checked));
-    if (type === SIGNAL_TYPES.ALERT)
-      setSelectedAlerts((sa) => uniqueGuidsArray(sa, item, !checked));
-  }, []);
+  const updateTagsHandler = useCallback(
+    (entitiesArr, policiesLookup) =>
+      setFilterOptions(({ [currentTab]: fos, ...opts }) => {
+        const map = fos.reduce((acc, { option, values }) => {
+          acc[option] = new Map(values.map((vObj) => [vObj.value, vObj]));
+          return acc;
+        }, {});
 
-  const deleteItemHandler = useCallback(
-    (type, guid) => selectItemHandler(type, false, { guid }),
-    [selectItemHandler]
+        entitiesArr.forEach(({ name: entityName, tags }) => {
+          if (typeof entityName === 'string') {
+            if (!map.name.has(entityName)) {
+              map.name.set(entityName, { value: entityName });
+            }
+          }
+
+          if (Array.isArray(tags)) {
+            tags.forEach(({ key, values: tagVals } = {}) => {
+              if (!map[key]) map[key] = new Map();
+
+              if (Array.isArray(tagVals)) {
+                tagVals.forEach((strVal) => {
+                  if (!map[key].has(strVal)) {
+                    if (key === 'policyId') {
+                      map[key].set(strVal, {
+                        value: strVal,
+                        label:
+                          `${strVal}: ${policiesLookup?.[strVal]}` || strVal,
+                      });
+                    } else {
+                      map[key].set(strVal, { value: strVal });
+                    }
+                  }
+                });
+              }
+            });
+          }
+        });
+
+        return {
+          ...opts,
+          [currentTab]: Object.entries(map).map(([option, valMap]) => ({
+            option,
+            type: 'string',
+            values: Array.from(valMap.values()),
+          })),
+        };
+      }),
+    [currentTab]
   );
+
+  const selectedEntities = useMemo(() => {
+    const entitiesIndexes = entities.reduce(
+      (acc, { guid }, idx) => (guid ? { ...acc, [guid]: idx } : acc),
+      {}
+    );
+    const entitiesSelectionsObj = signalSelections[SIGNAL_TYPES.ENTITY]?.reduce(
+      (acc, { guid }) =>
+        guid in entitiesIndexes
+          ? { ...acc, [entitiesIndexes[guid]]: true }
+          : acc,
+      {}
+    );
+    entitiesSelections.current = entitiesSelectionsObj;
+    const dynamicSelectionsObj = dynamicEntities.reduce(
+      (acc, { guid }) =>
+        guid in entitiesIndexes
+          ? { ...acc, [entitiesIndexes[guid]]: true }
+          : acc,
+      {}
+    );
+    return { ...entitiesSelectionsObj, ...dynamicSelectionsObj };
+  }, [signalSelections[SIGNAL_TYPES.ENTITY], entities, dynamicEntities]);
+
+  const selectedAlerts = useMemo(() => {
+    const entitiesIndexes = entities.reduce(
+      (acc, { guid }, idx) => (guid ? { ...acc, [guid]: idx } : acc),
+      {}
+    );
+    const entitiesSelectionsObj = signalSelections[SIGNAL_TYPES.ALERT]?.reduce(
+      (acc, { guid }) =>
+        guid in entitiesIndexes
+          ? { ...acc, [entitiesIndexes[guid]]: true }
+          : acc,
+      {}
+    );
+    alertsSelections.current = entitiesSelectionsObj;
+    const dynamicSelectionsObj = dynamicAlerts.reduce(
+      (acc, { guid }) =>
+        guid in entitiesIndexes
+          ? { ...acc, [entitiesIndexes[guid]]: true }
+          : acc,
+      {}
+    );
+    return { ...entitiesSelectionsObj, ...dynamicSelectionsObj };
+  }, [signalSelections[SIGNAL_TYPES.ALERT], entities, dynamicAlerts]);
+
+  const accountChangeHandler = useCallback((_, a) => setAccountId(a), []);
 
   const cancelHandler = useCallback(() => navigation.closeNerdlet(), []);
 
-  const saveHandler = () =>
+  const entitiesSelectionChangeHandler = useCallback(
+    (changedSel, entitiesArr) => {
+      const dynamicGuids = dynamicEntitiesGuids.current;
+
+      setSignalSelections(
+        ({ [SIGNAL_TYPES.ENTITY]: entitiesSels, ...sels }) => {
+          const entitiesByIndexes = entitiesArr.reduce(
+            (acc, { guid, name }, idx) =>
+              guid ? { ...acc, [idx]: { guid, name } } : acc,
+            {}
+          );
+          const prevSelIdxs = Object.keys(entitiesSelections.current);
+          const nextSelIdxs = Object.keys(changedSel);
+          const removeFilterFn = dynamicGuids.size
+            ? (guid, compareEntity) =>
+                guid !== compareEntity.guid && dynamicGuids.has(guid)
+            : (guid, compareEntity) => guid !== compareEntity.guid;
+
+          const cleanedSels = prevSelIdxs.reduce(
+            (acc, cur) =>
+              nextSelIdxs.includes(cur)
+                ? acc
+                : acc.filter(({ guid }) =>
+                    removeFilterFn(guid, entitiesByIndexes[cur])
+                  ),
+            entitiesSels
+          );
+
+          const updatedSels = nextSelIdxs.reduce(
+            (acc, cur) =>
+              prevSelIdxs.includes(cur)
+                ? acc
+                : [...acc, entitiesByIndexes[cur]],
+            cleanedSels
+          );
+
+          return {
+            ...sels,
+            [SIGNAL_TYPES.ENTITY]: updatedSels,
+          };
+        }
+      );
+    },
+    []
+  );
+
+  const alertsSelectionChangeHandler = useCallback(
+    (changedSel, entitiesArr) => {
+      const dynamicGuids = dynamicAlertsGuids.current;
+
+      setSignalSelections(({ [SIGNAL_TYPES.ALERT]: alertsSels, ...sels }) => {
+        const entitiesByIndexes = entitiesArr.reduce(
+          (acc, { guid, name }, idx) =>
+            guid ? { ...acc, [idx]: { guid, name } } : acc,
+          {}
+        );
+        const prevSelIdxs = Object.keys(alertsSelections.current);
+        const nextSelIdxs = Object.keys(changedSel);
+        const removeFilterFn = dynamicGuids.size
+          ? (guid, compareEntity) =>
+              guid !== compareEntity.guid && dynamicGuids.has(guid)
+          : (guid, compareEntity) => guid !== compareEntity.guid;
+
+        const cleanedSels = prevSelIdxs.reduce(
+          (acc, cur) =>
+            nextSelIdxs.includes(cur)
+              ? acc
+              : acc.filter(({ guid }) =>
+                  removeFilterFn(guid, entitiesByIndexes[cur])
+                ),
+          alertsSels
+        );
+
+        const updatedSels = nextSelIdxs.reduce(
+          (acc, cur) =>
+            prevSelIdxs.includes(cur) ? acc : [...acc, entitiesByIndexes[cur]],
+          cleanedSels
+        );
+
+        return {
+          ...sels,
+          [SIGNAL_TYPES.ALERT]: updatedSels,
+        };
+      });
+    },
+    []
+  );
+
+  const saveHandler = useCallback(() => {
+    let queries = [];
+    const queryIds = {
+      [SIGNAL_TYPES.ENTITY]: dynamicEntitiesQueryId.current,
+      [SIGNAL_TYPES.ALERT]: dynamicAlertsQueryId.current,
+    };
+    [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
+      const query = dynamicQueries[type];
+      if (query) {
+        queries.push({
+          type,
+          query,
+          id: queryIds[type] || uuid(),
+        });
+      }
+    });
+
     navigation.openNerdlet({
       id: 'home',
       urlState: {
@@ -219,44 +413,37 @@ const SignalSelectionNerdlet = () => {
           levelId,
           stepId: step?.id,
           signals: [
-            ...(selectedEntities || []).map(({ guid, name, included }) => ({
-              guid,
-              name,
-              type: SIGNAL_TYPES.ENTITY,
-              included: included !== undefined ? included : true,
-            })),
-            ...(selectedAlerts || []).map(({ guid, name, included }) => ({
-              guid,
-              name,
-              type: SIGNAL_TYPES.ALERT,
-              included: included !== undefined ? included : true,
-            })),
+            ...(signalSelections[SIGNAL_TYPES.ENTITY] || []).map(
+              ({ guid, name, included }) => ({
+                guid,
+                name,
+                type: SIGNAL_TYPES.ENTITY,
+                included: included !== undefined ? included : true,
+              })
+            ),
+            ...(signalSelections[SIGNAL_TYPES.ALERT] || []).map(
+              ({ guid, name, included }) => ({
+                guid,
+                name,
+                type: SIGNAL_TYPES.ALERT,
+                included: included !== undefined ? included : true,
+              })
+            ),
           ],
+          queries,
         },
       },
     });
+  }, [flowId, stageId, levelId, step, dynamicQueries, signalSelections]);
 
-  const conditionsEntities = useCallback(
-    (eee = []) =>
-      eee.reduce((acc, e) => {
-        const ee = {
-          accountId: e.accountId,
-          alertSeverity: e.alertSeverity,
-          domain: e.domain,
-          guid: e.guid,
-          name: e.name,
-          policyId: e.tags?.reduce(
-            (acc, { key, values: [pi] = [] }) =>
-              !acc || key === 'policyId' ? pi : acc,
-            null
-          ),
-          reporting: e.reporting,
-          type: e.type,
-        };
-        ee.policyName = acctPolicies.current?.[ee.policyId] || '';
-        return [...acc, ee];
-      }, []),
-    []
+  const tooManySignals = useMemo(
+    () =>
+      (signalSelections[SIGNAL_TYPES.ENTITY]?.length || 0) +
+        (signalSelections[SIGNAL_TYPES.ALERT]?.length || 0) +
+        (dynamicEntities.length || 0) +
+        (dynamicAlerts.length || 0) >
+      25,
+    [signalSelections, dynamicEntities, dynamicAlerts]
   );
 
   return (
@@ -267,49 +454,105 @@ const SignalSelectionNerdlet = () => {
           levelOrder={levelOrder}
           stepTitle={step?.title}
         />
-        <TabBar
-          currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
-          labels={{
-            [SIGNAL_TYPES.ENTITY]: `Entities (${entitiesCount})`,
-            [SIGNAL_TYPES.ALERT]: `Alerts (${alertCount})`,
-          }}
-        />
-        <Filters
-          currentTab={currentTab}
-          accountId={acctId}
-          entityTypeTitle={entityTypeTitle}
-          entityTypes={entitiesTypesList}
-          selectedPolicyText={
-            selectedPolicy
-              ? `POLICY: ${selectedPolicy.name}`
-              : '(showing all policies)'
-          }
-          policies={policiesData}
-          onAccountChange={accountChangeHandler}
-          onEntityTypeChange={entityTypeChangeHandler}
-          onPolicyChange={policyChangeHandler}
-          searchText={searchText}
-          setSearchText={setSearchText}
-        />
-        <Listing
-          currentTab={currentTab}
-          entities={
-            currentTab !== SIGNAL_TYPES.ALERT
-              ? entities
-              : conditionsEntities(entities)
-          }
-          selectedEntities={selectedEntities}
-          selectedAlerts={selectedAlerts}
-          isLoading={entitySearchLoading}
-          onSelect={selectItemHandler}
-          onDelete={deleteItemHandler}
-          rowCount={rowCount}
-          onLoadMore={fetchMore}
-        />
+        <div className="signal-select-content">
+          <div className="signals-browser">
+            <Tabs className="tabs" value={currentTab} onChange={setCurrentTab}>
+              <TabsItem
+                className="tab"
+                value={SIGNAL_TYPES.ENTITY}
+                label={`Entities (${entitiesCount})`}
+              />
+              <TabsItem
+                className="tab"
+                value={SIGNAL_TYPES.ALERT}
+                label={`Alerts (${alertsCount})`}
+              />
+            </Tabs>
+            <div className="filters">
+              <AccountPicker
+                value={accountId}
+                onChange={accountChangeHandler}
+              />
+              <FilterBar
+                options={filterOptions[currentTab]}
+                onChange={setEntitiesFilters}
+              />
+              <div className="filter-tail">
+                <Button
+                  sizeType={Button.SIZE_TYPE.SMALL}
+                  iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS}
+                  disabled={
+                    dynamicQueries[currentTab] ||
+                    entities.length > 25 ||
+                    !entities.length
+                  }
+                  onClick={() => {
+                    if (currentTab === SIGNAL_TYPES.ENTITY) {
+                      const qry = dynamicEntitiesQuery.current;
+                      if (qry)
+                        setDynamicQueries((prev) => ({
+                          ...prev,
+                          [SIGNAL_TYPES.ENTITY]: qry,
+                        }));
+                    } else if (currentTab === SIGNAL_TYPES.ALERT) {
+                      const qry = dynamicAlertsQuery.current;
+                      if (qry)
+                        setDynamicQueries((prev) => ({
+                          ...prev,
+                          [SIGNAL_TYPES.ALERT]: qry,
+                        }));
+                    }
+                  }}
+                >
+                  Add this filter
+                </Button>
+                <FiltersInfoPopover />
+              </div>
+            </div>
+            {currentTab === SIGNAL_TYPES.ENTITY ? (
+              <EntitiesDataTable
+                dynamicEntities={dynamicEntities}
+                entitySearchFilter={entitySearchFilter}
+                onSelectionChangeHandler={entitiesSelectionChangeHandler}
+                onUpdateTags={updateTagsHandler}
+                selection={selectedEntities}
+                setEntities={setEntities}
+              />
+            ) : null}
+            {currentTab === SIGNAL_TYPES.ALERT ? (
+              <AlertsDataTable
+                dynamicAlerts={dynamicAlerts}
+                entitySearchFilter={entitySearchFilter}
+                onUpdateTags={updateTagsHandler}
+                policies={policies}
+                onSelectionChangeHandler={alertsSelectionChangeHandler}
+                selection={selectedAlerts}
+                setEntities={setEntities}
+              />
+            ) : null}
+          </div>
+          <SelectedSignals
+            signalSelections={signalSelections}
+            setSignalSelections={setSignalSelections}
+            dynamicQueries={dynamicQueries}
+            dynamicEntities={dynamicEntities}
+            dynamicAlerts={dynamicAlerts}
+            onDeleteEntitiesQuery={() =>
+              setDynamicQueries((prev) => ({
+                ...prev,
+                [SIGNAL_TYPES.ENTITY]: '',
+              }))
+            }
+            onDeleteAlertsQuery={() =>
+              setDynamicQueries((prev) => ({
+                ...prev,
+                [SIGNAL_TYPES.ALERT]: '',
+              }))
+            }
+          />
+        </div>
         <Footer
-          entitiesCount={selectedEntities.length}
-          alertsCount={selectedAlerts.length}
+          tooManySignals={tooManySignals}
           saveHandler={saveHandler}
           cancelHandler={cancelHandler}
         />
