@@ -303,7 +303,7 @@ const Step = ({
       />
       {mode === MODES.EDIT ? (
         <>
-          {signals.length ? (
+          {thisStep?.signals.length ? (
             <div className="add-signal-btn">
               <Button
                 className="button-tertiary-border"
