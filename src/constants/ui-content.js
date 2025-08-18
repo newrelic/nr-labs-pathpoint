@@ -291,6 +291,14 @@ export const UI_CONTENT = {
       tags, or search for a specific signal that you know has your target
       set of tags to populate.`,
     ],
+    ADD_FILTER_BUTTON: {
+      BUTTON_TEXT: 'Add this filter',
+      TOOLTIP: {
+        DYNAMIC_QUERY_EXISTS: 'A dynamic query has already been set',
+        NO_FILTER_OR_MAXED:
+          'Filter not defined or more than 25 entities/alerts returned',
+      },
+    },
   },
   DUMMY_FILTER: "`tags.displayName` = 'project hedgehog'",
 };
