@@ -12,6 +12,7 @@ import {
   navigation,
   Tabs,
   TabsItem,
+  Tooltip,
   useEntitySearchQuery,
   useNerdletState,
   usePlatformState,
@@ -35,7 +36,10 @@ import {
   MODES,
   SIGNAL_TYPES,
   SKIP_ENTITY_TYPES_NRQL,
+  UI_CONTENT,
 } from '../../src/constants';
+
+const { ADD_FILTER_BUTTON } = UI_CONTENT.SIGNAL_SELECTION;
 
 const DEFAULT_FILTER_OPTIONS = {
   [SIGNAL_TYPES.ENTITY]: [
@@ -300,6 +304,14 @@ const SignalSelectionNerdlet = () => {
     [dynamicQueries, currentTab, entities]
   );
 
+  const addFilterTooltipText = useMemo(() => {
+    if (dynamicQueries[currentTab])
+      return ADD_FILTER_BUTTON.TOOLTIP.DYNAMIC_QUERY_EXISTS;
+    if (entities.length > 25 || !entities.length)
+      return ADD_FILTER_BUTTON.TOOLTIP.NO_FILTER_OR_MAXED;
+    return '';
+  }, [dynamicQueries, currentTab, entities]);
+
   const accountChangeHandler = useCallback((_, a) => setAccountId(a), []);
 
   const cancelHandler = useCallback(() => navigation.closeNerdlet(), []);
@@ -484,30 +496,31 @@ const SignalSelectionNerdlet = () => {
                 onChange={setEntitiesFilters}
               />
               <div className="filter-tail">
-                <Button
-                  sizeType={Button.SIZE_TYPE.SMALL}
-                  iconType={Button.ICON_TYPE.INTERFACE__SIGN__PLUS}
-                  disabled={isAddFilterDisabled}
-                  onClick={() => {
-                    if (currentTab === SIGNAL_TYPES.ENTITY) {
-                      const qry = dynamicEntitiesQuery.current;
-                      if (qry)
-                        setDynamicQueries((prev) => ({
-                          ...prev,
-                          [SIGNAL_TYPES.ENTITY]: qry,
-                        }));
-                    } else if (currentTab === SIGNAL_TYPES.ALERT) {
-                      const qry = dynamicAlertsQuery.current;
-                      if (qry)
-                        setDynamicQueries((prev) => ({
-                          ...prev,
-                          [SIGNAL_TYPES.ALERT]: qry,
-                        }));
-                    }
-                  }}
-                >
-                  Add this filter
-                </Button>
+                <Tooltip text={addFilterTooltipText}>
+                  <Button
+                    sizeType={Button.SIZE_TYPE.SMALL}
+                    disabled={isAddFilterDisabled}
+                    onClick={() => {
+                      if (currentTab === SIGNAL_TYPES.ENTITY) {
+                        const qry = dynamicEntitiesQuery.current;
+                        if (qry)
+                          setDynamicQueries((prev) => ({
+                            ...prev,
+                            [SIGNAL_TYPES.ENTITY]: qry,
+                          }));
+                      } else if (currentTab === SIGNAL_TYPES.ALERT) {
+                        const qry = dynamicAlertsQuery.current;
+                        if (qry)
+                          setDynamicQueries((prev) => ({
+                            ...prev,
+                            [SIGNAL_TYPES.ALERT]: qry,
+                          }));
+                      }
+                    }}
+                  >
+                    {ADD_FILTER_BUTTON.BUTTON_TEXT}
+                  </Button>
+                </Tooltip>
                 <FiltersInfoPopover />
               </div>
             </div>
