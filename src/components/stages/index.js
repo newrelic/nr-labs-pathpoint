@@ -81,6 +81,7 @@ const Stages = forwardRef(
     const [stagesData, setStagesData] = useState({ stages });
     const [signalsDetails, setSignalsDetails] = useState({});
     const [dynamicEntities, setDynamicEntities] = useState({});
+    const [dynamicAlerts, setDynamicAlerts] = useState({});
     const [selections, setSelections] = useState({});
     const [classifications, setClassifications] = useState({});
     const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
@@ -101,6 +102,7 @@ const Stages = forwardRef(
     const entitiesStatusTimeoutId = useRef();
     const alertsStatusTimeoutId = useRef();
     const stepsDynamicEntities = useRef({});
+    const stepsDynamicAlerts = useRef({});
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
 
@@ -156,6 +158,20 @@ const Stages = forwardRef(
         };
       });
     }, [dynamicEntities]);
+
+    useEffect(() => {
+      stepsDynamicAlerts.current = dynamicAlerts;
+      setGuids((gs) => {
+        const alertsGuidsSet = new Set(gs[SIGNAL_TYPES.ALERT] || []);
+        Object.keys(dynamicAlerts).forEach((stp) =>
+          dynamicAlerts[stp]?.forEach(({ guid }) => alertsGuidsSet.add(guid))
+        );
+        return {
+          ...gs,
+          [SIGNAL_TYPES.ALERT]: [...alertsGuidsSet],
+        };
+      });
+    }, [dynamicAlerts]);
 
     const fetchEntitiesStatus = useCallback(
       async (entitiesGuids, timeWindow, isForCache) => {
@@ -389,6 +405,7 @@ const Stages = forwardRef(
             signals: [
               ...stp.signals,
               ...(stepsDynamicEntities.current?.[stp.id] || []),
+              ...(stepsDynamicAlerts.current?.[stp.id] || []),
             ],
           })),
         })),
@@ -698,7 +715,9 @@ const Stages = forwardRef(
           stages: stagesData.stages,
           updateStagesDataRef,
           dynamicEntities,
+          dynamicAlerts,
           setDynamicEntities,
+          setDynamicAlerts,
         }}
       >
         <SignalsContext.Provider value={signalsDetails}>
