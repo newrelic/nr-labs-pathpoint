@@ -49,6 +49,24 @@ const DEFAULT_FILTER_OPTIONS = {
   [SIGNAL_TYPES.ALERT]: [{ option: 'name', type: 'string', values: [] }],
 };
 
+const KEY_KEYS = {
+  [SIGNAL_TYPES.ENTITY]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ENTITY].map(
+    ({ option }) => option
+  ),
+  [SIGNAL_TYPES.ALERT]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ALERT].map(
+    ({ option }) => option
+  ),
+};
+
+const DEFAULT_COLLATOR = new Intl.Collator();
+
+const ENTITY_TYPE_OPERATORS = [
+  { value: '=', label: 'Equals' },
+  { value: '!=', label: 'Not Equals' },
+  { value: 'IN', label: 'Is One Of', multiValue: true },
+  { value: 'NOT IN', label: 'Is Not One Of', multiValue: true },
+];
+
 const SignalSelectionNerdlet = () => {
   const [accountId, setAccountId] = useState();
   const [entities, setEntities] = useState([]);
@@ -205,33 +223,33 @@ const SignalSelectionNerdlet = () => {
   const updateTagsHandler = useCallback(
     (entitiesArr, policiesLookup) =>
       setFilterOptions(({ [currentTab]: fos, ...opts }) => {
-        const map = fos.reduce((acc, { option, values }) => {
+        const optsMaps = fos.reduce((acc, { option, values }) => {
           acc[option] = new Map(values.map((vObj) => [vObj.value, vObj]));
           return acc;
         }, {});
 
         entitiesArr.forEach(({ name: entityName, tags }) => {
           if (typeof entityName === 'string') {
-            if (!map.name.has(entityName)) {
-              map.name.set(entityName, { value: entityName });
+            if (!optsMaps.name.has(entityName)) {
+              optsMaps.name.set(entityName, { value: entityName });
             }
           }
 
           if (Array.isArray(tags)) {
             tags.forEach(({ key, values: tagVals } = {}) => {
-              if (!map[key]) map[key] = new Map();
+              if (!optsMaps[key]) optsMaps[key] = new Map();
 
               if (Array.isArray(tagVals)) {
                 tagVals.forEach((strVal) => {
-                  if (!map[key].has(strVal)) {
+                  if (!optsMaps[key].has(strVal)) {
                     if (key === 'policyId') {
-                      map[key].set(strVal, {
+                      optsMaps[key].set(strVal, {
                         value: strVal,
                         label:
                           `${strVal}: ${policiesLookup?.[strVal]}` || strVal,
                       });
                     } else {
-                      map[key].set(strVal, { value: strVal });
+                      optsMaps[key].set(strVal, { value: strVal });
                     }
                   }
                 });
@@ -240,13 +258,30 @@ const SignalSelectionNerdlet = () => {
           }
         });
 
+        const keyKeys = KEY_KEYS[currentTab];
+        const sortedKeys = [
+          ...keyKeys,
+          ...Object.keys(optsMaps)
+            .filter((key) => !keyKeys.includes(key))
+            .sort(DEFAULT_COLLATOR.compare),
+        ];
+
         return {
           ...opts,
-          [currentTab]: Object.entries(map).map(([option, valMap]) => ({
-            option,
-            type: 'string',
-            values: Array.from(valMap.values()),
-          })),
+          [currentTab]:
+            sortedKeys?.map((option) => {
+              const ret = {
+                option,
+                type: 'string',
+                values: Array.from(optsMaps[option]?.values() || []),
+              };
+              return option === 'entity type'
+                ? {
+                    ...ret,
+                    operators: ENTITY_TYPE_OPERATORS,
+                  }
+                : ret;
+            }) || [],
         };
       }),
     [currentTab]
@@ -306,9 +341,9 @@ const SignalSelectionNerdlet = () => {
 
   const addFilterTooltipText = useMemo(() => {
     if (dynamicQueries[currentTab])
-      return ADD_FILTER_BUTTON.TOOLTIP.DYNAMIC_QUERY_EXISTS;
+      return ADD_FILTER_BUTTON.TOOLTIP.DYNAMIC_QUERY_EXISTS[currentTab];
     if (entities.length > 25 || !entities.length)
-      return ADD_FILTER_BUTTON.TOOLTIP.NO_FILTER_OR_MAXED;
+      return ADD_FILTER_BUTTON.TOOLTIP.NO_FILTER_OR_MAXED[currentTab];
     return '';
   }, [dynamicQueries, currentTab, entities]);
 

@@ -1,3 +1,5 @@
+import { SIGNAL_TYPES } from './signals';
+
 export const UI_CONTENT = {
   GLOBAL: {
     BUTTON_LABEL_CREATE_FLOW: 'Create new flow',
@@ -294,9 +296,16 @@ export const UI_CONTENT = {
     ADD_FILTER_BUTTON: {
       BUTTON_TEXT: 'Add this filter',
       TOOLTIP: {
-        DYNAMIC_QUERY_EXISTS: 'A dynamic query has already been set',
-        NO_FILTER_OR_MAXED:
-          'Filter not defined or more than 25 entities/alerts returned',
+        DYNAMIC_QUERY_EXISTS: {
+          [SIGNAL_TYPES.ENTITY]: 'An entity filter has already been set',
+          [SIGNAL_TYPES.ALERT]: 'An alert filter has already been set',
+        },
+        NO_FILTER_OR_MAXED: {
+          [SIGNAL_TYPES.ENTITY]:
+            'No filter defined or more than 25 entities returned',
+          [SIGNAL_TYPES.ALERT]:
+            'No filter defined or more than 25 alerts returned',
+        },
       },
     },
   },
