@@ -1,3 +1,5 @@
+import { POLICY_ID_TAG } from '../../src/constants';
+
 const DEFAULT_COLLATOR = new Intl.Collator();
 
 export const keyValuesFromEntities = (entities, existingkeyValues) => {
@@ -15,7 +17,7 @@ export const keyValuesFromEntities = (entities, existingkeyValues) => {
 
     if (Array.isArray(tags)) {
       tags.forEach(({ key, values: tagVals } = {}) => {
-        if (key === 'policyId') return;
+        if (key === POLICY_ID_TAG) return;
         if (!optsMaps[key]) optsMaps[key] = new Map();
 
         if (Array.isArray(tagVals)) {

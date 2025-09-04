@@ -35,6 +35,7 @@ import { uuid } from '../../src/utils';
 import {
   ALERTS_DOMAIN_TYPE_NRQL,
   MODES,
+  POLICY_ID_TAG,
   SIGNAL_TYPES,
   SKIP_ENTITY_TYPES_NRQL,
   UI_CONTENT,
@@ -187,9 +188,11 @@ const SignalSelectionNerdlet = () => {
         []
       );
       if (policyIds.length === 1) {
-        keyFilters = `\`tags.policyId\` = '${policyIds[0]}'`;
+        keyFilters = `\`tags.${POLICY_ID_TAG}\` = '${policyIds[0]}'`;
       } else if (policyIds.length > 1) {
-        keyFilters = `\`tags.policyId\` IN ('${policyIds.join("', '")}')`;
+        keyFilters = `\`tags.${POLICY_ID_TAG}\` IN ('${policyIds.join(
+          "', '"
+        )}')`;
       }
     }
     const entitiesSearchNRQLArr = [];
@@ -215,7 +218,7 @@ const SignalSelectionNerdlet = () => {
               ? [
                   ...acc,
                   {
-                    id: `${domain}${type}`,
+                    id: `${domain}:${type}`,
                     title: displayName,
                     subtitle: `${count}`,
                     isSelected: false,
@@ -235,9 +238,9 @@ const SignalSelectionNerdlet = () => {
       setPoliciesList(
         () =>
           Object.keys(policies)?.map((key) => ({
-            id: `${key}`,
+            id: key,
             title: policies[key],
-            subtitle: `${key}`,
+            subtitle: key,
             isSelected: false,
           })) || []
       ),

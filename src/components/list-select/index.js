@@ -3,14 +3,22 @@ import PropTypes from 'prop-types';
 
 import { Popover, PopoverBody, PopoverTrigger, TextField } from 'nr1';
 
-const ListSelect = ({
-  label,
-  list = [],
-  clear: { title: clearTitle, subtitle: clearSubtitle } = {},
-  onChange,
-}) => {
+const ListSelect = ({ label, list = [], clear = {}, onChange }) => {
   const [searchText, setSearchText] = useState('');
   const [isClear, setIsClear] = useState(true);
+  const [clearText, setClearText] = useState({
+    title: '',
+    subtitle: '',
+  });
+
+  useEffect(
+    () =>
+      setClearText(() => ({
+        title: clear?.title || '',
+        subtitle: clear?.subtitle || '',
+      })),
+    [clear]
+  );
 
   useEffect(() => {
     if (!list.length) return;
@@ -44,7 +52,7 @@ const ListSelect = ({
   );
 
   const displayedList = useMemo(() => {
-    const lowerCaseSearchText = searchText?.trim?.()?.toLocaleLowerCase?.();
+    const lowerCaseSearchText = String(searchText).trim().toLocaleLowerCase();
     if (!lowerCaseSearchText) return list;
     return list.filter(({ title }) =>
       title.toLocaleLowerCase().includes(lowerCaseSearchText)
@@ -70,25 +78,26 @@ const ListSelect = ({
           </div>
           <hr className="list-select-rule" />
           <ul className="list-select-list">
-            {clearTitle ? (
+            {clearText.title ? (
               <>
                 <li className="list-select-item">
                   <label className="list-select-item-label">
                     <input
                       type="checkbox"
                       checked={isClear}
-                      onChange={() =>
-                        !isClear ? clearCheckHandler(true) : null
-                      }
-                      name={clearTitle}
+                      onChange={() => !isClear && clearCheckHandler(true)}
+                      name={clearText.title}
                     />
-                    <span className="list-select-item-title" title={clearTitle}>
-                      {clearTitle}
+                    <span
+                      className="list-select-item-title"
+                      title={clearText.title}
+                    >
+                      {clearText.title}
                     </span>
                   </label>
-                  {clearSubtitle ? (
+                  {clearText.subtitle ? (
                     <span className="list-select-item-subtitle">
-                      {clearSubtitle}
+                      {clearText.subtitle}
                     </span>
                   ) : null}
                 </li>

@@ -12,7 +12,7 @@ import {
   useEntitySearchQuery,
 } from 'nr1';
 
-import { ALERTS_DOMAIN_TYPE_NRQL } from '../../../src/constants';
+import { ALERTS_DOMAIN_TYPE_NRQL, POLICY_ID_TAG } from '../../../src/constants';
 
 const AlertsDataTable = ({
   dynamicAlerts = [],
@@ -82,7 +82,7 @@ const AlertsDataTable = ({
                   <DataTableRowCell>
                     {(tags) => {
                       const policyId = tags.find(
-                        ({ key }) => key === 'policyId'
+                        ({ key }) => key === POLICY_ID_TAG
                       )?.values?.[0];
                       return policies[policyId] || '';
                     }}
