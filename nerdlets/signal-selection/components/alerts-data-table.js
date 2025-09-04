@@ -12,7 +12,7 @@ import {
   useEntitySearchQuery,
 } from 'nr1';
 
-import { ALERTS_DOMAIN_TYPE_NRQL } from '../../../src/constants';
+import { ALERTS_DOMAIN_TYPE_NRQL, POLICY_ID_TAG } from '../../../src/constants';
 
 const AlertsDataTable = ({
   dynamicAlerts = [],
@@ -40,10 +40,7 @@ const AlertsDataTable = ({
 
   useEffect(() => setEntities(entities), [entities, setEntities]);
 
-  useEffect(
-    () => onUpdateTags?.(entities, policies),
-    [entities, onUpdateTags, policies]
-  );
+  useEffect(() => onUpdateTags?.(entities), [entities, onUpdateTags]);
 
   const getIsRowSelectable = useCallback(
     ({ item: { guid } = {} }) => !dynamicAlerts.some((de) => de.guid === guid),
@@ -85,7 +82,7 @@ const AlertsDataTable = ({
                   <DataTableRowCell>
                     {(tags) => {
                       const policyId = tags.find(
-                        ({ key }) => key === 'policyId'
+                        ({ key }) => key === POLICY_ID_TAG
                       )?.values?.[0];
                       return policies[policyId] || '';
                     }}

@@ -59,13 +59,13 @@ const EntitiesDataTable = ({
           <DataTable
             ariaLabel="Entities"
             items={entities}
-            itemCount={count} //entitySearchCount
+            itemCount={count}
             onLoadMoreItems={fetchMore}
             height={height}
             getIsRowSelectable={getIsRowSelectable}
             selectionType={DataTable.SELECTION_TYPE.MULTIPLE}
             selection={selection}
-            onSelectionChange={changeHandler} //entitiesSelectionChangeHandler
+            onSelectionChange={changeHandler}
           >
             <DataTableHeader>
               <DataTableHeaderCell name="name" value="name">

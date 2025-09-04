@@ -1,31 +1,50 @@
-export const entityTypeFilter = (operator, values, conjunction) => {
-  if (!operator || !values) return '';
-  let clause = '';
-  if (Array.isArray(values)) {
-    const [domains, types] = values.reduce(
-      (acc, { domain, type }) => [
-        [...acc[0], `'${domain}'`],
-        [...acc[1], `'${type}'`],
-      ],
-      [[], []]
-    );
-    if (operator === 'IN') {
-      clause = `(domain IN (${domains.join(', ')}) AND type IN (${types.join(
-        ', '
-      )}))`;
-    } else if (operator === 'NOT IN') {
-      clause = `(domain NOT IN (${domains.join(
-        ', '
-      )}) AND type NOT IN (${types.join(', ')}))`;
+import { POLICY_ID_TAG } from '../../src/constants';
+
+const DEFAULT_COLLATOR = new Intl.Collator();
+
+export const keyValuesFromEntities = (entities, existingkeyValues) => {
+  const optsMaps = existingkeyValues.reduce((acc, { option, values }) => {
+    acc[option] = new Map(values.map((vObj) => [vObj.value, vObj]));
+    return acc;
+  }, {});
+
+  entities.forEach(({ name: entityName, tags }) => {
+    if (typeof entityName === 'string') {
+      if (!optsMaps.name.has(entityName)) {
+        optsMaps.name.set(entityName, { value: entityName });
+      }
     }
-  } else {
-    if (operator === '=') {
-      clause = `(domain = '${values.domain}' AND type = '${values.type}')`;
-    } else if (operator === '!=') {
-      clause = `(domain != '${values.domain}' AND type != '${values.type}')`;
+
+    if (Array.isArray(tags)) {
+      tags.forEach(({ key, values: tagVals } = {}) => {
+        if (key === POLICY_ID_TAG) return;
+        if (!optsMaps[key]) optsMaps[key] = new Map();
+
+        if (Array.isArray(tagVals)) {
+          tagVals.forEach((strVal) => {
+            if (!optsMaps[key].has(strVal)) {
+              optsMaps[key].set(strVal, { value: strVal });
+            }
+          });
+        }
+      });
     }
-  }
-  return clause ? `${clause} ${conjunction}` : '';
+  });
+
+  const sortedKeys = [
+    'name', // name should always appear first
+    ...Object.keys(optsMaps)
+      .filter((key) => key !== 'name')
+      .sort(DEFAULT_COLLATOR.compare),
+  ];
+
+  return (
+    sortedKeys?.map((option) => ({
+      option,
+      type: 'string',
+      values: Array.from(optsMaps[option]?.values() || []),
+    })) || []
+  );
 };
 
 export const filtersArrayToNrql = (filters = []) =>
@@ -44,8 +63,6 @@ export const filtersArrayToNrql = (filters = []) =>
         partialMatches,
       } = filter.operator || {};
       if (!operator) return '';
-      if (key === 'entity type')
-        return entityTypeFilter(operator, filter.values, conjunction);
       let valueStr = '';
       if (multiValue && Array.isArray(filter.values)) {
         const valuesArr = filter.values

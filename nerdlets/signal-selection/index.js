@@ -28,12 +28,14 @@ import {
   Header,
   SelectedSignals,
 } from './components';
+import { ListSelect } from '../../src/components';
 import { useEntitiesTypesList, usePoliciesList } from './hooks';
-import { filtersArrayToNrql } from './utils';
+import { filtersArrayToNrql, keyValuesFromEntities } from './utils';
 import { uuid } from '../../src/utils';
 import {
   ALERTS_DOMAIN_TYPE_NRQL,
   MODES,
+  POLICY_ID_TAG,
   SIGNAL_TYPES,
   SKIP_ENTITY_TYPES_NRQL,
   UI_CONTENT,
@@ -41,43 +43,21 @@ import {
 
 const { ADD_FILTER_BUTTON } = UI_CONTENT.SIGNAL_SELECTION;
 
-const DEFAULT_FILTER_OPTIONS = {
-  [SIGNAL_TYPES.ENTITY]: [
-    { option: 'name', type: 'string', values: [] },
-    { option: 'entity type', type: 'string', values: [] },
-  ],
-  [SIGNAL_TYPES.ALERT]: [{ option: 'name', type: 'string', values: [] }],
-};
-
-const KEY_KEYS = {
-  [SIGNAL_TYPES.ENTITY]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ENTITY].map(
-    ({ option }) => option
-  ),
-  [SIGNAL_TYPES.ALERT]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ALERT].map(
-    ({ option }) => option
-  ),
-};
-
-const DEFAULT_COLLATOR = new Intl.Collator();
-
-const ENTITY_TYPE_OPERATORS = [
-  { value: '=', label: 'Equals' },
-  { value: '!=', label: 'Not Equals' },
-  { value: 'IN', label: 'Is One Of', multiValue: true },
-  { value: 'NOT IN', label: 'Is Not One Of', multiValue: true },
-];
+const DEFAULT_FILTER_OPTIONS = [{ option: 'name', type: 'string', values: [] }];
 
 const SignalSelectionNerdlet = () => {
   const [accountId, setAccountId] = useState();
   const [entities, setEntities] = useState([]);
+  const [entitiesTypesList, setEntitiesTypesList] = useState([]);
+  const [policiesList, setPoliciesList] = useState([]);
   const [entitiesFilters, setEntitiesFilters] = useState([]);
   const [entitySearchFilter, setEntitySearchFilter] = useState(
     SKIP_ENTITY_TYPES_NRQL
   );
   const [currentTab, setCurrentTab] = useState(SIGNAL_TYPES.ENTITY);
   const [filterOptions, setFilterOptions] = useState({
-    [SIGNAL_TYPES.ENTITY]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ENTITY],
-    [SIGNAL_TYPES.ALERT]: DEFAULT_FILTER_OPTIONS[SIGNAL_TYPES.ALERT],
+    [SIGNAL_TYPES.ENTITY]: DEFAULT_FILTER_OPTIONS,
+    [SIGNAL_TYPES.ALERT]: DEFAULT_FILTER_OPTIONS,
   });
   const [signalSelections, setSignalSelections] = useState({
     [SIGNAL_TYPES.ENTITY]: [],
@@ -90,9 +70,10 @@ const SignalSelectionNerdlet = () => {
   const [{ accountId: platformAccountId }] = usePlatformState();
   const [{ flowId, levelId, levelOrder, stageId, stageName, step }] =
     useNerdletState();
-  const { entitiesCount, entitiesTypesList } = useEntitiesTypesList({
-    accountId,
-  });
+  const { entitiesCount, entitiesTypesList: entitiesTypesListInitial } =
+    useEntitiesTypesList({
+      accountId,
+    });
   const { data: { count: alertsCount = 0 } = {} } = useEntitySearchQuery({
     filters: ALERTS_DOMAIN_TYPE_NRQL,
     includeCount: true,
@@ -189,101 +170,89 @@ const SignalSelectionNerdlet = () => {
 
   useEffect(() => {
     const filtersStr = filtersArrayToNrql(entitiesFilters);
-    const entitiesSearchNRQL = [
-      ...(typeof accountId === 'number' ? [`accountId = ${accountId}`] : []),
-      ...(filtersStr ? [filtersStr] : []),
-    ].join(' AND ');
+    let keyFilters;
+    if (currentTab === SIGNAL_TYPES.ENTITY) {
+      keyFilters = entitiesTypesList
+        .reduce(
+          (acc, { domain, type, isSelected }) =>
+            isSelected
+              ? [...acc, `(domain = '${domain}' AND type = '${type}')`]
+              : acc,
+          []
+        )
+        .join(' OR ');
+    } else if (currentTab === SIGNAL_TYPES.ALERT) {
+      const policyIds = policiesList.reduce(
+        (acc, { subtitle, isSelected }) =>
+          isSelected ? [...acc, subtitle] : acc,
+        []
+      );
+      if (policyIds.length === 1) {
+        keyFilters = `\`tags.${POLICY_ID_TAG}\` = '${policyIds[0]}'`;
+      } else if (policyIds.length > 1) {
+        keyFilters = `\`tags.${POLICY_ID_TAG}\` IN ('${policyIds.join(
+          "', '"
+        )}')`;
+      }
+    }
+    const entitiesSearchNRQLArr = [];
+    if (typeof accountId === 'number')
+      entitiesSearchNRQLArr.push(`accountId = ${accountId}`);
+    if (keyFilters) entitiesSearchNRQLArr.push(keyFilters);
+    if (filtersStr) entitiesSearchNRQLArr.push(filtersStr);
+    const entitiesSearchNRQL = entitiesSearchNRQLArr.join(' AND ');
     if (currentTab === SIGNAL_TYPES.ENTITY) {
       dynamicEntitiesQuery.current = entitiesSearchNRQL;
     } else if (currentTab === SIGNAL_TYPES.ALERT) {
       dynamicAlertsQuery.current = entitiesSearchNRQL;
     }
     setEntitySearchFilter(entitiesSearchNRQL);
-  }, [accountId, currentTab, entitiesFilters]);
+  }, [accountId, currentTab, entitiesFilters, entitiesTypesList, policiesList]);
 
   useEffect(
     () =>
-      setFilterOptions(({ [SIGNAL_TYPES.ENTITY]: fos, ...opts }) => ({
-        ...opts,
-        [SIGNAL_TYPES.ENTITY]: fos.map((fo) =>
-          fo.option === 'entity type'
-            ? {
-                ...fo,
-                values: entitiesTypesList?.map((et) => ({
-                  ...et,
-                  value: et.displayName,
-                })),
-              }
-            : fo
-        ),
-      })),
-    [entitiesTypesList]
+      setEntitiesTypesList(() =>
+        entitiesTypesListInitial.reduce(
+          (acc, { count, displayName, domain, type }) =>
+            count
+              ? [
+                  ...acc,
+                  {
+                    id: `${domain}:${type}`,
+                    title: displayName,
+                    subtitle: `${count}`,
+                    isSelected: false,
+                    domain,
+                    type,
+                  },
+                ]
+              : acc,
+          []
+        )
+      ),
+    [entitiesTypesListInitial]
+  );
+
+  useEffect(
+    () =>
+      setPoliciesList(
+        () =>
+          Object.keys(policies)?.map((key) => ({
+            id: key,
+            title: policies[key],
+            subtitle: key,
+            isSelected: false,
+          })) || []
+      ),
+    [policies]
   );
 
   const updateTagsHandler = useCallback(
-    (entitiesArr, policiesLookup) =>
-      setFilterOptions(({ [currentTab]: fos, ...opts }) => {
-        const optsMaps = fos.reduce((acc, { option, values }) => {
-          acc[option] = new Map(values.map((vObj) => [vObj.value, vObj]));
-          return acc;
-        }, {});
-
-        entitiesArr.forEach(({ name: entityName, tags }) => {
-          if (typeof entityName === 'string') {
-            if (!optsMaps.name.has(entityName)) {
-              optsMaps.name.set(entityName, { value: entityName });
-            }
-          }
-
-          if (Array.isArray(tags)) {
-            tags.forEach(({ key, values: tagVals } = {}) => {
-              if (!optsMaps[key]) optsMaps[key] = new Map();
-
-              if (Array.isArray(tagVals)) {
-                tagVals.forEach((strVal) => {
-                  if (!optsMaps[key].has(strVal)) {
-                    if (key === 'policyId') {
-                      optsMaps[key].set(strVal, {
-                        value: strVal,
-                        label:
-                          `${strVal}: ${policiesLookup?.[strVal]}` || strVal,
-                      });
-                    } else {
-                      optsMaps[key].set(strVal, { value: strVal });
-                    }
-                  }
-                });
-              }
-            });
-          }
-        });
-
-        const keyKeys = KEY_KEYS[currentTab];
-        const sortedKeys = [
-          ...keyKeys,
-          ...Object.keys(optsMaps)
-            .filter((key) => !keyKeys.includes(key))
-            .sort(DEFAULT_COLLATOR.compare),
-        ];
-
-        return {
-          ...opts,
-          [currentTab]:
-            sortedKeys?.map((option) => {
-              const ret = {
-                option,
-                type: 'string',
-                values: Array.from(optsMaps[option]?.values() || []),
-              };
-              return option === 'entity type'
-                ? {
-                    ...ret,
-                    operators: ENTITY_TYPE_OPERATORS,
-                  }
-                : ret;
-            }) || [],
-        };
-      }),
+    (entitiesArr) =>
+      setFilterOptions(({ [currentTab]: existingOptions, ...opts }) => ({
+        ...opts,
+        [currentTab]: keyValuesFromEntities(entitiesArr, existingOptions),
+      })),
     [currentTab]
   );
 
@@ -499,6 +468,64 @@ const SignalSelectionNerdlet = () => {
     [signalSelections, dynamicEntities, dynamicAlerts]
   );
 
+  const keyFilterLabel = useMemo(() => {
+    if (currentTab === SIGNAL_TYPES.ENTITY) {
+      const selectedEntitiesTypes = entitiesTypesList
+        .reduce(
+          (acc, { title, isSelected }) => (isSelected ? [...acc, title] : acc),
+          []
+        )
+        .join(', ');
+      return (
+        <>
+          <span>Entity Type</span>
+          <span>=</span>
+          <span>{selectedEntitiesTypes || 'All'}</span>
+        </>
+      );
+    }
+    if (currentTab === SIGNAL_TYPES.ALERT) {
+      const selectedPolicies = policiesList
+        .reduce(
+          (acc, { title, isSelected }) => (isSelected ? [...acc, title] : acc),
+          []
+        )
+        .join(', ');
+      return (
+        <>
+          <span>Policy Name</span>
+          <span>=</span>
+          <span>{selectedPolicies || 'All'}</span>
+        </>
+      );
+    }
+    return null;
+  }, [currentTab, entitiesTypesList, policiesList]);
+
+  const keyFilterClear = useMemo(() => {
+    if (currentTab === SIGNAL_TYPES.ENTITY)
+      return {
+        title: 'All',
+        subtitle: `${entitiesCount}`,
+      };
+    if (currentTab === SIGNAL_TYPES.ALERT)
+      return {
+        title: 'All',
+      };
+    return null;
+  }, [currentTab, entitiesCount]);
+
+  const keyFilterList = useMemo(() => {
+    if (currentTab === SIGNAL_TYPES.ENTITY) return entitiesTypesList;
+    if (currentTab === SIGNAL_TYPES.ALERT) return policiesList;
+    return [];
+  }, [currentTab, entitiesTypesList, policiesList]);
+
+  const keyFilterChangeHandler = useMemo(() => {
+    if (currentTab === SIGNAL_TYPES.ENTITY) return setEntitiesTypesList;
+    if (currentTab === SIGNAL_TYPES.ALERT) return setPoliciesList;
+  }, [currentTab]);
+
   return (
     <div className="container nerdlet">
       <div className="signal-select">
@@ -525,6 +552,12 @@ const SignalSelectionNerdlet = () => {
               <AccountPicker
                 value={accountId}
                 onChange={accountChangeHandler}
+              />
+              <ListSelect
+                label={keyFilterLabel}
+                clear={keyFilterClear}
+                list={keyFilterList}
+                onChange={keyFilterChangeHandler}
               />
               <FilterBar
                 options={filterOptions[currentTab]}
