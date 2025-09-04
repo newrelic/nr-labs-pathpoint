@@ -40,10 +40,7 @@ const AlertsDataTable = ({
 
   useEffect(() => setEntities(entities), [entities, setEntities]);
 
-  useEffect(
-    () => onUpdateTags?.(entities, policies),
-    [entities, onUpdateTags, policies]
-  );
+  useEffect(() => onUpdateTags?.(entities), [entities, onUpdateTags]);
 
   const getIsRowSelectable = useCallback(
     ({ item: { guid } = {} }) => !dynamicAlerts.some((de) => de.guid === guid),

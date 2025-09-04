@@ -16,7 +16,6 @@
   
 
   .signal-select-content {
-    // flex: 1 1 auto;
     flex: 1;
     overflow: hidden;
     display: flex;
@@ -36,9 +35,8 @@
 
       .filters {
         margin: 8px 0;
-        // display: flex;
         display: grid;
-        grid-template-columns: min-content 1fr min-content;
+        grid-template-columns: min-content max-content 1fr min-content;
         align-items: flex-start;
         gap: 8px;
 
