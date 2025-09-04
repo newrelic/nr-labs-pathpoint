@@ -1,0 +1,102 @@
+.list-select-label {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  background-color: #e1edff;
+  color: #074382;
+  padding-right: 4px;
+  cursor: pointer;
+
+  span {
+    padding: 4px;
+    line-height: 16px;
+    max-width: 24ch;
+  }
+}
+
+.list-select-body {
+  display: flex;
+  flex-direction: column;
+  width: 248px;
+
+  .list-select-rule {
+    border: 0;
+    border-top: 1px solid #E7E9EA;
+    margin-top: 4px;
+  }
+
+  .list-select-search {
+    margin-block: 4px 0;
+    margin-inline: 4px;
+
+    .list-select-search-input {
+      width: 100%;
+
+      input {
+        background-color: transparent;
+        border: 0;
+        color: #293338;
+      }
+    }
+  }
+
+  .list-select-list {
+    max-height: 245px;
+    max-width: 100%;
+    overflow: auto;
+    padding: 8px 0;
+
+    .list-select-spacer {
+      padding-top: 8px;
+    }
+
+    .list-select-item {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+      padding: 4px 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: pre;
+      width: 100%;
+
+      &:last-child {
+        padding-bottom: 8px;
+      }
+
+      &:hover {
+        background: #f3f4f4;
+        color: #293338;
+      }
+
+      .list-select-item-label, .list-select-item-subtitle {
+        min-height: 16px;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .list-select-item-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 66%;
+        flex: 1;
+
+        .list-select-item-title {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .list-select-item-subtitle {
+        text-align: right;
+        width: 34%;
+        color: #6B757B;
+        cursor: default;
+      }
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import { SIGNAL_TYPES } from './signals';
+
 export const UI_CONTENT = {
   GLOBAL: {
     BUTTON_LABEL_CREATE_FLOW: 'Create new flow',
@@ -13,6 +15,7 @@ export const UI_CONTENT = {
     BUTTON_LABEL_STACKED_MODE: 'Stacked',
     BUTTON_LABEL_HELP: 'Help',
     BUTTON_LABEL_DEBUG: ['Enable debug mode', 'Disable debug mode'],
+    UNKNOWN_TEXT: '(unknown)',
   },
   HELP_MODAL: {
     ABOUT: {
@@ -275,6 +278,36 @@ export const UI_CONTENT = {
     SIGNALS_LOADING: 'Loading signals...',
     TOO_MANY_ENTITIES_ERROR_MESSAGE:
       'Note: You exceeded your signal limit. Remove entities or convert to workload to save changes.',
+    FILTER_INFO_TEXT: [
+      `This filter bar allows you to add name or tag-based clauses that will
+      reduce the set of signals visible in the signals table below.`,
+      `You can also use the set of filter clauses to dynamically target
+      signals to include in the Step. Just click "Add this filter", and the
+      Flow will automatically include any Signals that match the filter
+      definition at the point of Flow load or refresh. The filter must honor
+      the 25 signal limit - if the limit is exceeded, "Add this filter" will
+      be disabled.`,
+      `Note that tag names/values are lazy loaded as the signals are loaded
+      into the table. If you are not seeing expected tags in the filter
+      dropdown, you can either scroll through the table to load additional
+      tags, or search for a specific signal that you know has your target
+      set of tags to populate.`,
+    ],
+    ADD_FILTER_BUTTON: {
+      BUTTON_TEXT: 'Add this filter',
+      TOOLTIP: {
+        DYNAMIC_QUERY_EXISTS: {
+          [SIGNAL_TYPES.ENTITY]: 'An entity filter has already been set',
+          [SIGNAL_TYPES.ALERT]: 'An alert filter has already been set',
+        },
+        NO_FILTER_OR_MAXED: {
+          [SIGNAL_TYPES.ENTITY]:
+            'No filter defined or more than 25 entities returned',
+          [SIGNAL_TYPES.ALERT]:
+            'No filter defined or more than 25 alerts returned',
+        },
+      },
+    },
   },
   DUMMY_FILTER: "`tags.displayName` = 'project hedgehog'",
 };

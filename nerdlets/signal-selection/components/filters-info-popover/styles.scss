@@ -1,0 +1,13 @@
+.filters-info-popover-body {
+  .info-text {
+    max-width: 60ch;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+  }
+}
+
+.help-cursor {
+  cursor: help;
+}

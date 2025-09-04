@@ -1,0 +1,21 @@
+.signal-tooltip-basic {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+
+  .info {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: #293338;
+  }
+
+  .meta {
+    display: flex;
+    gap: 4px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #535E65;
+  }
+}
