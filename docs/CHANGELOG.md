@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.1...v2.4.2) (2025-09-04)
+
+
+### Bug Fixes
+
+* add max width for stage ([a5ed8a6](https://github.com/newrelic/nr-labs-pathpoint/commit/a5ed8a69870e52c2a9a525f67662514d53703f27))
+
 ## [2.4.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.0...v2.4.1) (2025-09-04)
 
 
