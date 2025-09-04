@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -6,7 +6,6 @@ import {
   CardBody,
   HeadingText,
   InlineMessage,
-  Link,
   NerdGraphQuery,
   SectionMessage,
   navigation,
@@ -163,6 +162,23 @@ const SignalDetailSidebar = ({ guid, name, type, data, timeWindow }) => {
     loadWorkloadIncidents(guid);
   }, [guid, type, data, timeWindow]);
 
+  const signalLink = useMemo(() => {
+    if (!hasAccessToEntity || !guid) return null;
+    const { pathname, search } = navigation.getOpenEntityLocation(guid) || {};
+    if (!pathname) return null;
+
+    const origin =
+      window.location != window.parent.location
+        ? document.referrer
+        : document.location.href;
+    const link = `${origin.replace(/\/+$/, '')}${pathname}${search || ''}`;
+    return (
+      <a className="detail-link" href={link} target="_blank" rel="noreferrer">
+        {detailLinkText}
+      </a>
+    );
+  }, [detailLinkText, hasAccessToEntity, guid]);
+
   return (
     <div className="signal-detail-sidebar">
       <div className="signal-header">
@@ -179,15 +195,7 @@ const SignalDetailSidebar = ({ guid, name, type, data, timeWindow }) => {
                   : 'Alert condition'
               }`}
             </HeadingText>
-            {hasAccessToEntity ? (
-              <Link
-                className="detail-link"
-                to={navigation.getOpenEntityLocation(guid)}
-                onClick={(e) => e.target.setAttribute('target', '_blank')}
-              >
-                {detailLinkText}
-              </Link>
-            ) : null}
+            {signalLink}
             {timeWindow ? (
               <InlineMessage
                 className="detail-time-info"
