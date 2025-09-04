@@ -18,7 +18,7 @@ import {
   workloadEntitiesQuery,
   workloadEntitiesViolationsFromGuidsArray,
 } from '../../queries';
-import { formatTimestamp, isWorkload } from '../../utils';
+import { formatTimestamp, getOrigin, isWorkload } from '../../utils';
 import { MAX_PARAMS_IN_QUERY, SIGNAL_TYPES, STATUSES } from '../../constants';
 
 import typesList from '../../../nerdlets/signal-selection/types.json';
@@ -167,11 +167,7 @@ const SignalDetailSidebar = ({ guid, name, type, data, timeWindow }) => {
     const { pathname, search } = navigation.getOpenEntityLocation(guid) || {};
     if (!pathname) return null;
 
-    const origin =
-      window.location != window.parent.location
-        ? document.referrer
-        : document.location.href;
-    const link = `${origin.replace(/\/+$/, '')}${pathname}${search || ''}`;
+    const link = `${getOrigin()}${pathname}${search || ''}`;
     return (
       <a className="detail-link" href={link} target="_blank" rel="noreferrer">
         {detailLinkText}
