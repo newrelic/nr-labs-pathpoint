@@ -94,7 +94,15 @@ const Level = ({
 
     return (
       filteredSteps.reduce(
-        (acc, { id, signals = [], status }, index, arr) => {
+        (acc, { id, signals = [], status, excluded }, index, arr) => {
+          if (
+            excluded &&
+            signalExpandOption !== SIGNAL_EXPAND.NONE &&
+            signalExpandOption !== SIGNAL_EXPAND.ALL
+          ) {
+            return acc;
+          }
+
           let startNextRow = false;
           if (
             mode === MODES.INLINE &&
@@ -178,7 +186,7 @@ const Level = ({
                 );
                 acc.cols = [];
               }
-              return isLastStep ? acc.rows : acc;
+              return acc;
             }
 
             acc.cols.push(cell);
