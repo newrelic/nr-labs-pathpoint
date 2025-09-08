@@ -684,7 +684,7 @@ const Stages = forwardRef(
           entitiesGuidsLastState.current = [];
           alertsGuidsLastState.current = [];
           noAccessGuidsLastState.current = [];
-          fetchStatuses(guidsRef.current);
+          fetchStatuses(guids);
         },
         preload,
         seek: async (timeWindow) => {
@@ -707,7 +707,7 @@ const Stages = forwardRef(
           setCurrentPlaybackTimeWindow?.(null);
         },
       }),
-      [fetchStatuses, preload, setCurrentPlaybackTimeWindow]
+      [guids, fetchStatuses, preload, setCurrentPlaybackTimeWindow]
     );
 
     const addStageHandler = () =>
