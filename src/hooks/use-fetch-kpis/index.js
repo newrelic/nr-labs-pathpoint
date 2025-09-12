@@ -21,10 +21,12 @@ const valueFromResult = (result = {}) => {
   const { comparison, ...vals } = result;
   const values = Object.values(vals);
   if (values.length === 1) {
-    const [value] = values;
-    if (!comparison) return { value };
-    if (comparison === 'current') return { value };
-    if (comparison === 'previous') return { previousValue: value };
+    const [val] = values;
+    const value =
+      typeof val === 'object' && Object.keys(val).length === 1
+        ? Object.values(val)[0]
+        : val;
+    return comparison === 'previous' ? { previousValue: value } : { value };
   }
 };
 
