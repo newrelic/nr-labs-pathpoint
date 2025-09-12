@@ -23,7 +23,7 @@ const valueFromResult = (result = {}) => {
   if (values.length === 1) {
     const [val] = values;
     const value =
-      typeof val === 'object' && Object.keys(val).length === 1
+      typeof val === 'object' && val !== null && Object.keys(val).length === 1
         ? Object.values(val)[0]
         : val;
     return comparison === 'previous' ? { previousValue: value } : { value };
