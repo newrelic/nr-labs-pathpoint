@@ -1,3 +1,11 @@
+## [2.4.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.2...v2.4.3) (2025-09-12)
+
+
+### Bug Fixes
+
+* add null check for kpi value ([7902dbf](https://github.com/newrelic/nr-labs-pathpoint/commit/7902dbfa66a4b5e82cd68908b41a50b5d02d80f5))
+* kpi values when object is returned ([e23f82a](https://github.com/newrelic/nr-labs-pathpoint/commit/e23f82a8a321698373a538f73822a954b83c433a))
+
 ## [2.4.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.1...v2.4.2) (2025-09-04)
 
 
