@@ -102,7 +102,6 @@ const Stages = forwardRef(
     const timeBandDataCache = useRef(new Map());
     const timeWindowAlertsCache = useRef(new Map());
     const playbackTimeWindow = useRef(null);
-    // const statusTimeoutDelay = useRef(validRefreshInterval(refreshInterval));
     const entitiesStatusTimeoutId = useRef();
     const alertsStatusTimeoutId = useRef();
     const stepsDynamicEntities = useRef({});
