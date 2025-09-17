@@ -128,24 +128,23 @@ const Stages = forwardRef(
     useEffect(() => {
       guidsRef.current = guids;
       if (
-        isPlayback &&
-        prevPreloadArgs.current &&
         [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].some(
           (t) =>
             (guids[t] || []).length > (prevPreloadGuids.current[t] || []).length
         )
       ) {
-        preload(
-          prevPreloadArgs.current.timeBands,
-          prevPreloadArgs.current.callback,
-          true
-        );
+        const { timeBands, callback } = prevPreloadArgs.current || {};
+        if (isPlayback && timeBands && callback) {
+          preload(timeBands, callback, true);
+        } else {
+          runFetch(FETCH_TYPES.MANUAL);
+        }
         prevPreloadGuids.current = {
           [SIGNAL_TYPES.ENTITY]: guids[SIGNAL_TYPES.ENTITY],
           [SIGNAL_TYPES.ALERT]: guids[SIGNAL_TYPES.ALERT],
         };
       }
-    }, [guids, isPlayback, preload]);
+    }, [guids, isPlayback, preload, runFetch]);
 
     useEffect(() => {
       if (!accounts?.length) return;
@@ -187,7 +186,6 @@ const Stages = forwardRef(
           [SIGNAL_TYPES.ENTITY]: [...entitiesGuidsSet],
         };
       });
-      shouldResumeFetchStatuses.current = true;
     }, [dynamicEntities]);
 
     useEffect(() => {
@@ -202,7 +200,6 @@ const Stages = forwardRef(
           [SIGNAL_TYPES.ALERT]: [...alertsGuidsSet],
         };
       });
-      shouldResumeFetchStatuses.current = true;
     }, [dynamicAlerts]);
 
     const fetchEntitiesStatus = useCallback(
