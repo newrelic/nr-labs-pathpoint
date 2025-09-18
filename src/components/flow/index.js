@@ -281,6 +281,7 @@ const Flow = forwardRef(
                 ) : null}
                 <Stages
                   mode={flowMode}
+                  isPlayback={isPlayback}
                   setIsLoading={setIsLoading}
                   ref={stagesRef}
                 />

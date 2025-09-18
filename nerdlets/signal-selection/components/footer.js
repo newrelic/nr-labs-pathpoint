@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 
 import { Button } from 'nr1';
 
-import { UI_CONTENT } from '../../src/constants';
+import { UI_CONTENT } from '../../../src/constants';
 
-const Footer = ({ entitiesCount, alertsCount, saveHandler, cancelHandler }) => (
+const Footer = ({ tooManySignals, saveHandler, cancelHandler }) => (
   <footer>
     <div className="message-bar">
-      {entitiesCount > 25 || alertsCount > 50
+      {tooManySignals
         ? UI_CONTENT.SIGNAL_SELECTION.TOO_MANY_ENTITIES_ERROR_MESSAGE
         : ''}
     </div>
@@ -18,11 +18,7 @@ const Footer = ({ entitiesCount, alertsCount, saveHandler, cancelHandler }) => (
       </Button>
       <Button
         type={Button.TYPE.PRIMARY}
-        disabled={
-          !(entitiesCount || alertsCount) ||
-          entitiesCount > 25 ||
-          alertsCount > 50
-        }
+        disabled={tooManySignals}
         onClick={saveHandler}
       >
         Save changes
@@ -32,8 +28,7 @@ const Footer = ({ entitiesCount, alertsCount, saveHandler, cancelHandler }) => (
 );
 
 Footer.propTypes = {
-  entitiesCount: PropTypes.number,
-  alertsCount: PropTypes.number,
+  tooManySignals: PropTypes.bool,
   saveHandler: PropTypes.func,
   cancelHandler: PropTypes.func,
 };

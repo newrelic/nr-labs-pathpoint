@@ -6,7 +6,7 @@ import { Icon } from 'nr1';
 import { Signal } from '../';
 import { STATUSES } from '../../constants';
 
-const QueryTree = ({ query = '', results = [], onDelete, onEdit }) => {
+const QueryTree = ({ query = '', results = [], type, onDelete, onEdit }) => {
   const [queryComponents, setQueryComponents] = useState([]);
 
   useEffect(
@@ -52,7 +52,13 @@ const QueryTree = ({ query = '', results = [], onDelete, onEdit }) => {
       </div>
       {results.map(({ guid, name }) => (
         <div className="query-tree-list-item" key={guid}>
-          <Signal name={name} status={STATUSES.UNKNOWN} />
+          <Signal
+            name={name}
+            guid={guid}
+            status={STATUSES.UNKNOWN}
+            type={type}
+            hasTooltip
+          />
         </div>
       ))}
     </>
@@ -62,6 +68,7 @@ const QueryTree = ({ query = '', results = [], onDelete, onEdit }) => {
 QueryTree.propTypes = {
   query: PropTypes.string,
   results: PropTypes.array,
+  type: PropTypes.string,
   onDelete: PropTypes.func,
   onEdit: PropTypes.func,
 };

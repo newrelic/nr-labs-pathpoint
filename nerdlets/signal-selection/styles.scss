@@ -1,3 +1,5 @@
+@import './components/filters-info-popover/styles.scss';
+
 .container.nerdlet {
   flex-direction: column;
   justify-content: normal;
@@ -11,26 +13,10 @@
   display: flex;
   flex-direction: column;
 
-  .filters {
-    margin: 8px 0;
-    display: flex;
-    gap: 8px;
+  
 
-    .entity-type-filter {
-      button {
-        background-color: #e1edff;
-        color: #074382;
-        border-width: 0;
-
-        &:hover {
-          background-color: #a4d1fc;
-        }
-      }
-    }
-  }
-
-  .listing {
-    flex: 1 1 auto;
+  .signal-select-content {
+    flex: 1;
     overflow: hidden;
     display: flex;
     gap: 16px;
@@ -39,8 +25,62 @@
       flex: 1;
       overflow-y: scroll;
     }
+    
+    .signals-browser {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
 
-    .selection {
+      .filters {
+        margin: 8px 0;
+        display: grid;
+        grid-template-columns: min-content max-content 1fr min-content;
+        align-items: flex-start;
+        gap: 8px;
+
+        > :is(:last-child) {
+          margin-left: auto;
+          min-width: fit-content;
+        }
+
+        .filter-name {
+          min-width: calc(28px + 26ch);
+        }
+
+        .entity-type-filter {
+          button {
+            background-color: #e1edff;
+            color: #074382;
+            border-width: 0;
+
+            &:hover {
+              background-color: #a4d1fc;
+            }
+          }
+        }
+
+        .filter-tail {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+
+      .signals-browser-content {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        
+      }
+    }
+
+    .selected-signals {
       width: 30%;
       padding: 8px;
       display: flex;
@@ -49,7 +89,7 @@
       border-radius: 4px;
       background: #FBFBFB;
 
-      .selected {
+      .selections {
         flex: 1 1 auto;
         overflow-y: auto;
         display: flex;
