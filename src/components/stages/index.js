@@ -71,6 +71,12 @@ import { useDebugLogger } from '../../hooks';
 const keyFromTimeWindow = ({ start, end }) =>
   start && end ? `${start}:${end}` : null;
 
+const FETCH_TYPES = {
+  POLLED: 'polled',
+  MANUAL: 'manual',
+  RESUME: 'resume',
+};
+
 const Stages = forwardRef(
   ({ mode = MODES.INLINE, isPlayback, setIsLoading, saveFlow }, ref) => {
     const { refreshInterval, stages = [] } = useContext(FlowContext);
@@ -92,19 +98,23 @@ const Stages = forwardRef(
     const dragItemIndex = useRef();
     const dragOverItemIndex = useRef();
     const stagesDataRef = useRef(stages);
-    const entitiesGuidsLastState = useRef([]);
-    const alertsGuidsLastState = useRef([]);
     const noAccessGuidsLastState = useRef([]);
     const timeBandDataCache = useRef(new Map());
     const timeWindowAlertsCache = useRef(new Map());
     const playbackTimeWindow = useRef(null);
-    const statusTimeoutDelay = useRef(validRefreshInterval(refreshInterval));
     const entitiesStatusTimeoutId = useRef();
     const alertsStatusTimeoutId = useRef();
     const stepsDynamicEntities = useRef({});
     const stepsDynamicAlerts = useRef({});
     const guidsRef = useRef(guids);
-    const lastPreloadArgs = useRef(null);
+    const prevPreloadArgs = useRef(null);
+    const prevPreloadGuids = useRef({
+      [SIGNAL_TYPES.ENTITY]: [],
+      [SIGNAL_TYPES.ALERT]: [],
+    });
+    const fetchStatusesTimerId = useRef(null);
+    const isFetchingStatuses = useRef(false);
+    const shouldResumeFetchStatuses = useRef(false);
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
 
@@ -116,19 +126,25 @@ const Stages = forwardRef(
     }, []);
 
     useEffect(() => {
-      statusTimeoutDelay.current = validRefreshInterval(refreshInterval);
-    }, [refreshInterval]);
-
-    useEffect(() => {
       guidsRef.current = guids;
-      if (isPlayback && lastPreloadArgs.current) {
-        preload(
-          lastPreloadArgs.current.timeBands,
-          lastPreloadArgs.current.callback,
-          true
-        );
+      if (
+        [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].some(
+          (t) =>
+            (guids[t] || []).length > (prevPreloadGuids.current[t] || []).length
+        )
+      ) {
+        const { timeBands, callback } = prevPreloadArgs.current || {};
+        if (isPlayback && timeBands && callback) {
+          preload(timeBands, callback, true);
+        } else {
+          runFetch(FETCH_TYPES.MANUAL);
+        }
+        prevPreloadGuids.current = {
+          [SIGNAL_TYPES.ENTITY]: guids[SIGNAL_TYPES.ENTITY],
+          [SIGNAL_TYPES.ALERT]: guids[SIGNAL_TYPES.ALERT],
+        };
       }
-    }, [guids, isPlayback, preload]);
+    }, [guids, isPlayback, preload, runFetch]);
 
     useEffect(() => {
       if (!accounts?.length) return;
@@ -204,23 +220,11 @@ const Stages = forwardRef(
         setIsLoading?.(false);
         if (error) {
           console.error('Error fetching entities:', error.message);
-          if (statusTimeoutDelay.current && !timeWindow) {
-            entitiesStatusTimeoutId.current = setTimeout(
-              () => fetchEntitiesStatus(entitiesGuids),
-              statusTimeoutDelay.current
-            );
-          }
           return;
         }
         const entitiesStatusesObj = entitiesDetailsFromQueryResults(actor);
 
         if (isForCache) return entitiesStatusesObj;
-        if (statusTimeoutDelay.current && !timeWindow) {
-          entitiesStatusTimeoutId.current = setTimeout(
-            () => fetchEntitiesStatus(entitiesGuids),
-            statusTimeoutDelay.current
-          );
-        }
         setStatuses((s) => ({
           ...s,
           [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
@@ -331,12 +335,6 @@ const Stages = forwardRef(
 
         setIsLoading?.(false);
         if (isForCache) return alertsStatusesObj;
-        if (statusTimeoutDelay.current && !timeWindow) {
-          alertsStatusTimeoutId.current = setTimeout(
-            () => fetchAlertsStatus(alertsGuids),
-            statusTimeoutDelay.current
-          );
-        }
         setStatuses((s) => ({
           ...s,
           [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
@@ -355,31 +353,17 @@ const Stages = forwardRef(
 
         const fetchers = [];
 
-        if (
-          entitiesGuids.length &&
-          !(
-            entitiesGuids.length === entitiesGuidsLastState.current.length &&
-            entitiesGuids.every((g) =>
-              entitiesGuidsLastState.current.includes(g)
-            )
-          )
-        ) {
-          entitiesGuidsLastState.current = entitiesGuids;
+        if (entitiesGuids.length) {
           fetchers.push(() => fetchEntitiesStatus(entitiesGuids, timeWindow));
         }
 
-        if (
-          alertsGuids.length &&
-          !(
-            alertsGuids.length === alertsGuidsLastState.current.length &&
-            alertsGuids.every((g) => alertsGuidsLastState.current.includes(g))
-          )
-        ) {
-          alertsGuidsLastState.current = alertsGuids;
+        if (alertsGuids.length) {
           fetchers.push(() => fetchAlertsStatus(alertsGuids, timeWindow));
         }
 
-        await Promise.all(fetchers.map((fetcher) => fetcher()));
+        if (fetchers.length) {
+          await Promise.all(fetchers.map((fetcher) => fetcher()));
+        }
 
         if (
           noAccessGuids.length &&
@@ -403,10 +387,65 @@ const Stages = forwardRef(
       [fetchEntitiesStatus, fetchAlertsStatus]
     );
 
+    const runFetch = useCallback(
+      async (fetchType = FETCH_TYPES.POLLED) => {
+        if (isFetchingStatuses.current) {
+          if (fetchType === FETCH_TYPES.MANUAL)
+            shouldResumeFetchStatuses.current = true;
+          return;
+        }
+
+        isFetchingStatuses.current = true;
+        try {
+          await fetchStatuses(guidsRef.current);
+        } finally {
+          isFetchingStatuses.current = false;
+
+          if (shouldResumeFetchStatuses.current) {
+            shouldResumeFetchStatuses.current = false;
+            runFetch(FETCH_TYPES.MANUAL);
+          }
+        }
+      },
+      [fetchStatuses]
+    );
+
     useEffect(() => {
-      if (!guids || !Object.keys(guids).length) return;
-      fetchStatuses(guids);
-    }, [fetchStatuses, guids]);
+      let isRunCancelled = false;
+
+      const clearTimer = () => {
+        if (fetchStatusesTimerId.current !== null) {
+          clearTimeout(fetchStatusesTimerId.current);
+          fetchStatusesTimerId.current = null;
+        }
+      };
+
+      if (isPlayback) {
+        clearTimer();
+        return clearTimer;
+      }
+
+      runFetch(FETCH_TYPES.RESUME);
+
+      const scheduleNextFetch = () => {
+        if (isRunCancelled) return;
+
+        const timeout = validRefreshInterval(refreshInterval);
+
+        fetchStatusesTimerId.current = window.setTimeout(() => {
+          void runFetch(FETCH_TYPES.POLLED).finally(() => {
+            if (!isRunCancelled) scheduleNextFetch();
+          });
+        }, timeout);
+      };
+
+      scheduleNextFetch();
+
+      return () => {
+        isRunCancelled = true;
+        clearTimer();
+      };
+    }, [isPlayback, runFetch, refreshInterval]);
 
     const updateStagesWithDynamic = useCallback(
       (stg) => ({
@@ -544,7 +583,7 @@ const Stages = forwardRef(
 
     const preload = useCallback(
       async (timeBands = [], callback, overwriteCache = false) => {
-        lastPreloadArgs.current = { timeBands, callback };
+        prevPreloadArgs.current = { timeBands, callback };
         const { [SIGNAL_TYPES.ALERT]: alertsGuids = [] } =
           guidsRef.current || {};
         const timeWindow = {
@@ -681,10 +720,8 @@ const Stages = forwardRef(
       ref,
       () => ({
         refresh: async () => {
-          entitiesGuidsLastState.current = [];
-          alertsGuidsLastState.current = [];
           noAccessGuidsLastState.current = [];
-          fetchStatuses(guids);
+          runFetch(FETCH_TYPES.MANUAL);
         },
         preload,
         seek: async (timeWindow) => {
@@ -703,11 +740,11 @@ const Stages = forwardRef(
         },
         clearPlaybackTimeWindow: () => {
           playbackTimeWindow.current = null;
-          lastPreloadArgs.current = null;
+          prevPreloadArgs.current = null;
           setCurrentPlaybackTimeWindow?.(null);
         },
       }),
-      [guids, fetchStatuses, preload, setCurrentPlaybackTimeWindow]
+      [preload, runFetch, setCurrentPlaybackTimeWindow]
     );
 
     const addStageHandler = () =>
