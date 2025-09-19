@@ -1,3 +1,10 @@
+## [2.4.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.3...v2.4.4) (2025-09-19)
+
+
+### Bug Fixes
+
+* no flows alignment ([a4262a5](https://github.com/newrelic/nr-labs-pathpoint/commit/a4262a5ae4b9db98ede264eefb066643f42d030a))
+
 ## [2.4.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.2...v2.4.3) (2025-09-12)
 
 
