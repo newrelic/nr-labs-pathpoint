@@ -3,11 +3,13 @@
   flex-direction: column;
   height: 100%;
   justify-content: space-around;
+  gap: 16px;
 
   .step-settings-form {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    overflow: scroll;
 
     .step-settings-section {
       display: flex;

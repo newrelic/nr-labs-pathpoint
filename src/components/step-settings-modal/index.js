@@ -28,6 +28,7 @@ const NUM_ONLY_RE = /^[0-9\b]+$/;
 const StepSettingsModal = ({
   title,
   signals,
+  queries,
   link,
   excluded,
   config,
@@ -47,6 +48,7 @@ const StepSettingsModal = ({
   const [isWeightValInvalid, setIsWeightValInvalid] = useState(false);
   const [isExcluded, setIsExcluded] = useState(false);
   const [stepSignals, setStepSignals] = useState([]);
+  const [stepQueries, setStepQueries] = useState([]);
 
   useEffect(() => setIsModalHidden(hidden), [hidden]);
 
@@ -55,6 +57,12 @@ const StepSettingsModal = ({
     setIsExcluded(excluded || false);
     configSetup(config);
     stepSignalsSetup(signals);
+    setStepQueries(() =>
+      (queries || []).map((q) => ({
+        ...q,
+        included: q.included === undefined ? true : q.included,
+      }))
+    );
   };
 
   const stepSignalsSetup = useCallback(
@@ -80,6 +88,7 @@ const StepSettingsModal = ({
   const saveHandler = useCallback(() => {
     onChange?.({
       signals: stepSignals.map((s) => ({ ...s, included: !!s.included })),
+      queries: stepQueries,
       link: url?.trim(),
       excluded: isExcluded,
       config: {
@@ -105,6 +114,7 @@ const StepSettingsModal = ({
     url,
     isExcluded,
     stepSignals,
+    stepQueries,
     statusOption,
     statusWeightUnit,
     statusWeightValue,
@@ -255,10 +265,33 @@ const StepSettingsModal = ({
                 </div>
               </div>
             </RadioGroup>
-            <HeadingText
-              className="step-config-header"
-              type={HeadingText.TYPE.HEADING_5}
-            >
+            {queries?.length ? (
+              <>
+                <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                  {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.TITLE}
+                </HeadingText>
+                {stepQueries.map(({ id, included, query }) => (
+                  <Checkbox
+                    key={id}
+                    checked={included}
+                    onChange={() =>
+                      setStepQueries((sqs) =>
+                        sqs.map((sq) =>
+                          sq.id === id
+                            ? {
+                                ...sq,
+                                included: !sq.included,
+                              }
+                            : sq
+                        )
+                      )
+                    }
+                    label={query}
+                  />
+                ))}
+              </>
+            ) : null}
+            <HeadingText type={HeadingText.TYPE.HEADING_5}>
               {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.TITLE}
             </HeadingText>
             <span>{UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.DESCRIPTION}</span>
@@ -304,6 +337,7 @@ StepSettingsModal.propTypes = {
   title: PropTypes.string,
   excluded: PropTypes.bool,
   signals: PropTypes.array,
+  queries: PropTypes.array,
   link: PropTypes.string,
   config: PropTypes.object,
   hidden: PropTypes.bool,

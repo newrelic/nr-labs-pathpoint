@@ -97,6 +97,9 @@ export const UI_CONTENT = {
     },
     CONFIG: {
       TITLE: 'Step Settings',
+      SELECT_QUERIES: {
+        TITLE: 'Included Queries',
+      },
       SELECT_SIGNALS: {
         TITLE: 'Included Signals',
         DESCRIPTION:
