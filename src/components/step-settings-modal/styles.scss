@@ -3,11 +3,20 @@
   flex-direction: column;
   height: 100%;
   justify-content: space-around;
+  gap: 16px;
 
   .step-settings-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+    overflow: auto;
+
+    .step-settings-signals-settings {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
     .step-settings-section {
       display: flex;

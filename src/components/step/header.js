@@ -24,7 +24,7 @@ const StepHeader = ({
   stageId,
   levelId,
   stepId,
-  step: { title, signals, link, excluded, config } = {},
+  step: { title, signals, queries, link, excluded, config } = {},
   onDragHandle,
   markSelection,
   mode = MODES.INLINE,
@@ -128,6 +128,7 @@ const StepHeader = ({
       <StepSettingsModal
         title={title}
         signals={signals}
+        queries={queries}
         link={link}
         excluded={excluded}
         config={config}

@@ -30,10 +30,11 @@ const SignalsList = ({
             onDelete={() => openDeleteModalHandler(guid, name)}
             status={status}
             mode={mode}
+            hasTooltip
           />
         ))}
-        {queries.map(({ id, query, results }) => (
-          <QueryTree query={query} results={results} key={id} />
+        {queries.map(({ id, ...queryTreeProps }) => (
+          <QueryTree key={id} {...queryTreeProps} />
         ))}
       </>
     );
