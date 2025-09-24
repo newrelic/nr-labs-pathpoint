@@ -58,9 +58,9 @@ const StepSettingsModal = ({
     configSetup(config);
     stepSignalsSetup(signals);
     setStepQueries(() =>
-      (queries || []).map((q) => ({
-        ...q,
-        included: q.included === undefined ? true : q.included,
+      (queries || []).map((qry) => ({
+        ...qry,
+        included: qry.included ?? true,
       }))
     );
   };

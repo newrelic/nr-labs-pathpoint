@@ -456,8 +456,8 @@ const Stages = forwardRef(
             const signalWithQueryIncluded = (sig) => ({
               ...sig,
               included:
-                stp.queries.find(({ id }) => id === sig.queryId)?.included ??
-                true,
+                (stp.queries || []).find(({ id }) => id === sig.queryId)
+                  ?.included ?? true,
             });
             return {
               ...stp,
