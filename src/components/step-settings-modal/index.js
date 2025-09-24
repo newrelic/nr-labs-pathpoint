@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import {
   Button,
   Checkbox,
-  EmptyState,
   HeadingText,
   Icon,
+  InlineMessage,
   RadioGroup,
   Radio,
   Select,
@@ -28,6 +28,7 @@ const NUM_ONLY_RE = /^[0-9\b]+$/;
 const StepSettingsModal = ({
   title,
   signals,
+  queries,
   link,
   excluded,
   config,
@@ -47,6 +48,7 @@ const StepSettingsModal = ({
   const [isWeightValInvalid, setIsWeightValInvalid] = useState(false);
   const [isExcluded, setIsExcluded] = useState(false);
   const [stepSignals, setStepSignals] = useState([]);
+  const [stepQueries, setStepQueries] = useState([]);
 
   useEffect(() => setIsModalHidden(hidden), [hidden]);
 
@@ -55,6 +57,12 @@ const StepSettingsModal = ({
     setIsExcluded(excluded || false);
     configSetup(config);
     stepSignalsSetup(signals);
+    setStepQueries(() =>
+      (queries || []).map((qry) => ({
+        ...qry,
+        included: qry.included ?? true,
+      }))
+    );
   };
 
   const stepSignalsSetup = useCallback(
@@ -80,6 +88,7 @@ const StepSettingsModal = ({
   const saveHandler = useCallback(() => {
     onChange?.({
       signals: stepSignals.map((s) => ({ ...s, included: !!s.included })),
+      queries: stepQueries,
       link: url?.trim(),
       excluded: isExcluded,
       config: {
@@ -105,6 +114,7 @@ const StepSettingsModal = ({
     url,
     isExcluded,
     stepSignals,
+    stepQueries,
     statusOption,
     statusWeightUnit,
     statusWeightValue,
@@ -255,31 +265,64 @@ const StepSettingsModal = ({
                 </div>
               </div>
             </RadioGroup>
-            <HeadingText
-              className="step-config-header"
-              type={HeadingText.TYPE.HEADING_5}
-            >
-              {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.TITLE}
-            </HeadingText>
-            <span>{UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.DESCRIPTION}</span>
-            {signals?.length ? (
-              <div className="signal-settings-table">
-                <SignalStatusSelectionTable
-                  signals={stepSignals}
-                  onChange={(selection) =>
-                    setStepSignals((sigs) =>
-                      sigs.map((s, i) => ({ ...s, included: selection[i] }))
-                    )
+            <div className="step-settings-signals-settings">
+              {queries?.length ? (
+                <div className="step-settings-section">
+                  <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.TITLE}
+                  </HeadingText>
+                  <span>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.DESCRIPTION}
+                  </span>
+                  {stepQueries.map(({ id, included, query }) => (
+                    <Checkbox
+                      key={id}
+                      checked={included}
+                      onChange={() =>
+                        setStepQueries((sqs) =>
+                          sqs.map((sq) =>
+                            sq.id === id
+                              ? {
+                                  ...sq,
+                                  included: !sq.included,
+                                }
+                              : sq
+                          )
+                        )
+                      }
+                      label={query}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              {signals?.length ? (
+                <div className="step-settings-section">
+                  <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.TITLE}
+                  </HeadingText>
+                  <span>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.DESCRIPTION}
+                  </span>
+                  <div className="signal-settings-table">
+                    <SignalStatusSelectionTable
+                      signals={stepSignals}
+                      onChange={(selection) =>
+                        setStepSignals((sigs) =>
+                          sigs.map((s, i) => ({ ...s, included: selection[i] }))
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+              {!(signals?.length || queries?.length) ? (
+                <InlineMessage
+                  label={
+                    UI_CONTENT.STEP.CONFIG.NO_QUERIES_OR_SIGNALS.DESCRIPTION
                   }
                 />
-              </div>
-            ) : (
-              <EmptyState
-                type={EmptyState.TYPE.USER_CLEARED}
-                illustrationType={EmptyState.ILLUSTRATION_TYPE.ILLUSTRATION_03}
-                title={UI_CONTENT.STEP.CONFIG.EMPTY_STATE}
-              />
-            )}
+              ) : null}
+            </div>
           </div>
         </div>
         <div className="step-settings-button-bar">
@@ -304,6 +347,7 @@ StepSettingsModal.propTypes = {
   title: PropTypes.string,
   excluded: PropTypes.bool,
   signals: PropTypes.array,
+  queries: PropTypes.array,
   link: PropTypes.string,
   config: PropTypes.object,
   hidden: PropTypes.bool,

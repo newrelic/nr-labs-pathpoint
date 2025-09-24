@@ -95,11 +95,10 @@ const SignalSelectionNerdlet = () => {
   const alertsSelections = useRef({});
   const dynamicEntitiesQuery = useRef(null);
   const dynamicEntitiesGuids = useRef(new Set());
-  const dynamicEntitiesQueryId = useRef(null);
   const dynamicAlertsQuery = useRef(null);
   const dynamicAlertsGuids = useRef(new Set());
-  const dynamicAlertsQueryId = useRef(null);
   const selectingStepId = useRef(null);
+  const existingDynamicQueries = useRef({});
 
   useEffect(() => setAccountId(platformAccountId), [platformAccountId]);
 
@@ -112,12 +111,18 @@ const SignalSelectionNerdlet = () => {
       return;
     selectingStepId.current = step.id;
     const stepQueries = (step.queries || [])?.reduce(
-      (acc, { type, query, id }) => {
+      (acc, { type, query, id, included }) => {
         if (type === SIGNAL_TYPES.ENTITY && query) {
-          dynamicEntitiesQueryId.current = id;
+          existingDynamicQueries.current = {
+            ...existingDynamicQueries.current,
+            [type]: { id, included },
+          };
           return { ...acc, [SIGNAL_TYPES.ENTITY]: query };
         } else if (type === SIGNAL_TYPES.ALERT && query) {
-          dynamicAlertsQueryId.current = id;
+          existingDynamicQueries.current = {
+            ...existingDynamicQueries.current,
+            [type]: { id, included },
+          };
           return { ...acc, [SIGNAL_TYPES.ALERT]: query };
         }
         return acc;
@@ -410,17 +415,16 @@ const SignalSelectionNerdlet = () => {
 
   const saveHandler = useCallback(() => {
     let queries = [];
-    const queryIds = {
-      [SIGNAL_TYPES.ENTITY]: dynamicEntitiesQueryId.current,
-      [SIGNAL_TYPES.ALERT]: dynamicAlertsQueryId.current,
-    };
     [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
       const query = dynamicQueries[type];
+      const { id, included } =
+        (existingDynamicQueries.current || {})[type] || {};
       if (query) {
         queries.push({
           type,
           query,
-          id: queryIds[type] || uuid(),
+          id: id || uuid(),
+          included: included !== undefined ? included : true,
         });
       }
     });

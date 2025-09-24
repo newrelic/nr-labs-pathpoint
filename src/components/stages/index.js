@@ -452,14 +452,26 @@ const Stages = forwardRef(
         ...stg,
         levels: stg.levels.map((lvl) => ({
           ...lvl,
-          steps: lvl.steps.map((stp) => ({
-            ...stp,
-            signals: [
-              ...stp.signals,
-              ...(stepsDynamicEntities.current?.[stp.id] || []),
-              ...(stepsDynamicAlerts.current?.[stp.id] || []),
-            ],
-          })),
+          steps: lvl.steps.map((stp) => {
+            const signalWithQueryIncluded = (sig) => ({
+              ...sig,
+              included:
+                (stp.queries || []).find(({ id }) => id === sig.queryId)
+                  ?.included ?? true,
+            });
+            return {
+              ...stp,
+              signals: [
+                ...stp.signals,
+                ...(stepsDynamicEntities.current?.[stp.id] || []).map(
+                  signalWithQueryIncluded
+                ),
+                ...(stepsDynamicAlerts.current?.[stp.id] || []).map(
+                  signalWithQueryIncluded
+                ),
+              ],
+            };
+          }),
         })),
       }),
       []

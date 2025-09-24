@@ -68,8 +68,7 @@ const Step = ({
   const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
-  const dynamicEntitiesQueryId = useRef(null);
-  const dynamicAlertsQueryId = useRef(null);
+  const dynamicQueries = useRef({});
   const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
       filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
@@ -87,14 +86,17 @@ const Step = ({
     const { queries = [], ...step } =
       steps.find(({ id }) => id === stepId) || {};
     [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
-      const { query, id } =
+      const { query, id, included } =
         queries.find(({ type: qType }) => qType === type) || {};
+      if (!query) return;
+      dynamicQueries.current = {
+        ...dynamicQueries.current,
+        [type]: { queryId: id, included },
+      };
       if (type === SIGNAL_TYPES.ENTITY) {
-        dynamicEntitiesQueryId.current = id || null;
-        if (query) setEntitiesQuery(query);
+        setEntitiesQuery(query);
       } else if (type === SIGNAL_TYPES.ALERT) {
-        dynamicAlertsQueryId.current = id || null;
-        if (query) setAlertsQuery(query);
+        setAlertsQuery(query);
       }
     });
     setStageName(stgName);
@@ -135,9 +137,8 @@ const Step = ({
       [stepId]: dynamicEntities.map(({ guid, name }) => ({
         guid,
         name,
-        included: true,
         type: SIGNAL_TYPES.ENTITY,
-        queryId: dynamicEntitiesQueryId.current,
+        ...(dynamicQueries.current[SIGNAL_TYPES.ENTITY] || {}),
       })),
     }));
   }, [stepId, dynamicEntities]);
@@ -154,9 +155,8 @@ const Step = ({
       [stepId]: dynamicAlerts.map(({ guid, name }) => ({
         guid,
         name,
-        included: true,
         type: SIGNAL_TYPES.ALERT,
-        queryId: dynamicAlertsQueryId.current,
+        ...(dynamicQueries.current[SIGNAL_TYPES.ALERT] || {}),
       })),
     }));
   }, [stepId, dynamicAlerts]);
