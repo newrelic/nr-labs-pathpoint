@@ -97,13 +97,19 @@ export const UI_CONTENT = {
     },
     CONFIG: {
       TITLE: 'Step Settings',
+      NO_QUERIES_OR_SIGNALS: {
+        DESCRIPTION:
+          'No queries or signals in step. When queries/signals are present, select which ones to include in step status determination.',
+      },
       SELECT_QUERIES: {
         TITLE: 'Included Queries',
+        DESCRIPTION:
+          'Selected queries will be included in step status determination. All signals defined in the query will be included. Defaults to all.',
       },
       SELECT_SIGNALS: {
         TITLE: 'Included Signals',
         DESCRIPTION:
-          'Signals selected will be included in step status determination. Defaults to all signals.',
+          'Signals selected will be included in step status determination. Defaults to all signals. Does not include signals defined via queries.',
       },
       EXCLUSION: {
         LABEL: 'Exclude Step from Level Status',

@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import {
   Button,
   Checkbox,
-  EmptyState,
   HeadingText,
   Icon,
+  InlineMessage,
   RadioGroup,
   Radio,
   Select,
@@ -265,54 +265,64 @@ const StepSettingsModal = ({
                 </div>
               </div>
             </RadioGroup>
-            {queries?.length ? (
-              <>
-                <HeadingText type={HeadingText.TYPE.HEADING_5}>
-                  {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.TITLE}
-                </HeadingText>
-                {stepQueries.map(({ id, included, query }) => (
-                  <Checkbox
-                    key={id}
-                    checked={included}
-                    onChange={() =>
-                      setStepQueries((sqs) =>
-                        sqs.map((sq) =>
-                          sq.id === id
-                            ? {
-                                ...sq,
-                                included: !sq.included,
-                              }
-                            : sq
+            <div className="step-settings-signals-settings">
+              {queries?.length ? (
+                <div className="step-settings-section">
+                  <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.TITLE}
+                  </HeadingText>
+                  <span>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_QUERIES.DESCRIPTION}
+                  </span>
+                  {stepQueries.map(({ id, included, query }) => (
+                    <Checkbox
+                      key={id}
+                      checked={included}
+                      onChange={() =>
+                        setStepQueries((sqs) =>
+                          sqs.map((sq) =>
+                            sq.id === id
+                              ? {
+                                  ...sq,
+                                  included: !sq.included,
+                                }
+                              : sq
+                          )
                         )
-                      )
-                    }
-                    label={query}
-                  />
-                ))}
-              </>
-            ) : null}
-            <HeadingText type={HeadingText.TYPE.HEADING_5}>
-              {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.TITLE}
-            </HeadingText>
-            <span>{UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.DESCRIPTION}</span>
-            {signals?.length ? (
-              <div className="signal-settings-table">
-                <SignalStatusSelectionTable
-                  signals={stepSignals}
-                  onChange={(selection) =>
-                    setStepSignals((sigs) =>
-                      sigs.map((s, i) => ({ ...s, included: selection[i] }))
-                    )
+                      }
+                      label={query}
+                    />
+                  ))}
+                </div>
+              ) : null}
+              {signals?.length ? (
+                <div className="step-settings-section">
+                  <HeadingText type={HeadingText.TYPE.HEADING_5}>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.TITLE}
+                  </HeadingText>
+                  <span>
+                    {UI_CONTENT.STEP.CONFIG.SELECT_SIGNALS.DESCRIPTION}
+                  </span>
+                  <div className="signal-settings-table">
+                    <SignalStatusSelectionTable
+                      signals={stepSignals}
+                      onChange={(selection) =>
+                        setStepSignals((sigs) =>
+                          sigs.map((s, i) => ({ ...s, included: selection[i] }))
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+              {!(signals?.length || queries?.length) ? (
+                <InlineMessage
+                  label={
+                    UI_CONTENT.STEP.CONFIG.NO_QUERIES_OR_SIGNALS.DESCRIPTION
                   }
                 />
-              </div>
-            ) : (
-              <EmptyState
-                type={EmptyState.TYPE.USER_CLEARED}
-                illustrationType={EmptyState.ILLUSTRATION_TYPE.ILLUSTRATION_03}
-                title={UI_CONTENT.STEP.CONFIG.EMPTY_STATE}
-              />
-            )}
+              ) : null}
+            </div>
           </div>
         </div>
         <div className="step-settings-button-bar">

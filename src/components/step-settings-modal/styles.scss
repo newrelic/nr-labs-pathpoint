@@ -8,8 +8,15 @@
   .step-settings-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
     overflow: scroll;
+
+    .step-settings-signals-settings {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
     .step-settings-section {
       display: flex;
