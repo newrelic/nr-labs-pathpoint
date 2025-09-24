@@ -109,7 +109,7 @@ export const UI_CONTENT = {
       SELECT_SIGNALS: {
         TITLE: 'Included Signals',
         DESCRIPTION:
-          'Signals selected will be included in step status determination. Defaults to all signals. Does not include signals defined via queries.',
+          'Signals selected will be included in step status determination. Defaults to all signals. Does not include signals defined via queries, if queries are present.',
       },
       EXCLUSION: {
         LABEL: 'Exclude Step from Level Status',
