@@ -1,0 +1,58 @@
+.stage-issues-modal {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+
+  .modal-header {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .issues-table {
+      display: flex;
+      flex-direction: column;
+
+      .issues-table-row {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+        align-items: center;
+        padding: 8px 4px;
+        border-bottom: 1px solid #ECEEEE;
+        gap: 0 8px;
+
+        .issues-table-col {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+
+        .issues-table-signals {
+          padding-left: 8px;
+
+          .issues-table-signal {
+            display: grid;
+            grid-template-columns: min-content auto;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+            color: $unknown;
+          }
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    margin-top: 48px;
+    display: flex;
+    gap: 8px;
+  }
+}

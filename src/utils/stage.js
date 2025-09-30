@@ -92,13 +92,21 @@ export const addSignalStatuses = (stages = [], statuses = {}) => {
             }
             if (isEntity) {
               if (!entity || !Object.keys(entity).length) {
-                signalsWithNoStatus = addGuidToObjectTree(
-                  signalsWithNoStatus,
-                  stage.id,
-                  level.id,
-                  step.id,
-                  guid
-                );
+                signalsWithNoStatus = {
+                  ...signalsWithNoStatus,
+                  [stage.id]: {
+                    ...(signalsWithNoStatus[stage.id] || {}),
+                    [level.id]: {
+                      ...(signalsWithNoStatus[stage.id]?.[level.id] || {}),
+                      [step.id]: {
+                        ...(signalsWithNoStatus[stage.id]?.[level.id]?.[
+                          step.id
+                        ] || {}),
+                        [guid]: { name, type },
+                      },
+                    },
+                  },
+                };
                 return signalsAcc;
               }
               if (

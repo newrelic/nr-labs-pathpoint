@@ -488,11 +488,12 @@ const Stages = forwardRef(
       setStagesData(() => ({
         stages: signalsWithStatuses.map(annotateStageWithStatuses),
       }));
-      setClassifications({
+      setClassifications((cls = {}) => ({
+        ...cls,
         entitiesInStepCount,
         signalsWithNoAccess,
         signalsWithNoStatus,
-      });
+      }));
       const sigDetails = signalDetailsObject(statuses);
       if (sigDetails) setSignalsDetails(sigDetails);
     }, [stages, statuses, updateStagesWithDynamic]);
@@ -805,7 +806,9 @@ const Stages = forwardRef(
       >
         <SignalsContext.Provider value={signalsDetails}>
           <SelectionsContext.Provider value={{ selections, markSelection }}>
-            <SignalsClassificationsContext.Provider value={classifications}>
+            <SignalsClassificationsContext.Provider
+              value={{ classifications, setClassifications }}
+            >
               <PlaybackContext.Provider
                 value={{ timeWindow: currentPlaybackTimeWindow }}
               >
