@@ -130,7 +130,7 @@ const Step = ({
   useEffect(() => {
     if (!stepId || !setDynamicEntities) return;
     if (dynamicEntities.length > MAX_ENTITIES_IN_STEP) {
-      reportTooManyDynamicSignals(stepId, {
+      reportTooManyDynamicSignals?.(stepId, {
         [SIGNAL_TYPES.ENTITY]: dynamicEntities.length,
       });
     } else {

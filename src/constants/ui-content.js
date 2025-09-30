@@ -154,7 +154,7 @@ export const UI_CONTENT = {
     MISSING: {
       HEADING: 'Missing signals',
       DETAILS:
-        'No response recieved for the listed signals in these steps. It could be that these signals no longer exist.',
+        'No response received for the listed signals in these steps. It could be that these signals no longer exist.',
     },
     DETAILS: {
       NO_INCIDENTS: 'No open incidents from past 30 days',
