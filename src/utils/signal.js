@@ -194,7 +194,9 @@ const incidentFromIncident = ({
   name: parseIncidentName(title),
   closed: closedAt,
   opened: createdAt,
-  link: `https://aiops.service.newrelic.com/accounts/${accountIds}/incidents/${incidentId}/redirect`,
+  link: `https://aiops.service.${
+    document.referrer.includes('.eu.') ? 'eu.' : ''
+  }newrelic.com/accounts/${accountIds}/incidents/${incidentId}/redirect`,
   state: closedAt ? 'closed' : 'open',
   curStatus: priority,
   classname: priority.toLowerCase(),

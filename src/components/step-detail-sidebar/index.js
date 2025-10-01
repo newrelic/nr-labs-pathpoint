@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 
-import { Card, CardBody, HeadingText, Link } from 'nr1';
+import { Card, CardBody, HeadingText, Icon, Link } from 'nr1';
 
 import IconsLib from '../icons-lib';
 import {
@@ -50,7 +50,7 @@ const StepDetailSidebar = ({ step: { title, link, signals, ...step } }) => {
           <span className="status-option">{statusOption}</span>
           <span>
             status -{` ${weightAppliedMessage}${includedSignals.length} `}
-            signals
+            selected signals:
           </span>
         </>
       );
@@ -59,7 +59,7 @@ const StepDetailSidebar = ({ step: { title, link, signals, ...step } }) => {
     return (
       <>
         <span className="status-option">{statusOption}</span>
-        <span> status of {includedSignals.length} signals</span>
+        <span> status of {includedSignals.length} selected signals:</span>
       </>
     );
   }, [includedSignals, step]);
@@ -86,6 +86,19 @@ const StepDetailSidebar = ({ step: { title, link, signals, ...step } }) => {
         </Card>
       </div>
       <div className="signals-status-rule">
+        <HeadingText type={HeadingText.TYPE.HEADING_5}>
+          {UI_CONTENT.STEP.PANEL.CONFIG_TITLE}
+        </HeadingText>
+        {step.excluded ? (
+          <div className="step-excluded">
+            <Icon color="#f07a0e" type={Icon.TYPE.INTERFACE__STATE__WARNING} />
+            <span className="excluded-message">
+              {UI_CONTENT.STEP.PANEL.EXCLUDE_MESSAGE}
+            </span>
+          </div>
+        ) : (
+          ''
+        )}
         <div className="status-calculation">{signalsStatusRule}</div>
         <div className="included-signals-list">
           {includedSignals.map(({ guid, name, status, type }) => (

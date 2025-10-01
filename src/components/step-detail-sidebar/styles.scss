@@ -21,6 +21,14 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    .step-excluded {
+      font-weight: 200;
+
+      .excluded-message {
+        margin-left: 4px;
+      }
+    }
     
     .status-calculation {
       display: inline-flex;
@@ -39,6 +47,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      text-indent: 12px;
 
       .included-signal {
         box-sizing: border-box;
@@ -47,6 +56,8 @@
         align-items: center;
         gap: 8px;
         margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: ellipsis;
 
         .icons-lib {
           @include fill-colors(

@@ -15,3 +15,7 @@ export const POLICY_DOMAIN_TYPE = {
   entityDomain: 'AIOPS',
   entityType: 'POLICY',
 };
+
+export const ALERTS_DOMAIN_TYPE_NRQL = `domain = '${CONDITION_DOMAIN_TYPE.domain}' AND type = '${CONDITION_DOMAIN_TYPE.type}'`;
+
+export const POLICY_ID_TAG = 'policyId';

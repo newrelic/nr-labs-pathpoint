@@ -1,3 +1,99 @@
+## [2.4.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.3...v2.4.4) (2025-09-19)
+
+
+### Bug Fixes
+
+* no flows alignment ([a4262a5](https://github.com/newrelic/nr-labs-pathpoint/commit/a4262a5ae4b9db98ede264eefb066643f42d030a))
+
+## [2.4.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.2...v2.4.3) (2025-09-12)
+
+
+### Bug Fixes
+
+* add null check for kpi value ([7902dbf](https://github.com/newrelic/nr-labs-pathpoint/commit/7902dbfa66a4b5e82cd68908b41a50b5d02d80f5))
+* kpi values when object is returned ([e23f82a](https://github.com/newrelic/nr-labs-pathpoint/commit/e23f82a8a321698373a538f73822a954b83c433a))
+
+## [2.4.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.1...v2.4.2) (2025-09-04)
+
+
+### Bug Fixes
+
+* add max width for stage ([a5ed8a6](https://github.com/newrelic/nr-labs-pathpoint/commit/a5ed8a69870e52c2a9a525f67662514d53703f27))
+
+## [2.4.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.0...v2.4.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* copilot recommendations ([c5ec3b0](https://github.com/newrelic/nr-labs-pathpoint/commit/c5ec3b080ca1b424d994d8f59e15f28089799876))
+* get parent origin for link in sidebar ([1530a90](https://github.com/newrelic/nr-labs-pathpoint/commit/1530a902afdfb4391501f910b43da52fa32da940))
+
+# [2.4.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.27...v2.4.0) (2025-07-29)
+
+
+### Features
+
+* update stages to handle dynamic entities ([680e579](https://github.com/newrelic/nr-labs-pathpoint/commit/680e57992454fb60fd0ae42406a12b981489ca5e))
+
+## [2.3.27](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.26...v2.3.27) (2025-07-29)
+
+
+### Bug Fixes
+
+* adding a query tree for use in step ([60af2d8](https://github.com/newrelic/nr-labs-pathpoint/commit/60af2d8ab44741e192ea10f46c047c298c34970a))
+* adding check for setter fn in step ([b48ef91](https://github.com/newrelic/nr-labs-pathpoint/commit/b48ef91ef0a108dd9ad36d360a1298a7b673fba8))
+* memo issues in step; setting up for dynamic entities ([f459275](https://github.com/newrelic/nr-labs-pathpoint/commit/f4592756888fb08802f6b090afbe28b5fc45a435))
+
+
+### Performance Improvements
+
+* minor fixes ([26e4119](https://github.com/newrelic/nr-labs-pathpoint/commit/26e4119f5988d8d7abe9d47d5ef5c3fa5bc44e06))
+* minor fixes to step ([90fb8f5](https://github.com/newrelic/nr-labs-pathpoint/commit/90fb8f54fb9a599930e49d1fa16ce8dde092d932))
+* removing memo from signal listing components ([1948e39](https://github.com/newrelic/nr-labs-pathpoint/commit/1948e39603a4011fbc67b6538c70f1c22c5ca289))
+
+## [2.3.26](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.25...v2.3.26) (2025-07-28)
+
+
+### Bug Fixes
+
+* optional chaining for search in flow list ([37e35ab](https://github.com/newrelic/nr-labs-pathpoint/commit/37e35ab9b1f626da88a26df18ca0b63f721e49f0))
+* optional chaining in map ([3a82d4c](https://github.com/newrelic/nr-labs-pathpoint/commit/3a82d4c7b4bbffdccdbd3ef0e277f97f5ebf23dd))
+
+## [2.3.25](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.24...v2.3.25) (2025-07-17)
+
+
+### Bug Fixes
+
+* correct eu determination for inc link ([b6e41d6](https://github.com/newrelic/nr-labs-pathpoint/commit/b6e41d64930a04a163686e7aad020278e263c863))
+
+## [2.3.24](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.23...v2.3.24) (2025-07-17)
+
+
+### Bug Fixes
+
+* add eu support to alert signal incident uri ([011d5a2](https://github.com/newrelic/nr-labs-pathpoint/commit/011d5a26e8cf1b5f69f13835394dece8f9d7b3f3))
+
+## [2.3.23](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.22...v2.3.23) (2025-07-16)
+
+
+### Bug Fixes
+
+* set min-width for stage ([f620dea](https://github.com/newrelic/nr-labs-pathpoint/commit/f620dea290337401e5c4294f1e9dcd9b2c013c4e))
+
+## [2.3.22](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.21...v2.3.22) (2025-05-21)
+
+
+### Bug Fixes
+
+* add debugging output for alert conditions ([3f5e207](https://github.com/newrelic/nr-labs-pathpoint/commit/3f5e2072a16c4b32b89741e9c94892f7b5eb6b7c))
+
+## [2.3.21](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.20...v2.3.21) (2025-05-21)
+
+
+### Bug Fixes
+
+* step panel enhancements ([14e6b19](https://github.com/newrelic/nr-labs-pathpoint/commit/14e6b19d380717d62e64d73bf1d223023c83ab8e))
+
 ## [2.3.20](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.3.19...v2.3.20) (2025-04-25)
 
 

@@ -92,13 +92,21 @@ export const addSignalStatuses = (stages = [], statuses = {}) => {
             }
             if (isEntity) {
               if (!entity || !Object.keys(entity).length) {
-                signalsWithNoStatus = addGuidToObjectTree(
-                  signalsWithNoStatus,
-                  stage.id,
-                  level.id,
-                  step.id,
-                  guid
-                );
+                signalsWithNoStatus = {
+                  ...signalsWithNoStatus,
+                  [stage.id]: {
+                    ...(signalsWithNoStatus[stage.id] || {}),
+                    [level.id]: {
+                      ...(signalsWithNoStatus[stage.id]?.[level.id] || {}),
+                      [step.id]: {
+                        ...(signalsWithNoStatus[stage.id]?.[level.id]?.[
+                          step.id
+                        ] || {}),
+                        [guid]: { name, type },
+                      },
+                    },
+                  },
+                };
                 return signalsAcc;
               }
               if (
@@ -163,7 +171,7 @@ export const annotateStageWithStatuses = (stage = {}) => {
   return { ...stage, levels, status };
 };
 
-export const uniqueSignalGuidsInStages = (stages = [], accounts = []) => {
+export const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
   const guids = Object.values(SIGNAL_TYPES).reduce(
     (acc, type) => ({ ...acc, [type]: new Set() }),
     {}
@@ -185,7 +193,7 @@ export const uniqueSignalGuidsInStages = (stages = [], accounts = []) => {
   );
   return Object.keys(guids).reduce(
     (acc, type) =>
-      guids[type] instanceof Set ? { ...acc, [type]: [...guids[type]] } : acc,
+      guids[type] instanceof Set ? { ...acc, [type]: guids[type] } : acc,
     {}
   );
 };
