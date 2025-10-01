@@ -14,7 +14,7 @@
         "not dead"
     ],
     "dependencies": {
-        "@newrelic/nr-labs-components": "^1.24.3",
+        "@newrelic/nr-labs-components": "^2.0.1",
         "dayjs": "^1.11.10",
         "prop-types": "15.7.2",
         "react": "17.0.2",

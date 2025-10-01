@@ -1,3 +1,5 @@
+import { SIGNAL_TYPES } from './signals';
+
 export const UI_CONTENT = {
   GLOBAL: {
     BUTTON_LABEL_CREATE_FLOW: 'Create new flow',
@@ -13,6 +15,7 @@ export const UI_CONTENT = {
     BUTTON_LABEL_STACKED_MODE: 'Stacked',
     BUTTON_LABEL_HELP: 'Help',
     BUTTON_LABEL_DEBUG: ['Enable debug mode', 'Disable debug mode'],
+    UNKNOWN_TEXT: '(unknown)',
   },
   HELP_MODAL: {
     ABOUT: {
@@ -94,10 +97,19 @@ export const UI_CONTENT = {
     },
     CONFIG: {
       TITLE: 'Step Settings',
+      NO_QUERIES_OR_SIGNALS: {
+        DESCRIPTION:
+          'No queries or signals in step. When queries/signals are present, select which ones to include in step status determination.',
+      },
+      SELECT_QUERIES: {
+        TITLE: 'Included Queries',
+        DESCRIPTION:
+          'Selected queries will be included in step status determination. All signals defined in the query will be included. Defaults to all.',
+      },
       SELECT_SIGNALS: {
         TITLE: 'Included Signals',
         DESCRIPTION:
-          'Signals selected will be included in step status determination. Defaults to all signals.',
+          'Signals selected will be included in step status determination. Defaults to all signals. Does not include signals defined via queries, if queries are present.',
       },
       EXCLUSION: {
         LABEL: 'Exclude Step from Level Status',
@@ -142,7 +154,7 @@ export const UI_CONTENT = {
     MISSING: {
       HEADING: 'Missing signals',
       DETAILS:
-        'No response recieved for these signals. It could be that these signals no longer exist.',
+        'No response received for the listed signals in these steps. It could be that these signals no longer exist.',
     },
     DETAILS: {
       NO_INCIDENTS: 'No open incidents from past 30 days',
@@ -275,6 +287,36 @@ export const UI_CONTENT = {
     SIGNALS_LOADING: 'Loading signals...',
     TOO_MANY_ENTITIES_ERROR_MESSAGE:
       'Note: You exceeded your signal limit. Remove entities or convert to workload to save changes.',
+    FILTER_INFO_TEXT: [
+      `This filter bar allows you to add name or tag-based clauses that will
+      reduce the set of signals visible in the signals table below.`,
+      `You can also use the set of filter clauses to dynamically target
+      signals to include in the Step. Just click "Add this filter", and the
+      Flow will automatically include any Signals that match the filter
+      definition at the point of Flow load or refresh. The filter must honor
+      the 25 signal limit - if the limit is exceeded, "Add this filter" will
+      be disabled.`,
+      `Note that tag names/values are lazy loaded as the signals are loaded
+      into the table. If you are not seeing expected tags in the filter
+      dropdown, you can either scroll through the table to load additional
+      tags, or search for a specific signal that you know has your target
+      set of tags to populate.`,
+    ],
+    ADD_FILTER_BUTTON: {
+      BUTTON_TEXT: 'Add this filter',
+      TOOLTIP: {
+        DYNAMIC_QUERY_EXISTS: {
+          [SIGNAL_TYPES.ENTITY]: 'An entity filter has already been set',
+          [SIGNAL_TYPES.ALERT]: 'An alert filter has already been set',
+        },
+        NO_FILTER_OR_MAXED: {
+          [SIGNAL_TYPES.ENTITY]:
+            'No filter defined or more than 25 entities returned',
+          [SIGNAL_TYPES.ALERT]:
+            'No filter defined or more than 25 alerts returned',
+        },
+      },
+    },
   },
   DUMMY_FILTER: "`tags.displayName` = 'project hedgehog'",
 };

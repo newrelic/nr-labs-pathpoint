@@ -18,11 +18,13 @@ import {
   FlowContext,
   FlowDispatchContext,
   SelectionsContext,
+  SignalsClassificationsContext,
   SignalsContext,
   StagesContext,
 } from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 import {
+  ALERTS_DOMAIN_TYPE_NRQL,
   COMPONENTS,
   MAX_ENTITIES_IN_STEP,
   MODES,
@@ -50,9 +52,10 @@ const Step = ({
   saveFlow,
 }) => {
   const { id: flowId, stages: flowStages } = useContext(FlowContext);
-  const { stages, updateStagesDataRef, setDynamicEntities } =
+  const { stages, updateStagesDataRef, setDynamicEntities, setDynamicAlerts } =
     useContext(StagesContext);
   const { selections = {}, markSelection } = useContext(SelectionsContext);
+  const { setClassifications } = useContext(SignalsClassificationsContext);
   const dispatch = useContext(FlowDispatchContext);
   const [thisStep, setThisStep] = useState();
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
@@ -63,15 +66,20 @@ const Step = ({
   const [hideHealthy, setHideHealthy] = useState(true);
   const [hideSignals, setHideSignals] = useState(false);
   const [entitiesQuery, setEntitiesQuery] = useState('');
+  const [alertsQuery, setAlertsQuery] = useState('');
   const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
-  const dynamicEntitiesQueryId = useRef(null);
+  const dynamicQueries = useRef({});
   const { data: { entities: dynamicEntities = [] } = {} } =
     useEntitySearchQuery({
       filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
       limit: entitiesQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
     });
+  const { data: { entities: dynamicAlerts = [] } = {} } = useEntitySearchQuery({
+    filters: `${ALERTS_DOMAIN_TYPE_NRQL} AND ${alertsQuery}`,
+    limit: alertsQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
+  });
 
   useEffect(() => {
     const { name: stgName, levels = [] } =
@@ -79,12 +87,20 @@ const Step = ({
     const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
     const { queries = [], ...step } =
       steps.find(({ id }) => id === stepId) || {};
-    const { query, id } =
-      queries.find(({ type }) => type === SIGNAL_TYPES.ENTITY) || {};
-    if (query) {
-      dynamicEntitiesQueryId.current = id;
-      setEntitiesQuery(query);
-    }
+    [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
+      const { query, id, included } =
+        queries.find(({ type: qType }) => qType === type) || {};
+      if (!query) return;
+      dynamicQueries.current = {
+        ...dynamicQueries.current,
+        [type]: { queryId: id, included },
+      };
+      if (type === SIGNAL_TYPES.ENTITY) {
+        setEntitiesQuery(query);
+      } else if (type === SIGNAL_TYPES.ALERT) {
+        setAlertsQuery(query);
+      }
+    });
     setStageName(stgName);
     setStatus(step.status || STATUSES.UNKNOWN);
   }, [stageId, levelId, stepId, stages]);
@@ -112,23 +128,42 @@ const Step = ({
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    if (
-      !stepId ||
-      dynamicEntities.length > MAX_ENTITIES_IN_STEP ||
-      !setDynamicEntities
-    )
-      return;
-    setDynamicEntities((des) => ({
-      ...des,
-      [stepId]: dynamicEntities.map(({ guid, name }) => ({
-        guid,
-        name,
-        included: true,
-        type: SIGNAL_TYPES.ENTITY,
-        queryId: dynamicEntitiesQueryId.current,
-      })),
-    }));
-  }, [stepId, dynamicEntities]);
+    if (!stepId || !setDynamicEntities) return;
+    if (dynamicEntities.length > MAX_ENTITIES_IN_STEP) {
+      reportTooManyDynamicSignals?.(stepId, {
+        [SIGNAL_TYPES.ENTITY]: dynamicEntities.length,
+      });
+    } else {
+      setDynamicEntities((des) => ({
+        ...des,
+        [stepId]: dynamicEntities.map(({ guid, name }) => ({
+          guid,
+          name,
+          type: SIGNAL_TYPES.ENTITY,
+          ...(dynamicQueries.current[SIGNAL_TYPES.ENTITY] || {}),
+        })),
+      }));
+    }
+  }, [stepId, dynamicEntities, reportTooManyDynamicSignals]);
+
+  useEffect(() => {
+    if (!stepId || !setDynamicAlerts) return;
+    if (dynamicAlerts.length > MAX_ENTITIES_IN_STEP) {
+      reportTooManyDynamicSignals?.(stepId, {
+        [SIGNAL_TYPES.ALERT]: dynamicAlerts.length,
+      });
+    } else {
+      setDynamicAlerts((das) => ({
+        ...das,
+        [stepId]: dynamicAlerts.map(({ guid, name }) => ({
+          guid,
+          name,
+          type: SIGNAL_TYPES.ALERT,
+          ...(dynamicQueries.current[SIGNAL_TYPES.ALERT] || {}),
+        })),
+      }));
+    }
+  }, [stepId, dynamicAlerts, reportTooManyDynamicSignals]);
 
   useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
@@ -139,6 +174,28 @@ const Step = ({
       setHideSignals(false);
     }
   }, [signalCollapseOption]);
+
+  const reportTooManyDynamicSignals = useCallback(
+    (stepId, data = {}) =>
+      setClassifications?.((cls = {}) => ({
+        ...cls,
+        tooManyDynamicSignals: {
+          ...(cls.tooManyDynamicSignals || {}),
+          [stageId]: {
+            ...(cls.tooManyDynamicSignals?.[stageId] || {}),
+            [levelId]: {
+              ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId] || {}),
+              [stepId]: {
+                ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId]?.[stepId] ||
+                  {}),
+                ...data,
+              },
+            },
+          },
+        },
+      })),
+    [stageId, levelId, setClassifications]
+  );
 
   const updateSignalsHandler = (e) => {
     e.stopPropagation();
@@ -233,9 +290,14 @@ const Step = ({
             ...query,
             results: dynamicEntities,
           };
+        if (query.type === SIGNAL_TYPES.ALERT)
+          return {
+            ...query,
+            results: dynamicAlerts,
+          };
         return query;
       }),
-    [thisStep, dynamicEntities]
+    [thisStep, dynamicEntities, dynamicAlerts]
   );
 
   return (
@@ -267,7 +329,7 @@ const Step = ({
       />
       {mode === MODES.EDIT ? (
         <>
-          {signals.length ? (
+          {thisStep?.signals?.length || thisStep?.queries?.length ? (
             <div className="add-signal-btn">
               <Button
                 className="button-tertiary-border"

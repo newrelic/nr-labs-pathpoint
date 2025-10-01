@@ -21,7 +21,7 @@
 @import './flow-settings-modal/styles.scss';
 @import './signals-grid-layout/styles.scss';
 @import './audit-log/styles.scss';
-@import './stage-notify-modal/styles.scss';
+@import './stage-issues-modal/styles.scss';
 @import './signal-detail-sidebar/styles.scss';
 @import './empty-block/styles.scss';
 @import './playback-bar/styles.scss';
@@ -32,3 +32,5 @@
 @import './modal/styles.scss';
 @import './export-flow-modal/styles.scss';
 @import './query-tree/styles.scss';
+@import './signal-tooltip-basic/styles.scss';
+@import './list-select/styles.scss';
