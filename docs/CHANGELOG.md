@@ -1,3 +1,11 @@
+## [2.4.5](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.4...v2.4.5) (2025-10-01)
+
+
+### Bug Fixes
+
+* refine stacked mode critical/unhealthy toggle filters ([c4b8e5f](https://github.com/newrelic/nr-labs-pathpoint/commit/c4b8e5f0cd1b728f85dd734886458e449c898797))
+* stages toggles bug/filter excluded steps from display ([a494f6e](https://github.com/newrelic/nr-labs-pathpoint/commit/a494f6e00ace51dda94bb8d87adedf70ac848f61))
+
 ## [2.4.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.3...v2.4.4) (2025-09-19)
 
 
