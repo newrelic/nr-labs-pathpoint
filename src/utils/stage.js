@@ -24,7 +24,7 @@ export const sanitizeStages = (stages = [], shouldExcludeSignals) =>
             excluded = false,
             link = '',
             queries,
-            signals = [],
+            signals,
             title,
           }) => ({
             config,
@@ -39,7 +39,14 @@ export const sanitizeStages = (stages = [], shouldExcludeSignals) =>
                   query,
                   type,
                 })),
-            signals: shouldExcludeSignals ? [] : signals,
+            signals: shouldExcludeSignals
+              ? []
+              : (signals || []).map(({ guid, included, name, type }) => ({
+                  guid,
+                  included,
+                  name,
+                  type,
+                })),
             title,
           })
         ),
