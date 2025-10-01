@@ -1,6 +1,6 @@
 <a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
-# Pathpoint v2
+# Pathpoint v2 (v2.5)
 
 Pathpoint is a New Relic Open Source app used to model business processes end-to-end. It provides an ideal venue to marry the operational state of an entire process with the key business metrics that evaluate the success of that process - using Pathpoint, your dev and operational teams can draw a straight line from the performance health of the process to the business objectives it services.
 
