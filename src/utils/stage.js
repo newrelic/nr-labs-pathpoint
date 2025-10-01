@@ -20,7 +20,7 @@ export const sanitizeStages = (stages = [], shouldExcludeSignals) =>
         id: uuid(),
         steps: steps.map(
           ({
-            config = DEFAULT_STEP_CONFIG,
+            config = { ...DEFAULT_STEP_CONFIG },
             excluded = false,
             link = '',
             queries,
