@@ -1,3 +1,34 @@
+# [2.5.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.5...v2.5.0) (2025-10-01)
+
+
+### Bug Fixes
+
+* add tooltip and other fixes for add this filter button ([d5f19db](https://github.com/newrelic/nr-labs-pathpoint/commit/d5f19db486237905ca44561ab7fc102bcd1e1b9a))
+* added check for signals in optional chaining ([cc6c256](https://github.com/newrelic/nr-labs-pathpoint/commit/cc6c256d9ffe6c5c491d48028063f29f87959103))
+* adding queries check in step in edit mode ([87989f0](https://github.com/newrelic/nr-labs-pathpoint/commit/87989f0623f479fae6ea622200951f501ca5f375))
+* another copilot suggestion ([7e54eda](https://github.com/newrelic/nr-labs-pathpoint/commit/7e54edad60aeb9863ff4219569498af1499d8494))
+* copilot recommended fixes ([44414ba](https://github.com/newrelic/nr-labs-pathpoint/commit/44414baeab4ae816be5bd6d27aea426666db5287))
+* copilot suggestions ([f30f2bc](https://github.com/newrelic/nr-labs-pathpoint/commit/f30f2bc8189aee6a76dca7b99888ed355c72fa7e))
+* copilot suggestions ([71f1c1e](https://github.com/newrelic/nr-labs-pathpoint/commit/71f1c1e40eeca5f88851b9d912d883db1ea58a0f))
+* copilot suggestions ([84f9bdc](https://github.com/newrelic/nr-labs-pathpoint/commit/84f9bdccccff6f91c428bbcc868a7c17ca3ac8d2))
+* first fetch on dynamic signals being added ([e125002](https://github.com/newrelic/nr-labs-pathpoint/commit/e125002dad0a5759418b1e90bfb94d7844b73556))
+* handle including/excluding dynamic signals in step status ([df2bb85](https://github.com/newrelic/nr-labs-pathpoint/commit/df2bb85dddc56946d786949a6262315b1e65f3cd))
+* include dynamic queries when importing ([0d07cc4](https://github.com/newrelic/nr-labs-pathpoint/commit/0d07cc4b23c8e8392cee72aa3369702b3f9d2952))
+* minor fixes for dynamic signals ([d0db5d5](https://github.com/newrelic/nr-labs-pathpoint/commit/d0db5d5f73008e557383c0ac78d5b1e4e4ed5df1))
+* move entity types and policy ids into its own dropdown ([321600c](https://github.com/newrelic/nr-labs-pathpoint/commit/321600cfbcec69727b0f15e5cc44c8f5dffa9e75))
+* no signals msg on steps with inactive signals ([5e627c8](https://github.com/newrelic/nr-labs-pathpoint/commit/5e627c8a12bcc1f5dc269874b9dd02bcb2a7f628))
+* playback for dynamic signals ([4607eb6](https://github.com/newrelic/nr-labs-pathpoint/commit/4607eb65a61119cbc2c5d876c849fec045ee374c))
+* preview for dynamic signals on step settings update ([88f4df9](https://github.com/newrelic/nr-labs-pathpoint/commit/88f4df9c3c0041d72e62090e77b81edf2782c113))
+* replace StageNotifyModal with StageIssueModal; add too many dynamic signals logic ([a1460e9](https://github.com/newrelic/nr-labs-pathpoint/commit/a1460e927ebc835e751b910c85174a4b3409c8d9))
+* signals missing on refresh issue ([dd5c7b1](https://github.com/newrelic/nr-labs-pathpoint/commit/dd5c7b1144563b69b59476374603c2fd5bcb1ff8))
+* sort tag names and other minor fixes in dynamic signal selections ([71228ce](https://github.com/newrelic/nr-labs-pathpoint/commit/71228cebae3dcfd7b4bed77bace428b7dbc0a0dc))
+
+
+### Features
+
+* dynamic signals ([ffd94c4](https://github.com/newrelic/nr-labs-pathpoint/commit/ffd94c474bb9ef91f19b758ecaabf21569358e69))
+* releasing dynamic signals ([be9e979](https://github.com/newrelic/nr-labs-pathpoint/commit/be9e979933a42e11430639b32f6ee7bd3f0a7dcb))
+
 ## [2.4.5](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.4...v2.4.5) (2025-10-01)
 
 
