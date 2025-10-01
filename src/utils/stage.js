@@ -1,4 +1,5 @@
 import {
+  DEFAULT_STEP_CONFIG,
   MAX_ENTITIES_IN_STEP,
   SIGNAL_TYPES,
   STAGE_SHAPES_CLASSNAME_ARRAY,
@@ -12,25 +13,42 @@ import {
 } from './signal';
 
 export const sanitizeStages = (stages = [], shouldExcludeSignals) =>
-  stages.map(({ levels = [], name = 'New Stage', related = {} }) => ({
-    id: uuid(),
-    name,
-    related,
-    levels: levels.map(({ steps = [] }) => ({
+  stages.map(
+    ({ levels = [], link = '', name = 'New Stage', related = {} }) => ({
       id: uuid(),
-      steps: steps.map(({ signals = [], title }) => ({
+      levels: levels.map(({ steps = [] }) => ({
         id: uuid(),
-        title,
-        signals: shouldExcludeSignals
-          ? []
-          : signals.map(({ guid, name: signalName, type }) => ({
-              type,
-              guid,
-              name: signalName,
-            })),
+        steps: steps.map(
+          ({
+            config = DEFAULT_STEP_CONFIG,
+            excluded = false,
+            link = '',
+            queries,
+            signals = [],
+            title,
+          }) => ({
+            config,
+            excluded,
+            id: uuid(),
+            link,
+            queries: shouldExcludeSignals
+              ? []
+              : (queries || []).map(({ included, query, type }) => ({
+                  id: uuid(),
+                  included,
+                  query,
+                  type,
+                })),
+            signals: shouldExcludeSignals ? [] : signals,
+            title,
+          })
+        ),
       })),
-    })),
-  }));
+      link,
+      name,
+      related,
+    })
+  );
 
 const addGuidToObjectTree = (obj, stageId, levelId, stepId, guid) => ({
   ...obj,
