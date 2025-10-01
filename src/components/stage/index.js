@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 
 import { Button, HeadingText, Icon, Tooltip } from 'nr1';
 
-import { EmptyBlock, Level, Signal, StageNotifyModal } from '../';
+import { EmptyBlock, Level, Signal, StageIssuesModal } from '../';
 import StageHeader from './header';
 import {
   COMPONENTS,
@@ -22,7 +22,6 @@ import {
 } from '../../constants';
 
 import {
-  AppContext,
   FlowDispatchContext,
   SelectionsContext,
   SignalsClassificationsContext,
@@ -59,19 +58,20 @@ const Stage = ({
   const dispatch = useContext(FlowDispatchContext);
   const { selections } = useContext(SelectionsContext);
   const {
-    entitiesInStepCount = {},
-    signalsWithNoAccess = {},
-    signalsWithNoStatus = {},
+    classifications: {
+      signalsWithNoAccess = {},
+      signalsWithNoStatus = {},
+      tooManyDynamicSignals = {},
+    } = {},
   } = useContext(SignalsClassificationsContext);
-  const { maxEntitiesInStep } = useContext(AppContext);
   const [name, setName] = useState('');
   const [levels, setLevels] = useState([]);
   const [related, setRelated] = useState({});
   const [link, setLink] = useState('');
   const [signals, setSignals] = useState({});
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
-  const [tooManyEntitiesInStep, setTooManyEntitiesInStep] = useState([]);
-  const [missingSignals, setMissingSignals] = useState([]);
+  const [tooManySignalsSteps, setTooManySignalsSteps] = useState([]);
+  const [missingSignalsSteps, setMissingSignalsSteps] = useState([]);
   const [guidsInSelectedStep, setGuidsInSelectedStep] = useState([]);
   const isDragHandleClicked = useRef(false);
   const dragItemIndex = useRef();
@@ -88,45 +88,53 @@ const Stage = ({
     setStatus(stage.status || STATUSES.UNKNOWN);
   }, [stageId, stages]);
 
-  useEffect(() => {
-    setTooManyEntitiesInStep(
-      entitiesInStepCount[stageId]
-        ? Object.keys(entitiesInStepCount[stageId]).reduce(
-            (acc, levelId) =>
-              Object.keys(entitiesInStepCount[stageId][levelId]).reduce(
-                (acc, stepId) =>
-                  entitiesInStepCount[stageId][levelId][stepId] >
-                  maxEntitiesInStep
-                    ? [...acc, { stageId, levelId, stepId }]
-                    : acc,
-                acc
-              ),
-            []
-          )
-        : []
-    );
-  }, [entitiesInStepCount]);
-
-  useEffect(() => {
-    setMissingSignals(
-      signalsWithNoStatus[stageId]
-        ? Object.keys(signalsWithNoStatus[stageId]).reduce(
-            (acc, levelId) =>
-              Object.keys(signalsWithNoStatus[stageId][levelId]).reduce(
-                (acc, stepId) =>
-                  Object.keys(
+  useEffect(
+    () =>
+      setMissingSignalsSteps(() =>
+        Object.keys(signalsWithNoStatus[stageId] || {}).reduce(
+          (acc, levelId) =>
+            Object.keys(signalsWithNoStatus[stageId][levelId]).reduce(
+              (acc, stepId) => [
+                ...acc,
+                {
+                  levelId,
+                  stepId,
+                  signals: Object.keys(
                     signalsWithNoStatus[stageId][levelId][stepId]
-                  ).reduce(
-                    (acc, guid) => [...acc, { stageId, levelId, stepId, guid }],
-                    acc
-                  ),
-                acc
-              ),
-            []
-          )
-        : []
-    );
-  }, [signalsWithNoStatus]);
+                  ).map((guid) => ({
+                    guid,
+                    ...signalsWithNoStatus[stageId][levelId][stepId][guid],
+                  })),
+                },
+              ],
+              acc
+            ),
+          []
+        )
+      ),
+    [signalsWithNoStatus]
+  );
+
+  useEffect(
+    () =>
+      setTooManySignalsSteps((tms) =>
+        Object.keys(tooManyDynamicSignals[stageId] || {}).reduce(
+          (acc, levelId) =>
+            Object.keys(tooManyDynamicSignals[stageId][levelId]).reduce(
+              (acc, stepId) =>
+                acc.some(
+                  (existing) =>
+                    existing.levelId === levelId && existing.stepId === stepId
+                )
+                  ? acc
+                  : [...acc, { levelId, stepId }],
+              acc
+            ),
+          tms || []
+        )
+      ),
+    [tooManyDynamicSignals]
+  );
 
   useEffect(() => {
     const selGuids = [];
@@ -263,7 +271,7 @@ const Stage = ({
     if (isLoading) return null;
 
     const si = [];
-    if (missingSignals?.length)
+    if (missingSignalsSteps?.length)
       si.push(
         <Tooltip text={UI_CONTENT.STAGE.MISSING_SIGNALS}>
           <span
@@ -274,7 +282,7 @@ const Stage = ({
           </span>
         </Tooltip>
       );
-    if (tooManyEntitiesInStep.length)
+    if (tooManySignalsSteps.length)
       si.push(
         <Tooltip text={UI_CONTENT.STAGE.TOO_MANY_SIGNALS}>
           <span
@@ -295,7 +303,12 @@ const Stage = ({
       );
 
     return si;
-  }, [isLoading, missingSignals, tooManyEntitiesInStep, signalsWithNoAccess]);
+  }, [
+    isLoading,
+    missingSignalsSteps,
+    signalsWithNoAccess,
+    tooManySignalsSteps,
+  ]);
 
   const dragHandleHandler = (b) => (isDragHandleClicked.current = b);
 
@@ -437,22 +450,16 @@ const Stage = ({
           ) : null}
         </div>
       </div>
-      <StageNotifyModal
-        heading={UI_CONTENT.SIGNAL.MISSING.HEADING}
-        text={UI_CONTENT.SIGNAL.MISSING.DETAILS}
-        icon={Icon.TYPE.INTERFACE__STATE__WARNING__WEIGHT_BOLD}
-        iconColor="#F07A0E"
-        itemsTitle="Signal name"
-        items={missingSignals}
+      <StageIssuesModal
+        type={StageIssuesModal.TYPES.MISSING_SIGNALS}
+        items={missingSignalsSteps}
+        stageId={stageId}
         ref={missingSignalsModal}
       />
-      <StageNotifyModal
-        heading={UI_CONTENT.SIGNAL.TOO_MANY.HEADING}
-        text={UI_CONTENT.SIGNAL.TOO_MANY.DETAILS}
-        icon={Icon.TYPE.INTERFACE__STATE__CRITICAL__WEIGHT_BOLD}
-        iconColor="#df2d24"
-        itemsTitle="Step name"
-        items={tooManyEntitiesInStep}
+      <StageIssuesModal
+        type={StageIssuesModal.TYPES.TOO_MANY_SIGNALS}
+        items={tooManySignalsSteps}
+        stageId={stageId}
         ref={tooManySignalsModal}
       />
     </>

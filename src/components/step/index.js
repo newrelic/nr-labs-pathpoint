@@ -18,6 +18,7 @@ import {
   FlowContext,
   FlowDispatchContext,
   SelectionsContext,
+  SignalsClassificationsContext,
   SignalsContext,
   StagesContext,
 } from '../../contexts';
@@ -54,6 +55,7 @@ const Step = ({
   const { stages, updateStagesDataRef, setDynamicEntities, setDynamicAlerts } =
     useContext(StagesContext);
   const { selections = {}, markSelection } = useContext(SelectionsContext);
+  const { setClassifications } = useContext(SignalsClassificationsContext);
   const dispatch = useContext(FlowDispatchContext);
   const [thisStep, setThisStep] = useState();
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
@@ -126,40 +128,42 @@ const Step = ({
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    if (
-      !stepId ||
-      dynamicEntities.length > MAX_ENTITIES_IN_STEP ||
-      !setDynamicEntities
-    )
-      return;
-    setDynamicEntities((des) => ({
-      ...des,
-      [stepId]: dynamicEntities.map(({ guid, name }) => ({
-        guid,
-        name,
-        type: SIGNAL_TYPES.ENTITY,
-        ...(dynamicQueries.current[SIGNAL_TYPES.ENTITY] || {}),
-      })),
-    }));
-  }, [stepId, dynamicEntities]);
+    if (!stepId || !setDynamicEntities) return;
+    if (dynamicEntities.length > MAX_ENTITIES_IN_STEP) {
+      reportTooManyDynamicSignals?.(stepId, {
+        [SIGNAL_TYPES.ENTITY]: dynamicEntities.length,
+      });
+    } else {
+      setDynamicEntities((des) => ({
+        ...des,
+        [stepId]: dynamicEntities.map(({ guid, name }) => ({
+          guid,
+          name,
+          type: SIGNAL_TYPES.ENTITY,
+          ...(dynamicQueries.current[SIGNAL_TYPES.ENTITY] || {}),
+        })),
+      }));
+    }
+  }, [stepId, dynamicEntities, reportTooManyDynamicSignals]);
 
   useEffect(() => {
-    if (
-      !stepId ||
-      dynamicAlerts.length > MAX_ENTITIES_IN_STEP ||
-      !setDynamicAlerts
-    )
-      return;
-    setDynamicAlerts((das) => ({
-      ...das,
-      [stepId]: dynamicAlerts.map(({ guid, name }) => ({
-        guid,
-        name,
-        type: SIGNAL_TYPES.ALERT,
-        ...(dynamicQueries.current[SIGNAL_TYPES.ALERT] || {}),
-      })),
-    }));
-  }, [stepId, dynamicAlerts]);
+    if (!stepId || !setDynamicAlerts) return;
+    if (dynamicAlerts.length > MAX_ENTITIES_IN_STEP) {
+      reportTooManyDynamicSignals?.(stepId, {
+        [SIGNAL_TYPES.ALERT]: dynamicAlerts.length,
+      });
+    } else {
+      setDynamicAlerts((das) => ({
+        ...das,
+        [stepId]: dynamicAlerts.map(({ guid, name }) => ({
+          guid,
+          name,
+          type: SIGNAL_TYPES.ALERT,
+          ...(dynamicQueries.current[SIGNAL_TYPES.ALERT] || {}),
+        })),
+      }));
+    }
+  }, [stepId, dynamicAlerts, reportTooManyDynamicSignals]);
 
   useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
@@ -170,6 +174,28 @@ const Step = ({
       setHideSignals(false);
     }
   }, [signalCollapseOption]);
+
+  const reportTooManyDynamicSignals = useCallback(
+    (stepId, data = {}) =>
+      setClassifications?.((cls = {}) => ({
+        ...cls,
+        tooManyDynamicSignals: {
+          ...(cls.tooManyDynamicSignals || {}),
+          [stageId]: {
+            ...(cls.tooManyDynamicSignals?.[stageId] || {}),
+            [levelId]: {
+              ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId] || {}),
+              [stepId]: {
+                ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId]?.[stepId] ||
+                  {}),
+                ...data,
+              },
+            },
+          },
+        },
+      })),
+    [stageId, levelId, setClassifications]
+  );
 
   const updateSignalsHandler = (e) => {
     e.stopPropagation();
