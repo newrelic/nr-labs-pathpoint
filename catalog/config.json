@@ -15,5 +15,5 @@
       "url": "https://discuss.newrelic.com/"
     }
   },
-  "whatsNew": "- Version 2: rewrite of pathpoint\n- Version 2.1: fixes and updates"
+  "whatsNew": "- Version 2: rewrite of pathpoint\n- Version 2.1: fixes and updates\n- Version 2.5: dynamic signals in steps"
 }
