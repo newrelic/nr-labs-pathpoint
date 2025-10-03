@@ -34,6 +34,7 @@ import { filtersArrayToNrql, keyValuesFromEntities } from './utils';
 import { uuid } from '../../src/utils';
 import {
   ALERTS_DOMAIN_TYPE_NRQL,
+  MAX_ENTITIES_IN_STEP,
   MODES,
   POLICY_ID_TAG,
   SIGNAL_TYPES,
@@ -309,14 +310,16 @@ const SignalSelectionNerdlet = () => {
 
   const isAddFilterDisabled = useMemo(
     () =>
-      dynamicQueries[currentTab] || entities.length > 25 || !entities.length,
+      dynamicQueries[currentTab] ||
+      entities.length > MAX_ENTITIES_IN_STEP ||
+      !entities.length,
     [dynamicQueries, currentTab, entities]
   );
 
   const addFilterTooltipText = useMemo(() => {
     if (dynamicQueries[currentTab])
       return ADD_FILTER_BUTTON.TOOLTIP.DYNAMIC_QUERY_EXISTS[currentTab];
-    if (entities.length > 25 || !entities.length)
+    if (entities.length > MAX_ENTITIES_IN_STEP || !entities.length)
       return ADD_FILTER_BUTTON.TOOLTIP.NO_FILTER_OR_MAXED[currentTab];
     return '';
   }, [dynamicQueries, currentTab, entities]);
@@ -465,10 +468,11 @@ const SignalSelectionNerdlet = () => {
   const tooManySignals = useMemo(
     () =>
       (signalSelections[SIGNAL_TYPES.ENTITY]?.length || 0) +
-        (signalSelections[SIGNAL_TYPES.ALERT]?.length || 0) +
-        (dynamicEntities.length || 0) +
+        (dynamicEntities.length || 0) >
+        MAX_ENTITIES_IN_STEP ||
+      (signalSelections[SIGNAL_TYPES.ALERT]?.length || 0) +
         (dynamicAlerts.length || 0) >
-      25,
+        MAX_ENTITIES_IN_STEP,
     [signalSelections, dynamicEntities, dynamicAlerts]
   );
 
