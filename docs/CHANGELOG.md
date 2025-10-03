@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.0...v2.5.1) (2025-10-03)
+
+
+### Bug Fixes
+
+* set max entities by type in signal selection ([444a929](https://github.com/newrelic/nr-labs-pathpoint/commit/444a929f7dfdf1a9638a5880f9c30cacb7820f72))
+
 # [2.5.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.4.5...v2.5.0) (2025-10-01)
 
 
