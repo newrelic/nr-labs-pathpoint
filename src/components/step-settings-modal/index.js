@@ -9,8 +9,8 @@ import {
   InlineMessage,
   RadioGroup,
   Radio,
-  Select,
-  SelectItem,
+  SegmentedControl,
+  SegmentedControlItem,
   Switch,
   TextField,
 } from 'nr1';
@@ -42,7 +42,7 @@ const StepSettingsModal = ({
   const [hasWorstStatusArgs, setHasWorstStatusArgs] = useState(false);
   const [statusOption, setStatusOption] = useState(STEP_STATUS_OPTIONS.WORST);
   const [statusWeightUnit, setStatusWeightUnit] = useState(
-    STEP_STATUS_UNITS.PERCENT
+    STEP_STATUS_UNITS.COUNT
   );
   const [statusWeightValue, setStatusWeightValue] = useState('');
   const [isWeightValInvalid, setIsWeightValInvalid] = useState(false);
@@ -235,18 +235,21 @@ const StepSettingsModal = ({
                   invalid={isWeightValInvalid}
                   onChange={statusWeightValueHandler}
                 />
-                <Select
-                  onChange={(_, val) => setStatusWeightUnit(val)}
+                <SegmentedControl
                   value={statusWeightUnit}
-                  disabled={isWorstStatusArgsDisabled}
+                  onChange={(_, val) => setStatusWeightUnit(val)}
                 >
-                  <SelectItem value={STEP_STATUS_UNITS.PERCENT}>
-                    {UI_CONTENT.STEP.CONFIG.STATUS_CONFIG.SELECT.PERCENT}
-                  </SelectItem>
-                  <SelectItem value={STEP_STATUS_UNITS.COUNT}>
-                    {UI_CONTENT.STEP.CONFIG.STATUS_CONFIG.SELECT.COUNT}
-                  </SelectItem>
-                </Select>
+                  <SegmentedControlItem
+                    disabled={isWorstStatusArgsDisabled}
+                    value={STEP_STATUS_UNITS.COUNT}
+                    label={UI_CONTENT.STEP.CONFIG.STATUS_CONFIG.SELECT.COUNT}
+                  />
+                  <SegmentedControlItem
+                    disabled={isWorstStatusArgsDisabled}
+                    value={STEP_STATUS_UNITS.PERCENT}
+                    label={UI_CONTENT.STEP.CONFIG.STATUS_CONFIG.SELECT.PERCENT}
+                  />
+                </SegmentedControl>
               </div>
               <div className="step-best-status-container">
                 <Radio
