@@ -1,3 +1,10 @@
+## [2.5.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.1...v2.5.2) (2025-10-09)
+
+
+### Bug Fixes
+
+* replace dropdown with segmented control in step settings modal ([b54e821](https://github.com/newrelic/nr-labs-pathpoint/commit/b54e821836efeddcc6ea64c40c22178875eaef5f))
+
 ## [2.5.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.0...v2.5.1) (2025-10-03)
 
 
