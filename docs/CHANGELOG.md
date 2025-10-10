@@ -1,3 +1,10 @@
+## [2.5.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.2...v2.5.3) (2025-10-10)
+
+
+### Bug Fixes
+
+* content getting cut off in modal ([d969761](https://github.com/newrelic/nr-labs-pathpoint/commit/d96976157bc6c61938ee040b06b502b4c502e6bf))
+
 ## [2.5.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.1...v2.5.2) (2025-10-09)
 
 
