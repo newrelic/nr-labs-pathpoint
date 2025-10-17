@@ -15,6 +15,7 @@
   - [Investigate a Problem](#how-to-investigate)
   - [Revisit a period of time](#how-to-playback)
   - [Customize the View](#how-to-change-view)
+  - [Signal Error Indicators](#signal-error-indicators)
   - [Audit a Change](#how-to-audit)
   - [Export a Flow](#how-to-export)
   - [Share a Flow](#how-to-share)
@@ -248,13 +249,52 @@ As with Stages and KPIs, you can move a Level or Step by clicking on the `Drag` 
 
 Signal membership in a Step is managed in the **Select signals** overlay. To enter this overlay, click either the `Add signals` or `Update signals` button in the Flow Edit mode.
 
-Once opened, you will be presented with the set of Entities and Alert Conditions available for selection.
+Once opened, you will be presented with a tabbed table containing the set of Entities and Alert Conditions available for selection.
 
 <img src="screenshots/usage-select-signals.png" height=400 alt="Screenshot Select Signals" />
 
-By default, you will start on the Entities tab, with the Signals list pre-filtered to APM (Services) entities belonging to the active account. Change the Signals listed by changing the account, the entity type, or by filtering the list by entity name (or Condition/Policy name in the Alerts tab).
+#### Filtering Signals
 
-Click the checkbox next the desired Signal in the table to add it to the **Selected signals** list on the right side of the screen. To remove a Signal, either uncheck it in the table, or click on the `x` icon next to the Signal in the **Select signals** list.
+By default, you will start on the Entities tab, showing all entities belonging to the active account.
+
+You can change the Signals listed by changing the account, or adding optional additional filter clauses.
+
+The `Entity Type` filter is added automatically, configured to show all types. To add an additional filter, click the `+` button located next to it. This will open a point-and-click experience similar to others you will have encountered in New Relic, allowing you to build up filters based on the signals' availabe tags.
+
+![Screenshot of signal filters](screenshots/usage-signal-filter.png)
+
+You can add filters based on the signal name, the entity type (if you are in the Entities tab), or available tags on the Signals.
+
+**Note**
+
+- Tags are lazy loaded with the Signals in the table. If you don't see an expected tag, you can either scroll through the table to load additional entities (and therefore their tags), or search for a specific signal that you know has your target set of tags to populate.
+
+#### Add Signals to your Step
+
+There are two options to include Signals in your Step:
+
+**Static**
+
+Click the checkbox next the desired Signal in the table to manually add it to the **Selected signals** list on the right side of the screen. To remove a Signal, either uncheck it in the table, or click on the `x` icon next to the Signal in the **Selected signals** list.
+
+**Dynamic**
+
+Filters are not only useful for scoping the Signals shown in the table - you can also use the filter clauses to dynamically target signals to include in the Step. With dynamic filters, the set of signals in scope will be determined at the point of the Flow loading. Use dynamic filters if you need to target a set of Signals that may change over time.
+
+Once you have added the necessary filters, click `Add this filter` to add the filter definition to the **Selected Signals** list. The filter definition will be shown in the list, as well as any Signals that currently match that defintion (including previously statically selected signals that match).
+
+<img src="screenshots/usage-dynamic-filters.png" height=300 alt="Screenshot of dyanmic filters" />
+
+The `Add this filter` button will be disabled until the filter meets the necessary criteria:
+
+- In order to use a dynamic filter, it must honour the 25 Signal limit (see below)
+- Per Step, you can specify one dynamic filter for entites, and one for alerts.
+
+To remove the filter, click the `x` icon next to the filter definition in the **Selected Signals** list.
+
+**Note:** At this time, it is not possible to edit a dynamic filter. To change the filter definition, you will need to first remove it, and recreate it as needed.
+
+#### Signal Limits
 
 You can choose a maximum of 25 entities and 25 alerts for a single Step.
 
@@ -272,7 +312,7 @@ The following sections will cover the additional features and capabilities avail
 
 [Return to Index](#how-to-guide)
 
-With Pathpoint, it is very easy to isolate problem areas in you broader business process. As Signals experience problems, represented in the New Relic platform as incidents, their status in the Flow is updates to reflect the severity of the problem (see [Concepts: Health Indicators](concepts.md#health-indicators) for more information). By collecting Signals into meaningful categories (Stages and Steps), you are able to evaluate the potential importance of the problem, with the status configuration allowing further refinement on how incidents are understood to impact on the process overall (see **Adjust a Step's status health rules** in [Create and Edit Steps (and Levels)](#create-and-edit-steps-and-levels)).
+With Pathpoint, it is very easy to isolate problem areas in you broader business process. As Signals experience problems, represented in the New Relic platform as incidents, their status in the Flow is updated to reflect the severity of the problem (see [Concepts: Health Indicators](concepts.md#health-indicators) for more information). By collecting Signals into meaningful categories (Stages and Steps), you are able to evaluate the potential importance of the problem, with the status configuration allowing further refinement on how incidents are understood to impact on the process overall (see **Adjust a Step's status health rules** in [Create and Edit Steps (and Levels)](#create-and-edit-steps-and-levels)).
 
 If there is a problem that requires further action, Pathpoint helps kick-start investigation by incorporating key data points into the Signal detail panel, accessible by clicking on a Signal in the Flow.
 
@@ -284,7 +324,7 @@ For entities, you will also be able to review the entity's Golden Signals, which
 
 By surfacing these details and jumping-off points into other parts of the platform, Pathpoint simplifies problem identification and drives to next steps in an investigation very quickly.
 
-Can also combine these features with Playback mode (see [Revisit a period of time](#how-to-playback)) to investigate an event that occurred in the past.
+You can also combine these features with Playback mode (see [Revisit a period of time](#how-to-playback)) to investigate an event that occurred in the past.
 
 ### <a id="how-to-playback"></a>Revisit a period of time
 
@@ -368,6 +408,42 @@ In addition to the default layout behaviour described above, there are some addi
 **Critical only**: Toggle this to show only the elements of the Flow that are in a critical state. Note that if a Step has been excluded from the rollup health calculation, it will be hidden even if it is in a critical state. This is helpful if you need to streamline the view down only to those elements that are degrading the state of the Flow.
 
 **Expand all steps**: This toggle is available only in the Inline layout. Clicking it will expand all Steps in the Flow to show their full Signal listings.
+
+### Signal Error Indicators
+
+The underlying set of Signals used to create a Pathpoint Flow will naturally shift and change over time - as these changes occur, there may be impacts to the Flow defition that you need to be aware of.
+
+These will be indicated by a set of icons that appear at the top of the impacted Stage, above the first Step in that Stage.
+
+There are three potential Signal issues that you may encounter:
+
+**Missing Signals**
+
+This scenario will show up when a Signal that was included in the Flow no longer exists in New Relic, and is indicated by a the following icon:
+
+![Missing Signal Icon](screenshots/usage-missing-signals.png)
+
+Click on the icon to see the list of Signals that are in a missing state for the Stage. In the modal, click on `Update signals` to open the Signals overlay to make necessary adjustments.
+
+**No Access**
+
+This state is reported when the Flow includes Signals you don't have access to, and is indicated by the following icon:
+
+![No Access Icon](screenshots/concepts-signals-no-access.png)
+
+For more information regarding access, see [Data Access](concepts.md#data-access). This indicator is purely informational, and is there to let you know that you are only seeing a subset of data in the Flow. Note that you may also see this icon in the Flow KPIs section, as a KPI may be defined against an account you don't have permission to.
+
+**Too Many Signals**
+
+This state is flagged when a Step exceeds the Signal limit. This can come about if you are using a dynamic filter to select Signals (see [Selecting Signals](#add-signals-to-your-step)) - over time the scope of that filter can grow too large.
+
+When this condition is encountered, the Step health will still be evaluated, but the Signals that exceed the limit will not be considered in the evaluation. So, for instance, if you added a dynamic entity filter which has grown to include 28 entities, only the first 25 will be assessed in terms of the Step health.
+
+Too Many Signals is indicated by the following icon:
+
+![Too Many Signals Icon](screenshots/usage-too-many-signals-indicator.png)
+
+Click on the icon to see show the list of Steps in the Stage that are violating the limit. In the modal, click on `Update signals` to open the Signals overlay to make necessary adjustments. If you have a dynamic filter that needs to target a large number of signals, it is recommended to convert that into a Workload, and attach the Workload entity as a static Signal in the Flow.
 
 ### <a id="how-to-audit"></a>Audit a change
 
