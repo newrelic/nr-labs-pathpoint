@@ -63,7 +63,7 @@ Clicking on the **Blank Flow** option will initiate the process to manually defi
 
 Clicking the `Create` button will save a an empty Flow with these properties, and open Edit Mode. The additional sections in **Edit Mode** explain the specific configuration steps for each component in a Flow, starting with [creating a Stage](#create-and-edit-stages).
 
-<img src=screenshots/usage-empty-flow.png" height=350 alt="Screenshot Edit Mode New Flow" /></a>
+<img src="screenshots/usage-empty-flow.png" height=350 alt="Screenshot Edit Mode New Flow" /></a>
 
 ##### Create a Flow from an existing configuration
 
