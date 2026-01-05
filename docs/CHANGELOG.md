@@ -1,3 +1,10 @@
+## [2.5.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.3...v2.5.4) (2026-01-05)
+
+
+### Bug Fixes
+
+* export flow download; json chart height ([3c1ba41](https://github.com/newrelic/nr-labs-pathpoint/commit/3c1ba41afa94b196754ff8db5ccd0e22673948d2))
+
 ## [2.5.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.2...v2.5.3) (2025-10-10)
 
 
