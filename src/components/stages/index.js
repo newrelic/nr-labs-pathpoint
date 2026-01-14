@@ -13,7 +13,6 @@ import {
   Button,
   HeadingText,
   Icon,
-  NerdGraphQuery,
   Switch,
   Tooltip,
   useNerdletState,
@@ -21,6 +20,7 @@ import {
 
 import { EmptyBlock, SignalDetailSidebar, Stage, StepDetailSidebar } from '../';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
+import { useSignalsManager } from '../../hooks';
 import {
   AppContext,
   FlowContext,
@@ -32,471 +32,43 @@ import {
   StagesContext,
   useSidebar,
 } from '../../contexts';
-import {
-  conditionsDetailsQuery,
-  incidentsSearchQuery,
-  issuesForConditionsQuery,
-  statusesFromGuidsArray,
-  workloadsStatusesQuery,
-} from '../../queries';
-import {
-  addSignalStatuses,
-  alertsStatusesObjFromData,
-  annotateStageWithStatuses,
-  batchAlertConditionsByAccount,
-  batchedIncidentIdsFromIssuesQuery,
-  entitiesDetailsFromQueryResults,
-  fifteenMinutesAgo,
-  getWorstWorkloadStatusValue,
-  guidsToArray,
-  incidentsFromIncidentsBlocks,
-  isWorkload,
-  signalDetailsObject,
-  stagesSignalGuidsSetsByType,
-  statusFromStatuses,
-  threeDaysAgo,
-  validRefreshInterval,
-} from '../../utils';
-import {
-  MODES,
-  SIGNAL_TYPES,
-  SIGNAL_EXPAND,
-  COMPONENTS,
-  UI_CONTENT,
-  ALERT_STATUSES,
-  MAX_PARAMS_IN_QUERY,
-} from '../../constants';
-import { useDebugLogger } from '../../hooks';
-
-const keyFromTimeWindow = ({ start, end }) =>
-  start && end ? `${start}:${end}` : null;
-
-const FETCH_TYPES = {
-  POLLED: 'polled',
-  MANUAL: 'manual',
-  RESUME: 'resume',
-};
+import { MODES, SIGNAL_EXPAND, COMPONENTS, UI_CONTENT } from '../../constants';
 
 const Stages = forwardRef(
-  ({ mode = MODES.INLINE, isPlayback, setIsLoading, saveFlow }, ref) => {
+  ({ mode = MODES.INLINE, setIsLoading, saveFlow }, ref) => {
     const { refreshInterval, stages = [] } = useContext(FlowContext);
     const dispatch = useContext(FlowDispatchContext);
     const { accounts, debugMode } = useContext(AppContext);
-    const [guids, setGuids] = useState({});
-    const [statuses, setStatuses] = useState({});
     const [stagesData, setStagesData] = useState({ stages });
     const [signalsDetails, setSignalsDetails] = useState({});
-    const [dynamicEntities, setDynamicEntities] = useState({});
-    const [dynamicAlerts, setDynamicAlerts] = useState({});
     const [selections, setSelections] = useState({});
     const [classifications, setClassifications] = useState({});
     const [signalExpandOption, setSignalExpandOption] = useState(0); // bitwise: (00000001) = unhealthy signals ;; (00000010) = critical signals ;; (00000100)= all signals
     const [signalCollapseOption, setSignalCollapseOption] = useState(false);
-    const [currentPlaybackTimeWindow, setCurrentPlaybackTimeWindow] =
-      useState(null);
-    const { debugString } = useDebugLogger({ allowDebug: debugMode });
     const dragItemIndex = useRef();
     const dragOverItemIndex = useRef();
     const stagesDataRef = useRef(stages);
-    const noAccessGuidsLastState = useRef([]);
-    const timeBandDataCache = useRef(new Map());
-    const timeWindowAlertsCache = useRef(new Map());
     const playbackTimeWindow = useRef(null);
-    const entitiesStatusTimeoutId = useRef();
-    const alertsStatusTimeoutId = useRef();
-    const stepsDynamicEntities = useRef({});
-    const stepsDynamicAlerts = useRef({});
-    const guidsRef = useRef(guids);
-    const prevPreloadArgs = useRef(null);
-    const prevPreloadGuids = useRef({
-      [SIGNAL_TYPES.ENTITY]: [],
-      [SIGNAL_TYPES.ALERT]: [],
-    });
-    const fetchStatusesTimerId = useRef(null);
-    const isFetchingStatuses = useRef(false);
-    const shouldResumeFetchStatuses = useRef(false);
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
-
-    useEffect(() => {
-      return () => {
-        clearTimeout(entitiesStatusTimeoutId.current);
-        clearTimeout(alertsStatusTimeoutId.current);
-      };
-    }, []);
-
-    useEffect(() => {
-      guidsRef.current = guids;
-      if (
-        [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].some(
-          (t) =>
-            (guids[t] || []).length > (prevPreloadGuids.current[t] || []).length
-        )
-      ) {
-        const { timeBands, callback } = prevPreloadArgs.current || {};
-        if (isPlayback && timeBands && callback) {
-          preload(timeBands, callback, true);
-        } else {
-          runFetch(FETCH_TYPES.MANUAL);
-        }
-        prevPreloadGuids.current = {
-          [SIGNAL_TYPES.ENTITY]: guids[SIGNAL_TYPES.ENTITY],
-          [SIGNAL_TYPES.ALERT]: guids[SIGNAL_TYPES.ALERT],
-        };
-      }
-    }, [guids, isPlayback, preload, runFetch]);
-
-    useEffect(() => {
-      if (!accounts?.length) return;
-      clearTimeout(entitiesStatusTimeoutId.current);
-      clearTimeout(alertsStatusTimeoutId.current);
-      const uniqueGuidsSetsByType = stagesSignalGuidsSetsByType(
-        stages,
-        accounts
-      );
-      setGuids((gs) => ({
-        ...gs,
-        ...Object.keys(uniqueGuidsSetsByType)?.reduce(
-          (types, type) => ({
-            ...types,
-            [type]: [
-              ...(gs[type] || []).reduce(
-                (acc, cur) => acc.add(cur),
-                uniqueGuidsSetsByType[type]
-              ),
-            ],
-          }),
-          {}
-        ),
-      }));
-      setStagesData(() => ({ stages: [...stages] }));
-    }, [stages, accounts]);
-
-    useEffect(() => {
-      stepsDynamicEntities.current = dynamicEntities;
-      setGuids((gs) => {
-        const entitiesGuidsSet = new Set(gs[SIGNAL_TYPES.ENTITY] || []);
-        Object.keys(dynamicEntities).forEach((stp) =>
-          dynamicEntities[stp]?.forEach(({ guid }) =>
-            entitiesGuidsSet.add(guid)
-          )
-        );
-        return {
-          ...gs,
-          [SIGNAL_TYPES.ENTITY]: [...entitiesGuidsSet],
-        };
-      });
-    }, [dynamicEntities]);
-
-    useEffect(() => {
-      stepsDynamicAlerts.current = dynamicAlerts;
-      setGuids((gs) => {
-        const alertsGuidsSet = new Set(gs[SIGNAL_TYPES.ALERT] || []);
-        Object.keys(dynamicAlerts).forEach((stp) =>
-          dynamicAlerts[stp]?.forEach(({ guid }) => alertsGuidsSet.add(guid))
-        );
-        return {
-          ...gs,
-          [SIGNAL_TYPES.ALERT]: [...alertsGuidsSet],
-        };
-      });
-    }, [dynamicAlerts]);
-
-    const fetchEntitiesStatus = useCallback(
-      async (entitiesGuids, timeWindow, isForCache) => {
-        setIsLoading?.(true);
-        clearTimeout(entitiesStatusTimeoutId.current);
-        const entitiesGuidsArray = guidsToArray(
-          { entitiesGuids },
-          MAX_PARAMS_IN_QUERY
-        );
-        const query = statusesFromGuidsArray(entitiesGuidsArray, timeWindow);
-        debugString(query, 'Entities query');
-        const { data: { actor = {} } = {}, error } = await NerdGraphQuery.query(
-          {
-            query,
-          }
-        );
-        setIsLoading?.(false);
-        if (error) {
-          console.error('Error fetching entities:', error.message);
-          return;
-        }
-        const entitiesStatusesObj = entitiesDetailsFromQueryResults(actor);
-
-        if (isForCache) return entitiesStatusesObj;
-        setStatuses((s) => ({
-          ...s,
-          [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
-        }));
-      },
-      [debugString]
-    );
-
-    const fetchAlertsStatus = useCallback(
-      async (alertsGuids, timeWindow, isForCache) => {
-        setIsLoading?.(true);
-        clearTimeout(alertsStatusTimeoutId.current);
-
-        const batchedConditions = alertsGuids.reduce(
-          batchAlertConditionsByAccount,
-          []
-        );
-        debugString(JSON.stringify(batchedConditions), 'Batched conditions');
-        const conditionsResponses = await Promise.allSettled(
-          batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
-            debugString(JSON.stringify(condIds), `Alerts batch ${bIdx + 1}`);
-            const query = conditionsDetailsQuery(acctId, condIds);
-            const {
-              data: { actor: { account: { alerts } = {} } = {} } = {},
-              error,
-            } = await NerdGraphQuery.query({ query });
-            if (error)
-              console.error(
-                'Error fetching conditions details:',
-                error.message
-              );
-            return { acctId, alerts };
-          })
-        );
-        const issuesBlocks = await Promise.allSettled(
-          batchedConditions?.map(async ({ acctId, condIds }) => {
-            let query = issuesForConditionsQuery(acctId, condIds, timeWindow);
-            const {
-              data: {
-                actor: {
-                  account: { aiIssues: { issues: { issues } = {} } = {} } = {},
-                } = {},
-              } = {},
-              error,
-            } = await NerdGraphQuery.query({ query });
-            if (error) console.error('Error fetching issues:', error.message);
-            return { acctId, issues };
-          })
-        );
-        const batchedIncidentIds =
-          batchedIncidentIdsFromIssuesQuery(issuesBlocks);
-
-        const incidentsBlocks = await Promise.allSettled(
-          batchedIncidentIds?.map(async ({ acctId, incidentIds }, iIdx) => {
-            debugString(JSON.stringify(incidentIds), `Incidents ${iIdx + 1}`);
-            const query = incidentsSearchQuery(acctId, incidentIds, timeWindow);
-            const {
-              data: {
-                actor: {
-                  account: {
-                    aiIssues: { incidents: { incidents } = {} } = {},
-                  } = {},
-                } = {},
-              } = {},
-              error,
-            } = await NerdGraphQuery.query({ query });
-            if (error)
-              console.error('Error fetching incidents:', error.message);
-            return { acctId, incidents };
-          })
-        );
-        const acctCondIncidents = incidentsBlocks?.reduce(
-          incidentsFromIncidentsBlocks,
-          {}
-        );
-
-        const alertsStatusesObj = conditionsResponses.reduce(
-          (acc, { value: { acctId, alerts = {} } = {} } = {}) => {
-            Object.keys(alerts).forEach((key) => {
-              const {
-                id: conditionId,
-                entityGuid,
-                enabled,
-                name,
-              } = alerts[key] || {};
-              if (entityGuid) {
-                const {
-                  inferredPriority = ALERT_STATUSES.NOT_ALERTING,
-                  incidents = [],
-                } = acctCondIncidents?.[acctId]?.[conditionId] || {};
-                acc = {
-                  ...acc,
-                  [entityGuid]: {
-                    conditionId,
-                    name,
-                    entityGuid,
-                    enabled,
-                    inferredPriority,
-                    incidents,
-                  },
-                };
-              }
-            });
-            return acc;
-          },
-          {}
-        );
-
-        setIsLoading?.(false);
-        if (isForCache) return alertsStatusesObj;
-        setStatuses((s) => ({
-          ...s,
-          [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
-        }));
-      },
-      []
-    );
-
-    const fetchStatuses = useCallback(
-      async (guidsArr = {}, timeWindow) => {
-        const {
-          [SIGNAL_TYPES.ENTITY]: entitiesGuids = [],
-          [SIGNAL_TYPES.ALERT]: alertsGuids = [],
-          [SIGNAL_TYPES.NO_ACCESS]: noAccessGuids = [],
-        } = guidsArr;
-
-        const fetchers = [];
-
-        if (entitiesGuids.length) {
-          fetchers.push(() => fetchEntitiesStatus(entitiesGuids, timeWindow));
-        }
-
-        if (alertsGuids.length) {
-          fetchers.push(() => fetchAlertsStatus(alertsGuids, timeWindow));
-        }
-
-        if (fetchers.length) {
-          await Promise.all(fetchers.map((fetcher) => fetcher()));
-        }
-
-        if (
-          noAccessGuids.length &&
-          !(
-            noAccessGuids.length === noAccessGuidsLastState.current.length &&
-            noAccessGuids.every((g) =>
-              noAccessGuidsLastState.current.includes(g)
-            )
-          )
-        ) {
-          noAccessGuidsLastState.current = noAccessGuids;
-          setStatuses((s) => ({
-            ...s,
-            [SIGNAL_TYPES.NO_ACCESS]: noAccessGuids.reduce(
-              (acc, cur) => ({ ...acc, [cur]: true }),
-              {}
-            ),
-          }));
-        }
-      },
-      [fetchEntitiesStatus, fetchAlertsStatus]
-    );
-
-    const runFetch = useCallback(
-      async (fetchType = FETCH_TYPES.POLLED) => {
-        if (isFetchingStatuses.current) {
-          if (fetchType === FETCH_TYPES.MANUAL)
-            shouldResumeFetchStatuses.current = true;
-          return;
-        }
-
-        isFetchingStatuses.current = true;
-        try {
-          await fetchStatuses(guidsRef.current);
-        } finally {
-          isFetchingStatuses.current = false;
-
-          if (shouldResumeFetchStatuses.current) {
-            shouldResumeFetchStatuses.current = false;
-            runFetch(FETCH_TYPES.MANUAL);
-          }
-        }
-      },
-      [fetchStatuses]
-    );
-
-    useEffect(() => {
-      let isRunCancelled = false;
-
-      const clearTimer = () => {
-        if (fetchStatusesTimerId.current !== null) {
-          clearTimeout(fetchStatusesTimerId.current);
-          fetchStatusesTimerId.current = null;
-        }
-      };
-
-      if (isPlayback) {
-        clearTimer();
-        return clearTimer;
-      }
-
-      runFetch(FETCH_TYPES.RESUME);
-
-      const scheduleNextFetch = () => {
-        if (isRunCancelled) return;
-
-        const timeout = validRefreshInterval(refreshInterval);
-
-        fetchStatusesTimerId.current = window.setTimeout(() => {
-          void runFetch(FETCH_TYPES.POLLED).finally(() => {
-            if (!isRunCancelled) scheduleNextFetch();
-          });
-        }, timeout);
-      };
-
-      scheduleNextFetch();
-
-      return () => {
-        isRunCancelled = true;
-        clearTimer();
-      };
-    }, [isPlayback, runFetch, refreshInterval]);
-
-    const updateStagesWithDynamic = useCallback(
-      (stg) => ({
-        ...stg,
-        levels: stg.levels.map((lvl) => ({
-          ...lvl,
-          steps: lvl.steps.map((stp) => {
-            const signalWithQueryIncluded = (sig) => ({
-              ...sig,
-              included:
-                (stp.queries || []).find(({ id }) => id === sig.queryId)
-                  ?.included ?? true,
-            });
-            return {
-              ...stp,
-              signals: [
-                ...stp.signals,
-                ...(stepsDynamicEntities.current?.[stp.id] || []).map(
-                  signalWithQueryIncluded
-                ),
-                ...(stepsDynamicAlerts.current?.[stp.id] || []).map(
-                  signalWithQueryIncluded
-                ),
-              ],
-            };
-          }),
-        })),
-      }),
-      []
-    );
-
-    useEffect(() => {
-      const updatedStages = stages.map(updateStagesWithDynamic);
-      const {
-        entitiesInStepCount,
-        signalsWithNoAccess,
-        signalsWithNoStatus,
-        signalsWithStatuses,
-      } = addSignalStatuses(updatedStages, statuses);
-      setStagesData(() => ({
-        stages: signalsWithStatuses.map(annotateStageWithStatuses),
-      }));
-      setClassifications((cls = {}) => ({
-        ...cls,
-        entitiesInStepCount,
-        signalsWithNoAccess,
-        signalsWithNoStatus,
-      }));
-      const sigDetails = signalDetailsObject(statuses);
-      if (sigDetails) setSignalsDetails(sigDetails);
-    }, [stages, statuses, updateStagesWithDynamic]);
+    const {
+      statuses,
+      refresh,
+      preload,
+      seek,
+      clearPlaybackTimeWindow,
+      currentPlaybackTimeWindow,
+    } = useSignalsManager({
+      stages,
+      mode,
+      accounts,
+      debugMode,
+      refreshInterval,
+      setIsLoading,
+      setStagesData,
+      setSignalsDetails,
+      setClassifications,
+    });
 
     useEffect(() => {
       if (nerdletState.staging) {
@@ -594,170 +166,15 @@ const Stages = forwardRef(
       stagesDataRef.current = [...stages];
     }, [stages]);
 
-    const preload = useCallback(
-      async (timeBands = [], callback, overwriteCache = false) => {
-        prevPreloadArgs.current = { timeBands, callback };
-        const { [SIGNAL_TYPES.ALERT]: alertsGuids = [] } =
-          guidsRef.current || {};
-        const timeWindow = {
-          start: threeDaysAgo(timeBands?.[0]?.start),
-          end: timeBands?.[timeBands.length - 1]?.end,
-        };
-        const key = keyFromTimeWindow(timeWindow);
-        const timeWindowCachedAlerts = timeWindowAlertsCache.current.get(key);
-        let timeBandsDataArray;
-        if (overwriteCache || !timeWindowCachedAlerts) {
-          const alertsData = alertsGuids.length
-            ? await fetchAlertsStatus(alertsGuids, timeWindow, true)
-            : {};
-          timeBandsDataArray = timeBands.map((timeWindow) => ({
-            key: keyFromTimeWindow(timeWindow),
-            alertsStatusesObj: alertsStatusesObjFromData(
-              alertsData,
-              timeWindow
-            ),
-          }));
-          timeWindowAlertsCache.current.set(key, timeBandsDataArray);
-        } else {
-          timeBandsDataArray = timeWindowCachedAlerts;
-        }
-        setIsLoading(true);
-
-        const { [SIGNAL_TYPES.ENTITY]: entitiesGuids = [] } =
-          guidsRef.current || {};
-        const workloads = entitiesGuids?.reduce((acc, cur) => {
-          const [acctId, domain, type] = atob(cur)?.split('|') || [];
-          return acctId && isWorkload({ domain, type })
-            ? {
-                ...acc,
-                [acctId]: [...(acc[acctId] || []), cur],
-              }
-            : acc;
-        }, {});
-        let workloadsStatuses = {};
-        if (Object.keys(workloads)?.length) {
-          const { data: { actor: w = {} } = {}, error } =
-            await NerdGraphQuery.query({
-              query: workloadsStatusesQuery(workloads, {
-                start: fifteenMinutesAgo(timeBands?.[0]?.start),
-                end: timeBands?.[timeBands.length - 1]?.end,
-              }),
-            });
-          if (!error && w) {
-            workloadsStatuses = Object.keys(w)?.reduce((acc, key) => {
-              if (key === '__typename') return acc;
-              const r = w[key].results || [];
-              return {
-                ...acc,
-                ...r.reduce(
-                  (acc2, { statusValueCode, timestamp, workloadGuid }) => ({
-                    ...acc2,
-                    [workloadGuid]: [
-                      ...(acc2[workloadGuid] || []),
-                      { statusValueCode, timestamp },
-                    ],
-                  }),
-                  {}
-                ),
-              };
-            }, {});
-          }
-        }
-
-        const updatedStages = stages.map(updateStagesWithDynamic);
-        timeBands.forEach(async (timeWindow, idx) => {
-          const { key, alertsStatusesObj } = timeBandsDataArray[idx] || {};
-          const timeWindowCachedData = timeBandDataCache.current.get(key);
-          if (overwriteCache || !timeWindowCachedData) {
-            let entitiesStatusesObj = entitiesGuids.length
-              ? await fetchEntitiesStatus(entitiesGuids, timeWindow, true)
-              : {};
-            entitiesStatusesObj = Object.keys(entitiesStatusesObj)?.reduce(
-              (acc, cur) => {
-                const e = entitiesStatusesObj[cur];
-                if (isWorkload(e))
-                  return {
-                    ...acc,
-                    [cur]: {
-                      ...e,
-                      statusValueCode: getWorstWorkloadStatusValue(
-                        workloadsStatuses[e.guid],
-                        timeWindow
-                      ),
-                    },
-                  };
-                return { ...acc, [cur]: e };
-              },
-              {}
-            );
-            const timeWindowStatuses = {
-              [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
-              [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
-            };
-            timeBandDataCache.current.set(key, timeWindowStatuses);
-            const { signalsWithStatuses } = addSignalStatuses(
-              updatedStages,
-              timeWindowStatuses
-            );
-            callback?.(
-              idx,
-              statusFromStatuses(
-                signalsWithStatuses.map(annotateStageWithStatuses)
-              )
-            );
-          } else {
-            const { signalsWithStatuses } = addSignalStatuses(
-              updatedStages,
-              timeWindowCachedData
-            );
-            callback?.(
-              idx,
-              statusFromStatuses(
-                signalsWithStatuses.map(annotateStageWithStatuses)
-              )
-            );
-          }
-        });
-        setIsLoading(false);
-      },
-      [
-        fetchAlertsStatus,
-        fetchEntitiesStatus,
-        updateStagesWithDynamic,
-        stages,
-        setIsLoading,
-      ]
-    );
-
     useImperativeHandle(
       ref,
       () => ({
-        refresh: async () => {
-          noAccessGuidsLastState.current = [];
-          runFetch(FETCH_TYPES.MANUAL);
-        },
+        refresh,
         preload,
-        seek: async (timeWindow) => {
-          if (!timeWindow) return;
-          playbackTimeWindow.current = timeWindow;
-          setCurrentPlaybackTimeWindow?.(timeWindow);
-          const key = keyFromTimeWindow(timeWindow);
-          const timeWindowCachedData = timeBandDataCache.current.get(key);
-          if (timeWindowCachedData) {
-            setStatuses((s) => ({
-              ...s,
-              [SIGNAL_TYPES.ENTITY]: timeWindowCachedData[SIGNAL_TYPES.ENTITY],
-              [SIGNAL_TYPES.ALERT]: timeWindowCachedData[SIGNAL_TYPES.ALERT],
-            }));
-          }
-        },
-        clearPlaybackTimeWindow: () => {
-          playbackTimeWindow.current = null;
-          prevPreloadArgs.current = null;
-          setCurrentPlaybackTimeWindow?.(null);
-        },
+        seek,
+        clearPlaybackTimeWindow,
       }),
-      [preload, runFetch, setCurrentPlaybackTimeWindow]
+      [preload, refresh, seek, clearPlaybackTimeWindow]
     );
 
     const addStageHandler = () =>
@@ -796,12 +213,8 @@ const Stages = forwardRef(
     return (
       <StagesContext.Provider
         value={{
-          stages: stagesData.stages,
+          ...(stagesData || {}),
           updateStagesDataRef,
-          dynamicEntities,
-          dynamicAlerts,
-          setDynamicEntities,
-          setDynamicAlerts,
         }}
       >
         <SignalsContext.Provider value={signalsDetails}>

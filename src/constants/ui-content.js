@@ -156,6 +156,11 @@ export const UI_CONTENT = {
       DETAILS:
         'No response received for the listed signals in these steps. It could be that these signals no longer exist.',
     },
+    NO_ACCESS: {
+      HEADING: 'Signals with no access',
+      DETAILS:
+        'This configuration of this Stage includes Signals that you do not have access to. These Signals are not displayed in this version of the Flow, and the status impact that these Signals might have on the Flow are not indicated.',
+    },
     DETAILS: {
       NO_INCIDENTS: 'No open incidents from past 30 days',
       NOT_FOUND_IN_TIMERANGE:

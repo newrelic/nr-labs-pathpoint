@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 
-import { Button, navigation, useEntitySearchQuery } from 'nr1';
+import { Button, navigation } from 'nr1';
 
 import SignalsGrid from './signals-grid';
 import SignalsList from './signals-list';
@@ -24,14 +24,10 @@ import {
 } from '../../contexts';
 import { FLOW_DISPATCH_COMPONENTS, FLOW_DISPATCH_TYPES } from '../../reducers';
 import {
-  ALERTS_DOMAIN_TYPE_NRQL,
   COMPONENTS,
-  MAX_ENTITIES_IN_STEP,
   MODES,
   OK_STATUSES,
   SIGNAL_EXPAND,
-  SIGNAL_TYPES,
-  SKIP_ENTITY_TYPES_NRQL,
   STATUSES,
   UI_CONTENT,
   UNHEALTHY_STATUSES,
@@ -52,10 +48,11 @@ const Step = ({
   saveFlow,
 }) => {
   const { id: flowId, stages: flowStages } = useContext(FlowContext);
-  const { stages, updateStagesDataRef, setDynamicEntities, setDynamicAlerts } =
-    useContext(StagesContext);
+  const { stages, updateStagesDataRef } = useContext(StagesContext);
   const { selections = {}, markSelection } = useContext(SelectionsContext);
-  const { setClassifications } = useContext(SignalsClassificationsContext);
+  const { classifications: { dynamicQuerySignals } = {} } = useContext(
+    SignalsClassificationsContext
+  );
   const dispatch = useContext(FlowDispatchContext);
   const [thisStep, setThisStep] = useState();
   const [status, setStatus] = useState(STATUSES.UNKNOWN);
@@ -65,44 +62,17 @@ const Step = ({
   const [signalsListView, setSignalsListView] = useState(false);
   const [hideHealthy, setHideHealthy] = useState(true);
   const [hideSignals, setHideSignals] = useState(false);
-  const [entitiesQuery, setEntitiesQuery] = useState('');
-  const [alertsQuery, setAlertsQuery] = useState('');
   const signalsDetails = useContext(SignalsContext);
   const signalToDelete = useRef({});
   const isDragHandleClicked = useRef(false);
-  const dynamicQueries = useRef({});
-  const { data: { entities: dynamicEntities = [] } = {} } =
-    useEntitySearchQuery({
-      filters: `${SKIP_ENTITY_TYPES_NRQL} AND ${entitiesQuery}`,
-      limit: entitiesQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
-    });
-  const { data: { entities: dynamicAlerts = [] } = {} } = useEntitySearchQuery({
-    filters: `${ALERTS_DOMAIN_TYPE_NRQL} AND ${alertsQuery}`,
-    limit: alertsQuery ? MAX_ENTITIES_IN_STEP + 1 : 0,
-  });
 
   useEffect(() => {
     const { name: stgName, levels = [] } =
       (stages || []).find(({ id }) => id === stageId) || {};
     const { steps = [] } = levels.find(({ id }) => id === levelId) || {};
-    const { queries = [], ...step } =
-      steps.find(({ id }) => id === stepId) || {};
-    [SIGNAL_TYPES.ENTITY, SIGNAL_TYPES.ALERT].forEach((type) => {
-      const { query, id, included } =
-        queries.find(({ type: qType }) => qType === type) || {};
-      if (!query) return;
-      dynamicQueries.current = {
-        ...dynamicQueries.current,
-        [type]: { queryId: id, included },
-      };
-      if (type === SIGNAL_TYPES.ENTITY) {
-        setEntitiesQuery(query);
-      } else if (type === SIGNAL_TYPES.ALERT) {
-        setAlertsQuery(query);
-      }
-    });
+    const { status: stepStatus } = steps.find(({ id }) => id === stepId) || {};
     setStageName(stgName);
-    setStatus(step.status || STATUSES.UNKNOWN);
+    setStatus(stepStatus || STATUSES.UNKNOWN);
   }, [stageId, levelId, stepId, stages]);
 
   useEffect(
@@ -128,44 +98,6 @@ const Step = ({
   }, [flowStages, stageId, levelId, stepId]);
 
   useEffect(() => {
-    if (!stepId || !setDynamicEntities) return;
-    if (dynamicEntities.length > MAX_ENTITIES_IN_STEP) {
-      reportTooManyDynamicSignals?.(stepId, {
-        [SIGNAL_TYPES.ENTITY]: dynamicEntities.length,
-      });
-    } else {
-      setDynamicEntities((des) => ({
-        ...des,
-        [stepId]: dynamicEntities.map(({ guid, name }) => ({
-          guid,
-          name,
-          type: SIGNAL_TYPES.ENTITY,
-          ...(dynamicQueries.current[SIGNAL_TYPES.ENTITY] || {}),
-        })),
-      }));
-    }
-  }, [stepId, dynamicEntities, reportTooManyDynamicSignals]);
-
-  useEffect(() => {
-    if (!stepId || !setDynamicAlerts) return;
-    if (dynamicAlerts.length > MAX_ENTITIES_IN_STEP) {
-      reportTooManyDynamicSignals?.(stepId, {
-        [SIGNAL_TYPES.ALERT]: dynamicAlerts.length,
-      });
-    } else {
-      setDynamicAlerts((das) => ({
-        ...das,
-        [stepId]: dynamicAlerts.map(({ guid, name }) => ({
-          guid,
-          name,
-          type: SIGNAL_TYPES.ALERT,
-          ...(dynamicQueries.current[SIGNAL_TYPES.ALERT] || {}),
-        })),
-      }));
-    }
-  }, [stepId, dynamicAlerts, reportTooManyDynamicSignals]);
-
-  useEffect(() => {
     setSignalsListView([STATUSES.CRITICAL, STATUSES.WARNING].includes(status));
   }, [status]);
 
@@ -174,28 +106,6 @@ const Step = ({
       setHideSignals(false);
     }
   }, [signalCollapseOption]);
-
-  const reportTooManyDynamicSignals = useCallback(
-    (stepId, data = {}) =>
-      setClassifications?.((cls = {}) => ({
-        ...cls,
-        tooManyDynamicSignals: {
-          ...(cls.tooManyDynamicSignals || {}),
-          [stageId]: {
-            ...(cls.tooManyDynamicSignals?.[stageId] || {}),
-            [levelId]: {
-              ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId] || {}),
-              [stepId]: {
-                ...(cls.tooManyDynamicSignals?.[stageId]?.[levelId]?.[stepId] ||
-                  {}),
-                ...data,
-              },
-            },
-          },
-        },
-      })),
-    [stageId, levelId, setClassifications]
-  );
 
   const updateSignalsHandler = (e) => {
     e.stopPropagation();
@@ -284,20 +194,11 @@ const Step = ({
 
   const queriesWithResults = useMemo(
     () =>
-      (thisStep?.queries || []).map((query) => {
-        if (query.type === SIGNAL_TYPES.ENTITY)
-          return {
-            ...query,
-            results: dynamicEntities,
-          };
-        if (query.type === SIGNAL_TYPES.ALERT)
-          return {
-            ...query,
-            results: dynamicAlerts,
-          };
-        return query;
-      }),
-    [thisStep, dynamicEntities, dynamicAlerts]
+      (thisStep?.queries || []).map((query) => ({
+        ...query,
+        results: dynamicQuerySignals?.[thisStep.id]?.[query.id] || [],
+      })),
+    [thisStep, dynamicQuerySignals]
   );
 
   return (

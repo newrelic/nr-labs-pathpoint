@@ -17,3 +17,5 @@ export const REFRESH_INTERVALS = [
 export const MAX_ENTITIES_IN_STEP = 25;
 
 export const MAX_PARAMS_IN_QUERY = 25;
+
+export const MAX_ENTITIES_IN_FLOW = 200;

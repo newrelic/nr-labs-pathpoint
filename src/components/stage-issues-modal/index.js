@@ -19,6 +19,7 @@ import { SIGNAL_TYPES, UI_CONTENT } from '../../constants';
 const STAGE_ISSUE_TYPES = {
   TOO_MANY_SIGNALS: 1,
   MISSING_SIGNALS: 2,
+  NO_ACCESS_SIGNALS: 3,
 };
 
 const configs = {
@@ -26,13 +27,20 @@ const configs = {
     ...UI_CONTENT.SIGNAL.TOO_MANY,
     icon: {
       type: Icon.TYPE.INTERFACE__STATE__CRITICAL__WEIGHT_BOLD,
-      color: '#df2d24',
+      color: '#DF2D24',
     },
   },
   [STAGE_ISSUE_TYPES.MISSING_SIGNALS]: {
     ...UI_CONTENT.SIGNAL.MISSING,
     icon: {
       type: Icon.TYPE.INTERFACE__STATE__WARNING__WEIGHT_BOLD,
+      color: '#F07A0E',
+    },
+  },
+  [STAGE_ISSUE_TYPES.NO_ACCESS_SIGNALS]: {
+    ...UI_CONTENT.SIGNAL.NO_ACCESS,
+    icon: {
+      type: Icon.TYPE.INTERFACE__STATE__UNAVAILABLE,
       color: '#F07A0E',
     },
   },
@@ -148,17 +156,19 @@ const StageIssuesModal = forwardRef(({ type, items, stageId }, ref) => {
         </div>
         <div className="modal-content">
           <BlockText>{config.DETAILS || ''}</BlockText>
-          <div className="issues-table">
-            <div className="issues-table-row">
-              <HeadingText
-                className="issues-table-col"
-                type={HeadingText.TYPE.HEADING_6}
-              >
-                Step
-              </HeadingText>
+          {type !== STAGE_ISSUE_TYPES.NO_ACCESS_SIGNALS ? (
+            <div className="issues-table">
+              <div className="issues-table-row">
+                <HeadingText
+                  className="issues-table-col"
+                  type={HeadingText.TYPE.HEADING_6}
+                >
+                  Step
+                </HeadingText>
+              </div>
+              {issueTableBody}
             </div>
-            {issueTableBody}
-          </div>
+          ) : null}
         </div>
         <div className="modal-footer">
           <Button type={Button.TYPE.TERTIARY} onClick={closeHandler}>
