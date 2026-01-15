@@ -1,34 +1,48 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-
 import { Button, HeadingText, JsonChart } from 'nr1';
-
 import Modal from '../modal';
 
 const ExportFlowModal = ({ flowDoc, hidden = true, onClose }) => {
   const [data, setData] = useState(null);
+  const [chartHeight, setChartHeight] = useState(0);
   const linkRef = useRef(null);
+  const chartWrapperRef = useRef(null);
 
   useEffect(() => {
     const { created: _, ...flow } = flowDoc || {}; // eslint-disable-line no-unused-vars
     setData(flow);
   }, [flowDoc]);
 
+  useEffect(() => {
+    if (!chartWrapperRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setChartHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(chartWrapperRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [hidden]);
+
   const downloadButtonClickHandler = useCallback(() => {
     const exportBtn = linkRef.current;
     if (!exportBtn) return;
 
-    const blob = new Blob([JSON.stringify(data)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
+    const jsonString = JSON.stringify(data, null, 2);
+    const url = `data:application/json;charset=utf-8,${encodeURIComponent(
+      jsonString
+    )}`;
     const fileName = `${(data?.name || 'flow')
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase()}.json`;
     exportBtn.download = fileName;
     exportBtn.href = url;
     exportBtn.click();
-    URL.revokeObjectURL(url);
   }, [data]);
 
   const closeHandler = () => onClose?.();
@@ -43,7 +57,16 @@ const ExportFlowModal = ({ flowDoc, hidden = true, onClose }) => {
           >
             Export flow
           </HeadingText>
-          <JsonChart className="json-chart" data={data} fullHeight fullWidth />
+          <div ref={chartWrapperRef} className="chart-wrapper">
+            {chartHeight > 0 && (
+              <JsonChart
+                className="json-chart"
+                data={data}
+                fullWidth
+                style={{ height: chartHeight }}
+              />
+            )}
+          </div>
         </div>
         <div className="button-bar">
           <a ref={linkRef} className="hidden-download-btn" />
