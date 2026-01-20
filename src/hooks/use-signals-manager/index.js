@@ -59,13 +59,6 @@ const COUNTS_BY_TYPE_DEFAULT = {
   [SIGNAL_TYPES.ENTITY]: 0,
 };
 
-const FETCH_TYPES = {
-  POLLED: 'polled',
-  MANUAL: 'manual',
-  RESUME: 'resume',
-  PLAYBACK: 'playback',
-};
-
 const keyFromTimeWindow = ({ start, end }) =>
   start && end ? `${start}:${end}` : null;
 
@@ -209,7 +202,9 @@ const useSignalsManager = ({
 
   useEffect(() => {
     guidsRef.current = guids;
-    if (Object.keys(guids).length) runFetch();
+    if (Object.keys(guids).length) {
+      runFetch();
+    }
   }, [guids, runFetch]);
 
   useEffect(() => {
@@ -444,54 +439,36 @@ const useSignalsManager = ({
     [fetchEntitiesStatus, fetchAlertsStatus]
   );
 
-  const runFetch = useCallback(
-    async (fetchType = FETCH_TYPES.POLLED) => {
-      if (fetchType === FETCH_TYPES.PLAYBACK) {
-        shouldPollRef.current = false;
-        clearTimeout(pollingTimeoutId.current);
-      } else if (fetchType === FETCH_TYPES.POLLED) {
-        shouldPollRef.current = true;
-        clearTimeout(pollingTimeoutId.current);
-      }
+  const runFetch = useCallback(async () => {
+    if (isFetchingStatuses.current) {
+      shouldResumeFetchStatuses.current = true;
+      return;
+    }
 
-      if (isFetchingStatuses.current) {
-        if (fetchType === FETCH_TYPES.MANUAL) {
-          shouldResumeFetchStatuses.current = true;
-        } else if (fetchType === FETCH_TYPES.POLLED && shouldPollRef.current) {
-          const timeout = validRefreshInterval(refreshInterval);
-          if (timeout) {
-            pollingTimeoutId.current = setTimeout(() => {
-              runFetch(FETCH_TYPES.POLLED);
-            }, timeout);
-          }
-        }
-        return;
-      }
+    isFetchingStatuses.current = true;
+    clearTimeout(pollingTimeoutId.current);
 
-      isFetchingStatuses.current = true;
-      try {
-        await fetchStatuses(guidsRef.current);
-      } finally {
-        isFetchingStatuses.current = false;
+    try {
+      await fetchStatuses(guidsRef.current);
+    } finally {
+      isFetchingStatuses.current = false;
 
-        if (shouldResumeFetchStatuses.current) {
-          shouldResumeFetchStatuses.current = false;
-          runFetch(FETCH_TYPES.MANUAL);
-        } else if (fetchType === FETCH_TYPES.POLLED && shouldPollRef.current) {
-          const timeout = validRefreshInterval(refreshInterval);
-          if (timeout) {
-            pollingTimeoutId.current = setTimeout(() => {
-              runFetch(FETCH_TYPES.POLLED);
-            }, timeout);
-          }
+      if (shouldResumeFetchStatuses.current) {
+        shouldResumeFetchStatuses.current = false;
+        runFetch();
+      } else if (shouldPollRef.current) {
+        const timeout = validRefreshInterval(refreshInterval);
+        if (timeout) {
+          pollingTimeoutId.current = setTimeout(() => {
+            runFetch();
+          }, timeout);
         }
       }
-    },
-    [fetchStatuses, refreshInterval]
-  );
+    }
+  }, [fetchStatuses, refreshInterval]);
 
   const refresh = useCallback(() => {
-    runFetch(FETCH_TYPES.MANUAL);
+    runFetch();
   }, [runFetch]);
 
   const preload = useCallback(
@@ -727,7 +704,10 @@ const useSignalsManager = ({
     playbackTimeWindow.current = null;
     prevPreloadArgs.current = null;
     setCurrentPlaybackTimeWindow?.(null);
-  }, []);
+
+    shouldPollRef.current = true;
+    runFetch();
+  }, [runFetch, setCurrentPlaybackTimeWindow]);
 
   return {
     statuses,
