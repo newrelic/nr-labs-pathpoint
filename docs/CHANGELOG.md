@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.0...v2.6.1) (2026-01-20)
+
+
+### Bug Fixes
+
+* cleaned up issues with fetching data ([dc75ea6](https://github.com/newrelic/nr-labs-pathpoint/commit/dc75ea6ffb3329f123d785535d4b5a89319a6833))
+
 # [2.6.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.4...v2.6.0) (2026-01-20)
 
 
