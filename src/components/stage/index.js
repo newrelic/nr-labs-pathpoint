@@ -61,7 +61,7 @@ const Stage = ({
     classifications: {
       signalsWithNoAccess = {},
       signalsWithNoStatus = {},
-      tooManyDynamicSignals = {},
+      tooManySignalInStep = {},
     } = {},
   } = useContext(SignalsClassificationsContext);
   const [name, setName] = useState('');
@@ -78,6 +78,7 @@ const Stage = ({
   const dragOverItemIndex = useRef();
   const missingSignalsModal = useRef();
   const tooManySignalsModal = useRef();
+  const noAccessSignalModal = useRef();
 
   useEffect(() => {
     const stage = (stages || []).find(({ id }) => id === stageId) || {};
@@ -117,23 +118,29 @@ const Stage = ({
 
   useEffect(
     () =>
-      setTooManySignalsSteps((tms) =>
-        Object.keys(tooManyDynamicSignals[stageId] || {}).reduce(
+      setTooManySignalsSteps(() =>
+        Object.keys(tooManySignalInStep[stageId] || {}).reduce(
           (acc, levelId) =>
-            Object.keys(tooManyDynamicSignals[stageId][levelId]).reduce(
-              (acc, stepId) =>
-                acc.some(
-                  (existing) =>
-                    existing.levelId === levelId && existing.stepId === stepId
-                )
-                  ? acc
-                  : [...acc, { levelId, stepId }],
+            Object.keys(tooManySignalInStep[stageId][levelId]).reduce(
+              (acc, stepId) => [
+                ...acc,
+                {
+                  levelId,
+                  stepId,
+                  signals: Object.keys(
+                    tooManySignalInStep[stageId][levelId][stepId]
+                  ).map((guid) => ({
+                    guid,
+                    ...tooManySignalInStep[stageId][levelId][stepId][guid],
+                  })),
+                },
+              ],
               acc
             ),
-          tms || []
+          []
         )
       ),
-    [tooManyDynamicSignals]
+    [tooManySignalInStep]
   );
 
   useEffect(() => {
@@ -312,7 +319,10 @@ const Stage = ({
     if (Object.keys(signalsWithNoAccess?.[stageId] || {}).length)
       si.push(
         <Tooltip text={UI_CONTENT.STAGE.NO_ACCESS_SIGNALS}>
-          <span className="notify no-access">
+          <span
+            className="notify no-access"
+            onClick={() => noAccessSignalModal.current?.open?.()}
+          >
             <Icon type={Icon.TYPE.INTERFACE__STATE__UNAVAILABLE} />
           </span>
         </Tooltip>
@@ -477,6 +487,12 @@ const Stage = ({
         items={tooManySignalsSteps}
         stageId={stageId}
         ref={tooManySignalsModal}
+      />
+      <StageIssuesModal
+        type={StageIssuesModal.TYPES.NO_ACCESS_SIGNALS}
+        items={[]}
+        stageId={stageId}
+        ref={noAccessSignalModal}
       />
     </>
   );
