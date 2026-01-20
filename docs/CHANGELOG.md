@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.4...v2.6.0) (2026-01-20)
+
+
+### Features
+
+* new use signals manager hook to handle data fetching for flows ([09c59e4](https://github.com/newrelic/nr-labs-pathpoint/commit/09c59e4bf838f6d968ab3a7f1ad9cec42c50becd))
+
 ## [2.5.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.5.3...v2.5.4) (2026-01-05)
 
 
