@@ -1,3 +1,10 @@
+## [2.6.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.1...v2.6.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* additional debugging logging ([f043e45](https://github.com/newrelic/nr-labs-pathpoint/commit/f043e45102637cf29ca7c432b70758633dca1741))
+
 ## [2.6.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.0...v2.6.1) (2026-01-20)
 
 
