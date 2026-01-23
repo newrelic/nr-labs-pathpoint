@@ -147,12 +147,24 @@ const useSignalsManager = ({
         guids: gs,
         noAccessGuidsSet,
         markSignalsToSkip,
-      } = stagesSignalGuidsSetsByType(stages, accounts);
+      } = stagesSignalGuidsSetsByType(stages, accounts, debugString);
+
+      debugString(
+        JSON.stringify(markSignalsToSkip, null, 2),
+        'Skipped signals - no dynamic queries'
+      );
+      debugString(
+        `Allowed signals: Entities (${
+          gs[SIGNAL_TYPES.ENTITY]?.size || 0
+        }), Alerts (${gs[SIGNAL_TYPES.ALERT]?.size || 0})`,
+        'Allowed signals counts - no dynamic queries'
+      );
+
       noAccessGuidsSetRef.current = noAccessGuidsSet;
       signalsMarkedToSkip.current = markSignalsToSkip;
       setGuids(gs);
     }
-  }, [stages, accounts]);
+  }, [stages, accounts, debugString]);
 
   useEffect(() => {
     setIsLoading(dqLoading);
@@ -194,11 +206,34 @@ const useSignalsManager = ({
       guids: gs,
       noAccessGuidsSet,
       markSignalsToSkip,
-    } = stagesSignalGuidsSetsByType(stagesWithDynamicSignals, accounts);
+    } = stagesSignalGuidsSetsByType(
+      stagesWithDynamicSignals,
+      accounts,
+      debugString
+    );
+
+    debugString(
+      JSON.stringify(markSignalsToSkip, null, 2),
+      'Skipped signals - with dynamic queries'
+    );
+    debugString(
+      `Allowed signals: Entities (${
+        gs[SIGNAL_TYPES.ENTITY]?.size || 0
+      }), Alerts (${gs[SIGNAL_TYPES.ALERT]?.size || 0})`,
+      'Allowed signals counts - with dynamic queries'
+    );
+
     noAccessGuidsSetRef.current = noAccessGuidsSet;
     signalsMarkedToSkip.current = markSignalsToSkip;
     setGuids(gs);
-  }, [dqData, dqLoading, stages, accounts]);
+  }, [
+    dqData,
+    dqLoading,
+    stages,
+    accounts,
+    updateStagesWithDynamic,
+    debugString,
+  ]);
 
   useEffect(() => {
     guidsRef.current = guids;
@@ -221,6 +256,12 @@ const useSignalsManager = ({
       noAccessGuidsSetRef.current,
       signalsMarkedToSkip.current
     );
+
+    debugString(
+      JSON.stringify(tooManySignalInStep, null, 2),
+      'Too many signals in step'
+    );
+
     setStagesData(() => ({
       stages: signalsWithStatuses.map(annotateStageWithStatuses),
     }));
@@ -241,6 +282,7 @@ const useSignalsManager = ({
     setStagesData,
     setClassifications,
     setSignalsDetails,
+    debugString,
   ]);
 
   useEffect(() => {
@@ -422,6 +464,11 @@ const useSignalsManager = ({
       const entitiesGuids = [...entitiesSet];
       const alertsGuids = [...alertsSet];
 
+      debugString(
+        `Starting fetch. Entities: ${entitiesGuids.length}, Alerts: ${alertsGuids.length}`,
+        'Fetching statuses'
+      );
+
       const fetchers = [];
 
       if (entitiesGuids.length) {
@@ -436,7 +483,7 @@ const useSignalsManager = ({
         await Promise.all(fetchers.map((fetcher) => fetcher()));
       }
     },
-    [fetchEntitiesStatus, fetchAlertsStatus]
+    [fetchEntitiesStatus, fetchAlertsStatus, debugString]
   );
 
   const runFetch = useCallback(async () => {
@@ -540,7 +587,8 @@ const useSignalsManager = ({
             );
             const { guids: newGuids } = stagesSignalGuidsSetsByType(
               stagesWithDynamicSignals,
-              accounts
+              accounts,
+              debugString
             );
 
             guidsRef.current = newGuids;
@@ -682,6 +730,7 @@ const useSignalsManager = ({
       stages,
       accounts,
       setIsLoading,
+      debugString,
     ]
   );
 
@@ -721,7 +770,11 @@ const useSignalsManager = ({
 
 export default useSignalsManager;
 
-const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
+const stagesSignalGuidsSetsByType = (
+  stages = [],
+  accounts = [],
+  debugString
+) => {
   const guids = {
     [SIGNAL_TYPES.ENTITY]: new Set(),
     [SIGNAL_TYPES.ALERT]: new Set(),
@@ -730,9 +783,9 @@ const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
   let markSignalsToSkip = {};
 
   const signalsByTypeCount = { ...COUNTS_BY_TYPE_DEFAULT };
-  stages.forEach(({ id: stageId, levels = [] }) =>
+  stages.forEach(({ id: stageId, name: stageName, levels = [] }) =>
     levels.forEach(({ id: levelId, steps = [] }) =>
-      steps.forEach(({ id: stepId, signals = [] }) => {
+      steps.forEach(({ id: stepId, title: stepTitle, signals = [] }) => {
         const signalsInStepByTypeCount = { ...COUNTS_BY_TYPE_DEFAULT };
         signals.forEach(({ guid, name, type }) => {
           const [acctId] = atob(guid)?.split('|') || [];
@@ -751,25 +804,41 @@ const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
           signalsInStepByTypeCount[type] = currentStepCount;
 
           if (currentStepCount > MAX_ENTITIES_IN_STEP) {
+            const reason = 'step_limit_exceeded';
+            if (debugString) {
+              debugString(
+                `Skipping [${type}] "${name}" (from "${stepTitle}" in "${stageName}") (${reason} ${currentStepCount})`,
+                'Signal skipped'
+              );
+            }
+
             markSignalsToSkip = addSignalToTree(
               markSignalsToSkip,
               stageId,
               levelId,
               stepId,
               guid,
-              { name, type, reason: 'step_limit_exceeded' }
+              { name, type, reason }
             );
             return;
           }
 
           if (currentFlowCount > MAX_ENTITIES_IN_FLOW) {
+            const reason = 'flow_limit_exceeded';
+            if (debugString) {
+              debugString(
+                `Skipping [${type}] "${name}" (from "${stepTitle}" in "${stageName}") (${reason} ${currentFlowCount})`,
+                'Signal skipped'
+              );
+            }
+
             markSignalsToSkip = addSignalToTree(
               markSignalsToSkip,
               stageId,
               levelId,
               stepId,
               guid,
-              { name, type, reason: 'flow_limit_exceeded' }
+              { name, type, reason }
             );
             return;
           }
