@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useNerdGraphQuery, NerdGraphQuery } from 'nr1';
+import { NerdGraphQuery } from 'nr1';
 
 import useDebugLogger from '../use-debug-logger';
 import {
@@ -39,28 +39,102 @@ import {
   UI_CONTENT,
 } from '../../constants';
 
-const EMPTY_GQL = `{
-  actor {
-    user {
-      id
-    }
-  }
-}`;
-
 const EMPTY_DYNAMIC_SIGNALS = {
   [SIGNAL_TYPES.ALERT]: {},
   [SIGNAL_TYPES.ENTITY]: {},
 };
-
-const DYNAMIC_SIGNALS_RESULTS_SKIP_KEYS = ['__typename', 'user'];
 
 const COUNTS_BY_TYPE_DEFAULT = {
   [SIGNAL_TYPES.ALERT]: 0,
   [SIGNAL_TYPES.ENTITY]: 0,
 };
 
+const MAX_DYNAMIC_QUERIES_IN_BATCH = 10;
+
 const keyFromTimeWindow = ({ start, end }) =>
   start && end ? `${start}:${end}` : null;
+
+const chunkArray = (array, size) => {
+  const chunked = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunked.push(array.slice(i, i + size));
+  }
+  return chunked;
+};
+
+const generateDynamicQueriesList = (stages) => {
+  return stages.reduce((acc, { id: stageId, levels }) => {
+    levels?.map(({ id: levelId, steps }) =>
+      steps?.map(({ id: stepId, queries }) =>
+        queries?.map(({ query, type, ...qry }) => {
+          const name = `q${acc.length + 1}`;
+          acc.push({ ...qry, name, type, query, stageId, levelId, stepId });
+        })
+      )
+    );
+    return acc;
+  }, []);
+};
+
+const batchFetchDynamicQueries = async (queriesList) => {
+  if (!queriesList.length) return { actor: {}, errors: [] };
+
+  const batches = chunkArray(queriesList, MAX_DYNAMIC_QUERIES_IN_BATCH);
+  const errors = [];
+  const actor = {};
+
+  const responses = await Promise.all(
+    batches.map(async (batch) => {
+      let batchGraphql = '';
+      batch.forEach(({ name, type, query }) => {
+        let prefix = '';
+        if (type === SIGNAL_TYPES.ENTITY)
+          prefix = `${SKIP_ENTITY_TYPES_NRQL} AND `;
+        if (type === SIGNAL_TYPES.ALERT)
+          prefix = `${ALERTS_DOMAIN_TYPE_NRQL} AND `;
+
+        batchGraphql += `
+          ${name}: entitySearch(query: "${prefix}${query}") {
+            count
+            results { entities { guid name } }
+          }`;
+      });
+
+      return NerdGraphQuery.query({ query: `{ actor { ${batchGraphql} } }` });
+    })
+  );
+
+  responses.forEach(({ data, error }) => {
+    if (data?.actor) Object.assign(actor, data.actor);
+    if (error) errors.push(error.message || error.toString());
+  });
+
+  return { actor, errors };
+};
+
+const signalsFromDynamicQueries = (actorData, queriesList) => {
+  return queriesList.reduce(
+    (acc, { included, name, type, stepId, id: queryId }) => {
+      const { [name]: { results: { entities = [] } = {} } = {} } = actorData;
+      return entities.length
+        ? {
+            ...acc,
+            [type]: {
+              ...acc[type],
+              [stepId]: entities.map(({ name, guid }) => ({
+                guid,
+                name,
+                type,
+                queryId,
+                included,
+              })),
+            },
+          }
+        : acc;
+    },
+    EMPTY_DYNAMIC_SIGNALS
+  );
+};
 
 const useSignalsManager = ({
   stages,
@@ -74,16 +148,12 @@ const useSignalsManager = ({
   setClassifications,
 }) => {
   const [guids, setGuids] = useState({});
-  const [dynamicQueriesGQL, setDynamicQueriesGQL] = useState(EMPTY_GQL);
   const [statuses, setStatuses] = useState({});
   const [currentPlaybackTimeWindow, setCurrentPlaybackTimeWindow] =
     useState(null);
+  const [dqLoading, setDqLoading] = useState(false);
+  const [dqError, setDqError] = useState(null);
 
-  const {
-    loading: dqLoading,
-    error: dqError,
-    data: dqData,
-  } = useNerdGraphQuery({ query: dynamicQueriesGQL });
   const { debugString } = useDebugLogger({ allowDebug: debugMode });
 
   const guidsRef = useRef(guids);
@@ -105,135 +175,86 @@ const useSignalsManager = ({
     return () => clearTimeout(pollingTimeoutId.current);
   }, []);
 
-  useEffect(() => {
-    if (!stages?.length || !accounts?.length) return;
+  const signalsInStages = useCallback(async (curStages, curAccounts) => {
+    const queriesList = generateDynamicQueriesList(curStages);
+    dynamicQueries.current = queriesList;
 
-    let graphql = ``;
-    dynamicQueries.current = stages.reduce((acc, { id: stageId, levels }) => {
-      levels?.map(({ id: levelId, steps }) =>
-        steps?.map(({ id: stepId, queries }) =>
-          queries?.map(({ query, type, ...qry }) => {
-            let typeSpecificQryPrefix = '';
-            const name = `q${acc.length + 1}`;
-            if (type === SIGNAL_TYPES.ENTITY) {
-              typeSpecificQryPrefix = `${SKIP_ENTITY_TYPES_NRQL} AND `;
-            }
-            if (type === SIGNAL_TYPES.ALERT) {
-              typeSpecificQryPrefix = `${ALERTS_DOMAIN_TYPE_NRQL} AND `;
-            }
-            graphql = `${graphql}
-            ${name}: entitySearch(query: "${typeSpecificQryPrefix}${query}") {
-              count
-              results { entities { guid name } }
-            }`;
-            acc.push({
-              ...qry,
-              name,
-              type,
-              query,
-              stageId,
-              levelId,
-              stepId,
-            });
-          })
-        )
-      );
-      return acc;
-    }, []);
-    if (dynamicQueries.current.length && graphql) {
-      setDynamicQueriesGQL(`{ actor { ${graphql} } }`);
-    } else {
-      const {
-        guids: gs,
-        noAccessGuidsSet,
-        markSignalsToSkip,
-      } = stagesSignalGuidsSetsByType(stages, accounts, debugString);
+    let dynamicSignals = EMPTY_DYNAMIC_SIGNALS;
 
-      debugString(
-        JSON.stringify(markSignalsToSkip, null, 2),
-        'Skipped signals - no dynamic queries'
-      );
-      debugString(
-        `Allowed signals: Entities (${
-          gs[SIGNAL_TYPES.ENTITY]?.size || 0
-        }), Alerts (${gs[SIGNAL_TYPES.ALERT]?.size || 0})`,
-        'Allowed signals counts - no dynamic queries'
-      );
+    if (queriesList.length > 0) {
+      const { actor, errors } = await batchFetchDynamicQueries(queriesList);
 
-      noAccessGuidsSetRef.current = noAccessGuidsSet;
-      signalsMarkedToSkip.current = markSignalsToSkip;
-      setGuids(gs);
+      if (errors.length) {
+        console.error('Errors fetching dynamic signals:', errors);
+        if (Object.keys(actor).length === 0) setDqError(errors[0]);
+      }
+
+      dynamicSignals = signalsFromDynamicQueries(actor, queriesList);
     }
-  }, [stages, accounts, debugString]);
+    dynamicSignalsByStep.current = dynamicSignals;
 
-  useEffect(() => {
-    setIsLoading(dqLoading);
-  }, [dqLoading, setIsLoading]);
+    const updateStagesWithDynamic = (stg) => ({
+      ...stg,
+      levels: stg.levels.map((lvl) => ({
+        ...lvl,
+        steps: lvl.steps.map((stp) => {
+          const signalWithQueryIncluded = (sig) => ({
+            ...sig,
+            included:
+              (stp.queries || []).find(({ id }) => id === sig.queryId)
+                ?.included ?? true,
+          });
+          return {
+            ...stp,
+            signals: [
+              ...stp.signals,
+              ...(dynamicSignals?.[SIGNAL_TYPES.ENTITY]?.[stp.id] || []).map(
+                signalWithQueryIncluded
+              ),
+              ...(dynamicSignals?.[SIGNAL_TYPES.ALERT]?.[stp.id] || []).map(
+                signalWithQueryIncluded
+              ),
+            ],
+          };
+        }),
+      })),
+    });
+    const stagesWithDynamicSignals = curStages.map(updateStagesWithDynamic);
 
-  useEffect(() => {
-    if (
-      dqLoading ||
-      !Object.keys(dqData?.actor || {}).filter(
-        (key) => !DYNAMIC_SIGNALS_RESULTS_SKIP_KEYS.includes(key)
-      ).length
-    )
-      return;
-
-    dynamicSignalsByStep.current = dynamicQueries.current.reduce(
-      (acc, { id: queryId, included, name, type, stepId }) => {
-        const { [name]: { results: { entities = [] } = {} } = {} } =
-          dqData?.actor || {};
-        return entities.length
-          ? {
-              ...acc,
-              [type]: {
-                ...acc[type],
-                [stepId]: entities.map(({ name, guid }) => ({
-                  guid,
-                  name,
-                  type,
-                  queryId,
-                  included,
-                })),
-              },
-            }
-          : acc;
-      },
-      EMPTY_DYNAMIC_SIGNALS
-    );
-    const stagesWithDynamicSignals = stages.map(updateStagesWithDynamic);
     const {
       guids: gs,
       noAccessGuidsSet,
       markSignalsToSkip,
-    } = stagesSignalGuidsSetsByType(
-      stagesWithDynamicSignals,
-      accounts,
-      debugString
-    );
-
-    debugString(
-      JSON.stringify(markSignalsToSkip, null, 2),
-      'Skipped signals - with dynamic queries'
-    );
-    debugString(
-      `Allowed signals: Entities (${
-        gs[SIGNAL_TYPES.ENTITY]?.size || 0
-      }), Alerts (${gs[SIGNAL_TYPES.ALERT]?.size || 0})`,
-      'Allowed signals counts - with dynamic queries'
-    );
+    } = stagesSignalGuidsSetsByType(stagesWithDynamicSignals, curAccounts);
 
     noAccessGuidsSetRef.current = noAccessGuidsSet;
     signalsMarkedToSkip.current = markSignalsToSkip;
-    setGuids(gs);
-  }, [
-    dqData,
-    dqLoading,
-    stages,
-    accounts,
-    updateStagesWithDynamic,
-    debugString,
-  ]);
+    guidsRef.current = gs;
+
+    return { guids: gs, stagesWithDynamicSignals };
+  }, []);
+
+  useEffect(() => {
+    if (!stages?.length || !accounts?.length) return;
+    const init = async () => {
+      setDqLoading(true);
+      try {
+        const { guids: gs } = await signalsInStages(stages, accounts);
+        setGuids(gs);
+      } catch (e) {
+        console.error('Error initializing flow:', e);
+        setDqError(e);
+      } finally {
+        setDqLoading(false);
+      }
+    };
+
+    init();
+  }, [stages, accounts, signalsInStages]);
+
+  useEffect(() => {
+    setIsLoading(dqLoading);
+  }, [dqLoading, setIsLoading]);
 
   useEffect(() => {
     guidsRef.current = guids;
@@ -532,67 +553,16 @@ const useSignalsManager = ({
 
       setIsLoading?.(true);
 
-      if (dynamicQueries.current.length > 0) {
-        const dynamicQueryBody = dynamicQueries.current.reduce(
-          (acc, { name, query, type }) => {
-            let typeSpecificQryPrefix = '';
-            if (type === SIGNAL_TYPES.ENTITY) {
-              typeSpecificQryPrefix = `${SKIP_ENTITY_TYPES_NRQL} AND `;
-            }
-            if (type === SIGNAL_TYPES.ALERT) {
-              typeSpecificQryPrefix = `${ALERTS_DOMAIN_TYPE_NRQL} AND `;
-            }
-            return `${acc}
-              ${name}: entitySearch(query: "${typeSpecificQryPrefix}${query}") {
-                count
-                results { entities { guid name } }
-              }`;
-          },
-          ''
-        );
-
-        if (dynamicQueryBody) {
-          const { data: dqData, error: dqError } = await NerdGraphQuery.query({
-            query: `{ actor { ${dynamicQueryBody} } }`,
-          });
-
-          if (dqError) {
-            console.error('Error pre-fetching dynamic signals', dqError);
-          } else if (dqData?.actor) {
-            dynamicSignalsByStep.current = dynamicQueries.current.reduce(
-              (acc, { id: queryId, included, name, type, stepId }) => {
-                const { [name]: { results: { entities = [] } = {} } = {} } =
-                  dqData.actor;
-                return entities.length
-                  ? {
-                      ...acc,
-                      [type]: {
-                        ...acc[type],
-                        [stepId]: entities.map(({ name, guid }) => ({
-                          guid,
-                          name,
-                          type,
-                          queryId,
-                          included,
-                        })),
-                      },
-                    }
-                  : acc;
-              },
-              EMPTY_DYNAMIC_SIGNALS
-            );
-
-            const stagesWithDynamicSignals = stages.map(
-              updateStagesWithDynamic
-            );
-            const { guids: newGuids } = stagesSignalGuidsSetsByType(
-              stagesWithDynamicSignals,
-              accounts,
-              debugString
-            );
-
-            guidsRef.current = newGuids;
-          }
+      let currentGuids = guidsRef.current;
+      if (
+        dynamicQueries.current.length > 0 ||
+        !Object.keys(currentGuids).length
+      ) {
+        try {
+          const result = await signalsInStages(stages, accounts);
+          currentGuids = result.guids;
+        } catch (err) {
+          console.error('Error preloading playback', err);
         }
       }
 
@@ -726,11 +696,11 @@ const useSignalsManager = ({
     [
       fetchAlertsStatus,
       fetchEntitiesStatus,
-      updateStagesWithDynamic,
       stages,
       accounts,
       setIsLoading,
       debugString,
+      signalsInStages,
     ]
   );
 
