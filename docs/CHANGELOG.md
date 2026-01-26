@@ -1,3 +1,10 @@
+## [2.6.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.2...v2.6.3) (2026-01-26)
+
+
+### Bug Fixes
+
+* replace usenerdgraphquery with NerdGraphQuery in useSignalsManager ([1b45170](https://github.com/newrelic/nr-labs-pathpoint/commit/1b451705c92f584847cd664544aa6ad734c3290b))
+
 ## [2.6.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.1...v2.6.2) (2026-01-23)
 
 
