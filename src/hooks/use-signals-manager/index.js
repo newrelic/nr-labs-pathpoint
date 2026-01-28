@@ -136,6 +136,41 @@ const signalsFromDynamicQueries = (actorData, queriesList) => {
   );
 };
 
+const skippedSignalsArray = (skippedSignals, stagesArr) => {
+  const skippedSignalsArr = [];
+  if (!skippedSignals) return skippedSignalsArr;
+
+  Object.entries(skippedSignals).forEach(([stageId, levels]) => {
+    const stage = stagesArr.find((s) => s.id === stageId);
+    const stageName = stage ? stage.name : stageId;
+    Object.entries(levels).forEach(([levelId, steps]) => {
+      const levelIdx = stage?.levels
+        ? stage.levels.findIndex((l) => l.id === levelId)
+        : -1;
+      const levelLabel = levelIdx > -1 ? levelIdx + 1 : '-';
+      Object.entries(steps).forEach(([stepId, guids]) => {
+        const step = stage?.levels?.[levelIdx]?.steps?.find(
+          (s) => s.id === stepId
+        );
+        const stepTitle = step ? step.title : stepId;
+        Object.entries(guids).forEach(([guid, details]) => {
+          skippedSignalsArr.push({
+            stage: stageName,
+            level: levelLabel,
+            step: stepTitle,
+            name: details.name,
+            reason: details.reason,
+            counter: details.count,
+            type: details.type,
+            guid: guid,
+          });
+        });
+      });
+    });
+  });
+  return skippedSignalsArr;
+};
+
 const useSignalsManager = ({
   stages,
   mode,
@@ -154,7 +189,9 @@ const useSignalsManager = ({
   const [dqLoading, setDqLoading] = useState(false);
   const [dqError, setDqError] = useState(null);
 
-  const { debugString } = useDebugLogger({ allowDebug: debugMode });
+  const { debugLogJson, debugString, debugTable } = useDebugLogger({
+    allowDebug: debugMode,
+  });
 
   const guidsRef = useRef(guids);
   const noAccessGuidsSetRef = useRef(new Set());
@@ -278,10 +315,13 @@ const useSignalsManager = ({
       signalsMarkedToSkip.current
     );
 
-    debugString(
-      JSON.stringify(tooManySignalInStep, null, 2),
-      'Too many signals in step'
+    const skippedSignalsTable = skippedSignalsArray(
+      tooManySignalInStep,
+      stagesWithDynamicSignals
     );
+    if (skippedSignalsTable.length) {
+      debugTable(skippedSignalsTable, 'Skipped signals');
+    }
 
     setStagesData(() => ({
       stages: signalsWithStatuses.map(annotateStageWithStatuses),
@@ -303,7 +343,7 @@ const useSignalsManager = ({
     setStagesData,
     setClassifications,
     setSignalsDetails,
-    debugString,
+    debugTable,
   ]);
 
   useEffect(() => {
@@ -379,10 +419,11 @@ const useSignalsManager = ({
         batchAlertConditionsByAccount,
         []
       );
-      debugString(JSON.stringify(batchedConditions), 'Batched conditions');
+      debugLogJson(batchedConditions, 'Batched conditions');
+
       const conditionsResponses = await Promise.allSettled(
         batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
-          debugString(JSON.stringify(condIds), `Alerts batch ${bIdx + 1}`);
+          debugLogJson(condIds, `Alerts batch ${bIdx + 1}`);
           const query = conditionsDetailsQuery(acctId, condIds);
           const {
             data: { actor: { account: { alerts } = {} } = {} } = {},
@@ -413,7 +454,7 @@ const useSignalsManager = ({
 
       const incidentsBlocks = await Promise.allSettled(
         batchedIncidentIds?.map(async ({ acctId, incidentIds }, iIdx) => {
-          debugString(JSON.stringify(incidentIds), `Incidents ${iIdx + 1}`);
+          debugLogJson(incidentIds, `Incidents ${iIdx + 1}`);
           const query = incidentsSearchQuery(acctId, incidentIds, timeWindow);
           const {
             data: {
@@ -473,7 +514,7 @@ const useSignalsManager = ({
         [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
       }));
     },
-    [debugString, setIsLoading]
+    [debugLogJson, setIsLoading]
   );
 
   const fetchStatuses = useCallback(
@@ -699,7 +740,6 @@ const useSignalsManager = ({
       stages,
       accounts,
       setIsLoading,
-      debugString,
       signalsInStages,
     ]
   );
@@ -740,11 +780,7 @@ const useSignalsManager = ({
 
 export default useSignalsManager;
 
-const stagesSignalGuidsSetsByType = (
-  stages = [],
-  accounts = [],
-  debugString
-) => {
+const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
   const guids = {
     [SIGNAL_TYPES.ENTITY]: new Set(),
     [SIGNAL_TYPES.ALERT]: new Set(),
@@ -753,9 +789,9 @@ const stagesSignalGuidsSetsByType = (
   let markSignalsToSkip = {};
 
   const signalsByTypeCount = { ...COUNTS_BY_TYPE_DEFAULT };
-  stages.forEach(({ id: stageId, name: stageName, levels = [] }) =>
+  stages.forEach(({ id: stageId, levels = [] }) =>
     levels.forEach(({ id: levelId, steps = [] }) =>
-      steps.forEach(({ id: stepId, title: stepTitle, signals = [] }) => {
+      steps.forEach(({ id: stepId, signals = [] }) => {
         const signalsInStepByTypeCount = { ...COUNTS_BY_TYPE_DEFAULT };
         signals.forEach(({ guid, name, type }) => {
           const [acctId] = atob(guid)?.split('|') || [];
@@ -775,40 +811,26 @@ const stagesSignalGuidsSetsByType = (
 
           if (currentStepCount > MAX_ENTITIES_IN_STEP) {
             const reason = 'step_limit_exceeded';
-            if (debugString) {
-              debugString(
-                `Skipping [${type}] "${name}" (from "${stepTitle}" in "${stageName}") (${reason} ${currentStepCount})`,
-                'Signal skipped'
-              );
-            }
-
             markSignalsToSkip = addSignalToTree(
               markSignalsToSkip,
               stageId,
               levelId,
               stepId,
               guid,
-              { name, type, reason }
+              { name, type, reason, count: currentStepCount }
             );
             return;
           }
 
           if (currentFlowCount > MAX_ENTITIES_IN_FLOW) {
             const reason = 'flow_limit_exceeded';
-            if (debugString) {
-              debugString(
-                `Skipping [${type}] "${name}" (from "${stepTitle}" in "${stageName}") (${reason} ${currentFlowCount})`,
-                'Signal skipped'
-              );
-            }
-
             markSignalsToSkip = addSignalToTree(
               markSignalsToSkip,
               stageId,
               levelId,
               stepId,
               guid,
-              { name, type, reason }
+              { name, type, reason, count: currentFlowCount }
             );
             return;
           }
@@ -902,13 +924,14 @@ const addSignalStatusesAndClassify = (
             const skippedSignal =
               markSignalsToSkip?.[stage.id]?.[level.id]?.[step.id]?.[guid];
             if (skippedSignal) {
+              const { reason, count } = skippedSignal;
               tooManySignalInStep = addSignalToTree(
                 tooManySignalInStep,
                 stage.id,
                 level.id,
                 step.id,
                 guid,
-                { name, type, reason: skippedSignal.reason }
+                { name, type, reason, count }
               );
               return signalsAcc;
             }
