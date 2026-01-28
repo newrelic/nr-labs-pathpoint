@@ -1,3 +1,10 @@
+## [2.6.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.3...v2.6.4) (2026-01-28)
+
+
+### Bug Fixes
+
+* updated debugging in usesignalsmanager hook ([05ebd2a](https://github.com/newrelic/nr-labs-pathpoint/commit/05ebd2a53381347060ff8cacf7f43c80268b0ad9))
+
 ## [2.6.3](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.2...v2.6.3) (2026-01-26)
 
 
