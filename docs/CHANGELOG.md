@@ -1,3 +1,10 @@
+## [2.6.5](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.4...v2.6.5) (2026-02-02)
+
+
+### Bug Fixes
+
+* remove flow limits check ([fd5040f](https://github.com/newrelic/nr-labs-pathpoint/commit/fd5040f36ba3bd16c3e50a9ba38587cc03e5cce0))
+
 ## [2.6.4](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.3...v2.6.4) (2026-01-28)
 
 
