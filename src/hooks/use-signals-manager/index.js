@@ -262,8 +262,16 @@ const useSignalsManager = ({
       guids: gs,
       noAccessGuidsSet,
       markSignalsToSkip,
+      signalsByTypeCount,
     } = stagesSignalGuidsSetsByType(stagesWithDynamicSignals, curAccounts);
 
+    Object.entries(signalsByTypeCount || {}).forEach(([type, count]) => {
+      if (count > MAX_ENTITIES_IN_FLOW) {
+        console.warn(
+          `${count} ${type} signals (recommended limit: ${MAX_ENTITIES_IN_FLOW})`
+        );
+      }
+    });
     noAccessGuidsSetRef.current = noAccessGuidsSet;
     signalsMarkedToSkip.current = markSignalsToSkip;
     guidsRef.current = gs;
@@ -822,19 +830,6 @@ const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
             return;
           }
 
-          if (currentFlowCount > MAX_ENTITIES_IN_FLOW) {
-            const reason = 'flow_limit_exceeded';
-            markSignalsToSkip = addSignalToTree(
-              markSignalsToSkip,
-              stageId,
-              levelId,
-              stepId,
-              guid,
-              { name, type, reason, count: currentFlowCount }
-            );
-            return;
-          }
-
           if (type in guids) {
             guids[type].add(guid);
           }
@@ -847,6 +842,7 @@ const stagesSignalGuidsSetsByType = (stages = [], accounts = []) => {
     guids,
     noAccessGuidsSet,
     markSignalsToSkip,
+    signalsByTypeCount,
   };
 };
 
