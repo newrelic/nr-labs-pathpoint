@@ -84,9 +84,9 @@ const batchFetchDynamicQueries = async (queriesList) => {
   const actor = {};
 
   const responses = await Promise.all(
-    batches.map(async (batch) => {
+    batches.map(async (batch, index) => {
       let batchGraphql = '';
-      batch.forEach(({ name, type, query }) => {
+      batch.forEach(({ name, type, query: qry }) => {
         let prefix = '';
         if (type === SIGNAL_TYPES.ENTITY)
           prefix = `${SKIP_ENTITY_TYPES_NRQL} AND `;
@@ -94,19 +94,29 @@ const batchFetchDynamicQueries = async (queriesList) => {
           prefix = `${ALERTS_DOMAIN_TYPE_NRQL} AND `;
 
         batchGraphql += `
-          ${name}: entitySearch(query: "${prefix}${query}") {
+          ${name}: entitySearch(query: "${prefix}${qry}") {
             count
             results { entities { guid name } }
           }`;
       });
 
-      return NerdGraphQuery.query({ query: `{ actor { ${batchGraphql} } }` });
+      const query = `{ actor { ${batchGraphql} } }`;
+      const result = await NerdGraphQuery.query({ query });
+      return { ...result, query, index };
     })
   );
 
-  responses.forEach(({ data, error }) => {
+  responses.forEach(({ data, error, query, index }) => {
     if (data?.actor) Object.assign(actor, data.actor);
-    if (error) errors.push(error.message || error.toString());
+    if (error) {
+      errors.push(error);
+      queryErrorHandler(
+        error,
+        query,
+        `Error fetching dynamic queries [batch ${index + 1}]`,
+        {}
+      );
+    }
   });
 
   return { actor, errors };
@@ -171,6 +181,28 @@ const skippedSignalsArray = (skippedSignals, stagesArr) => {
   return skippedSignalsArr;
 };
 
+const queryErrorHandler = (error, query, label, signalsCounts) => {
+  const errorMsg = error.message || error.toString();
+  console.group(label || 'Query error');
+  console.error('Query:', query);
+  if (
+    errorMsg.includes('query was too complex') ||
+    errorMsg.includes('reduce the number of fields')
+  ) {
+    const {
+      [SIGNAL_TYPES.ENTITY]: entityCount = 0,
+      [SIGNAL_TYPES.ALERT]: alertCount = 0,
+    } = signalsCounts || {};
+    if (entityCount > MAX_ENTITIES_IN_FLOW) {
+      console.warn(`⚠️ ${entityCount} entities in flow`);
+    }
+    if (alertCount > MAX_ENTITIES_IN_FLOW) {
+      console.warn(`⚠️ ${alertCount} alerts in flow`);
+    }
+  }
+  console.groupEnd();
+};
+
 const useSignalsManager = ({
   stages,
   mode,
@@ -186,8 +218,6 @@ const useSignalsManager = ({
   const [statuses, setStatuses] = useState({});
   const [currentPlaybackTimeWindow, setCurrentPlaybackTimeWindow] =
     useState(null);
-  const [dqLoading, setDqLoading] = useState(false);
-  const [dqError, setDqError] = useState(null);
 
   const { debugLogJson, debugString, debugTable } = useDebugLogger({
     allowDebug: debugMode,
@@ -196,6 +226,7 @@ const useSignalsManager = ({
   const guidsRef = useRef(guids);
   const noAccessGuidsSetRef = useRef(new Set());
   const signalsMarkedToSkip = useRef({});
+  const signalsCountsRef = useRef(COUNTS_BY_TYPE_DEFAULT);
   const dynamicQueries = useRef([]);
   const dynamicSignalsByStep = useRef(EMPTY_DYNAMIC_SIGNALS);
   const isFetchingStatuses = useRef(false);
@@ -221,9 +252,11 @@ const useSignalsManager = ({
     if (queriesList.length > 0) {
       const { actor, errors } = await batchFetchDynamicQueries(queriesList);
 
-      if (errors.length) {
-        console.error('Errors fetching dynamic signals:', errors);
-        if (Object.keys(actor).length === 0) setDqError(errors[0]);
+      const errorsLen = errors.length;
+      if (errorsLen) {
+        console.error(
+          `Error(s) in ${errorsLen} batch(es) fetching dynamic signals`
+        );
       }
 
       dynamicSignals = signalsFromDynamicQueries(actor, queriesList);
@@ -272,9 +305,10 @@ const useSignalsManager = ({
         );
       }
     });
+    guidsRef.current = gs;
     noAccessGuidsSetRef.current = noAccessGuidsSet;
     signalsMarkedToSkip.current = markSignalsToSkip;
-    guidsRef.current = gs;
+    signalsCountsRef.current = signalsByTypeCount;
 
     return { guids: gs, stagesWithDynamicSignals };
   }, []);
@@ -282,24 +316,19 @@ const useSignalsManager = ({
   useEffect(() => {
     if (!stages?.length || !accounts?.length) return;
     const init = async () => {
-      setDqLoading(true);
+      setIsLoading?.(true);
       try {
         const { guids: gs } = await signalsInStages(stages, accounts);
         setGuids(gs);
       } catch (e) {
         console.error('Error initializing flow:', e);
-        setDqError(e);
       } finally {
-        setDqLoading(false);
+        setIsLoading?.(false);
       }
     };
 
     init();
-  }, [stages, accounts, signalsInStages]);
-
-  useEffect(() => {
-    setIsLoading(dqLoading);
-  }, [dqLoading, setIsLoading]);
+  }, [stages, accounts, signalsInStages, setIsLoading]);
 
   useEffect(() => {
     guidsRef.current = guids;
@@ -354,11 +383,6 @@ const useSignalsManager = ({
     debugTable,
   ]);
 
-  useEffect(() => {
-    if (!dqError) return;
-    console.error('Error fetching dynamic signals', dqError);
-  }, [dqError]);
-
   const updateStagesWithDynamic = useCallback(
     (stg) => ({
       ...stg,
@@ -406,7 +430,13 @@ const useSignalsManager = ({
       setIsLoading?.(false);
       if (error) {
         console.error('Error fetching entities:', error.message);
-        return;
+        queryErrorHandler(
+          error,
+          query,
+          'Error fetching entities',
+          signalsCountsRef.current
+        );
+        return {};
       }
       const entitiesStatusesObj = entitiesDetailsFromQueryResults(actor);
 
@@ -431,19 +461,28 @@ const useSignalsManager = ({
 
       const conditionsResponses = await Promise.allSettled(
         batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
-          debugLogJson(condIds, `Alerts batch ${bIdx + 1}`);
+          debugLogJson(
+            condIds,
+            `Alerts conditions details [batch ${bIdx + 1}]`
+          );
           const query = conditionsDetailsQuery(acctId, condIds);
           const {
             data: { actor: { account: { alerts } = {} } = {} } = {},
             error,
           } = await NerdGraphQuery.query({ query });
           if (error)
-            console.error('Error fetching conditions details:', error.message);
+            queryErrorHandler(
+              error,
+              query,
+              `Error fetching conditions details [batch ${bIdx + 1}]`,
+              signalsCountsRef.current
+            );
           return { acctId, alerts };
         })
       );
       const issuesBlocks = await Promise.allSettled(
-        batchedConditions?.map(async ({ acctId, condIds }) => {
+        batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
+          debugLogJson(condIds, `Issues for conditions [batch ${bIdx + 1}]`);
           let query = issuesForConditionsQuery(acctId, condIds, timeWindow);
           const {
             data: {
@@ -453,7 +492,13 @@ const useSignalsManager = ({
             } = {},
             error,
           } = await NerdGraphQuery.query({ query });
-          if (error) console.error('Error fetching issues:', error.message);
+          if (error)
+            queryErrorHandler(
+              error,
+              query,
+              `Error fetching issues [batch ${bIdx + 1}]`,
+              signalsCountsRef.current
+            );
           return { acctId, issues };
         })
       );
@@ -462,7 +507,7 @@ const useSignalsManager = ({
 
       const incidentsBlocks = await Promise.allSettled(
         batchedIncidentIds?.map(async ({ acctId, incidentIds }, iIdx) => {
-          debugLogJson(incidentIds, `Incidents ${iIdx + 1}`);
+          debugLogJson(incidentIds, `Incidents [batch ${iIdx + 1}]`);
           const query = incidentsSearchQuery(acctId, incidentIds, timeWindow);
           const {
             data: {
@@ -474,7 +519,12 @@ const useSignalsManager = ({
             } = {},
             error,
           } = await NerdGraphQuery.query({ query });
-          if (error) console.error('Error fetching incidents:', error.message);
+          if (error)
+            queryErrorHandler(
+              error,
+              query,
+              `Error fetching incidents [batch ${iIdx + 1}]`
+            );
           return { acctId, incidents };
         })
       );
