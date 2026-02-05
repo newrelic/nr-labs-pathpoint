@@ -1,3 +1,10 @@
+## [2.6.6](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.5...v2.6.6) (2026-02-05)
+
+
+### Bug Fixes
+
+* improved logging of error; includes signals count on complex query errors ([2d8843c](https://github.com/newrelic/nr-labs-pathpoint/commit/2d8843cc5e36dca1076e973cda3272da522d92a9))
+
 ## [2.6.5](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.4...v2.6.5) (2026-02-02)
 
 
