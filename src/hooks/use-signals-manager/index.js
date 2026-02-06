@@ -418,27 +418,39 @@ const useSignalsManager = ({
   const fetchEntitiesStatus = useCallback(
     async (entitiesGuids, timeWindow, isForCache) => {
       setIsLoading?.(true);
-      const entitiesGuidsArray = guidsToArray(
-        { entitiesGuids },
-        MAX_PARAMS_IN_QUERY
-      );
-      const query = statusesFromGuidsArray(entitiesGuidsArray, timeWindow);
-      debugString(query, 'Entities query');
-      const { data: { actor = {} } = {}, error } = await NerdGraphQuery.query({
-        query,
-      });
-      setIsLoading?.(false);
-      if (error) {
-        console.error('Error fetching entities:', error.message);
-        queryErrorHandler(
-          error,
-          query,
-          'Error fetching entities',
-          signalsCountsRef.current
+      const batches = chunkArray(entitiesGuids, MAX_ENTITIES_IN_FLOW);
+      const batchPromises = batches.map(async (batchGuids, bIdx) => {
+        const entitiesGuidsArray = guidsToArray(
+          { entitiesGuids: batchGuids },
+          MAX_PARAMS_IN_QUERY
         );
-        return {};
-      }
-      const entitiesStatusesObj = entitiesDetailsFromQueryResults(actor);
+        const query = statusesFromGuidsArray(entitiesGuidsArray, timeWindow);
+        debugLogJson(batchGuids, `Entities [batch ${bIdx + 1}]`);
+
+        const { data: { actor = {} } = {}, error } = await NerdGraphQuery.query(
+          {
+            query,
+          }
+        );
+        if (error) {
+          queryErrorHandler(
+            error,
+            query,
+            `Error fetching entities [batch ${bIdx + 1}]`,
+            signalsCountsRef.current
+          );
+          return {};
+        }
+
+        return entitiesDetailsFromQueryResults(actor);
+      });
+
+      const results = await Promise.all(batchPromises);
+      const entitiesStatusesObj = results.reduce(
+        (acc, result) => ({ ...acc, ...result }),
+        {}
+      );
+      setIsLoading?.(false);
 
       if (isForCache) return entitiesStatusesObj;
       setStatuses((s) => ({
@@ -446,7 +458,7 @@ const useSignalsManager = ({
         [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
       }));
     },
-    [debugString, setIsLoading]
+    [debugLogJson, setIsLoading]
   );
 
   const fetchAlertsStatus = useCallback(
