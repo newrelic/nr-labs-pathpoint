@@ -1,3 +1,10 @@
+## [2.6.7](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.6...v2.6.7) (2026-02-06)
+
+
+### Bug Fixes
+
+* batch fetching entity statuses ([bbbafae](https://github.com/newrelic/nr-labs-pathpoint/commit/bbbafaef935f532b0b4e246ef988c07f78699ef1))
+
 ## [2.6.6](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.5...v2.6.6) (2026-02-05)
 
 
