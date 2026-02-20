@@ -1,3 +1,11 @@
+## [2.6.8](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.7...v2.6.8) (2026-02-20)
+
+
+### Bug Fixes
+
+* issue with editing existing value ([5c08158](https://github.com/newrelic/nr-labs-pathpoint/commit/5c0815891fcc964e6da47cfc1e2a3cb802302016))
+* update nr-labs-components to enable freeform keys and values in filter bar ([1ff606c](https://github.com/newrelic/nr-labs-pathpoint/commit/1ff606caa07cdb920965c45b7fbc2379bec3d151))
+
 ## [2.6.7](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.6...v2.6.7) (2026-02-06)
 
 
