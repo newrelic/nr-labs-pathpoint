@@ -92,11 +92,11 @@ export const entitiesDetailsFromQueryResults = (res = {}) =>
   }, {});
 
 export const getWorstWorkloadStatusValue = (events = [], { start, end }) => {
-  let worstRank = 0;
+  let worstRank = -99;
   for (const { statusValueCode, timestamp } of events) {
     if (timestamp >= start && timestamp <= end) {
-      const rank = [0, 2, 3].includes(statusValueCode) ? statusValueCode : -1;
-      if (rank > worstRank) {
+      const rank = [-99, 0, 2, 3].includes(statusValueCode) ? statusValueCode : -99;
+      if (worstRank === -99 || rank > worstRank) {
         worstRank = rank;
       }
       if (worstRank === 3) break;
