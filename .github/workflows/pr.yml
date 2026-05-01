@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-${{ env.cache-name }}-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps --ignore-scripts
 
       - name: Install NR1 CLI
         run: curl -s https://cli.nr-ext.net/installer.sh | sudo bash
@@ -67,7 +67,7 @@ jobs:
             ${{ runner.os }}-${{ env.cache-name }}-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps --ignore-scripts
 
       - name: Run eslint-check and generate report
         id: eslint-check
@@ -113,7 +113,7 @@ jobs:
             ${{ runner.os }}-${{ env.cache-name }}-
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps --ignore-scripts
 
       - name: Run npm test
         run: npm test
