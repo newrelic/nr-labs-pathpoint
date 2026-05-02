@@ -1,3 +1,13 @@
+## [2.6.9](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.8...v2.6.9) (2026-05-02)
+
+
+### Bug Fixes
+
+* eslint issue ([66630fc](https://github.com/newrelic/nr-labs-pathpoint/commit/66630fca9e5618a9bbcce6d78323165e48df267c))
+* replace npm ci with npm install in github workflows ([2fa3031](https://github.com/newrelic/nr-labs-pathpoint/commit/2fa3031a73339140653cd196242e7ab5c5eb0f73))
+* update nr-labs-components to remove nr1 dependency ([bd94b8c](https://github.com/newrelic/nr-labs-pathpoint/commit/bd94b8c61a165c1651f994d65dce54445a5369a7))
+* workload missing unknown in playback ([259891a](https://github.com/newrelic/nr-labs-pathpoint/commit/259891a7c741ba2acd1d05603be254f715a760fc))
+
 ## [2.6.8](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.7...v2.6.8) (2026-02-20)
 
 
