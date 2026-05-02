@@ -95,7 +95,9 @@ export const getWorstWorkloadStatusValue = (events = [], { start, end }) => {
   let worstRank = -99;
   for (const { statusValueCode, timestamp } of events) {
     if (timestamp >= start && timestamp <= end) {
-      const rank = [-99, 0, 2, 3].includes(statusValueCode) ? statusValueCode : -99;
+      const rank = [-99, 0, 2, 3].includes(statusValueCode)
+        ? statusValueCode
+        : -99;
       if (worstRank === -99 || rank > worstRank) {
         worstRank = rank;
       }
