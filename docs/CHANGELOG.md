@@ -1,3 +1,10 @@
+## [2.6.10](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.9...v2.6.10) (2026-05-05)
+
+
+### Bug Fixes
+
+* workload statuses in playback ([56367da](https://github.com/newrelic/nr-labs-pathpoint/commit/56367dac120f6283c8e927131438c422b1076072))
+
 ## [2.6.9](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.8...v2.6.9) (2026-05-02)
 
 
