@@ -1,6 +1,10 @@
 import { StatusIcon } from '@newrelic/nr-labs-components';
 
-import { ALERT_STATUSES, WORKLOAD } from '../constants';
+import {
+  ALERT_STATUSES,
+  WORKLOAD,
+  WORKLOAD_STATUS_VALUE_CODES,
+} from '../constants';
 
 const {
   STATUSES: { UNKNOWN, CRITICAL, WARNING, SUCCESS },
@@ -29,15 +33,19 @@ export const entityStatus = ({ alertSeverity } = {}) => {
   }
 };
 
-export const workloadStatus = ({ statusValueCode = -1 }) => {
+const knownWorkloadStatusValues = Object.values(WORKLOAD_STATUS_VALUE_CODES);
+
+export const workloadStatus = ({
+  statusValueCode = WORKLOAD_STATUS_VALUE_CODES.UNKNOWN,
+}) => {
   switch (statusValueCode) {
-    case 0: {
+    case WORKLOAD_STATUS_VALUE_CODES.OPERATIONAL: {
       return SUCCESS;
     }
-    case 2: {
+    case WORKLOAD_STATUS_VALUE_CODES.DEGRADED: {
       return WARNING;
     }
-    case 3: {
+    case WORKLOAD_STATUS_VALUE_CODES.DISRUPTED: {
       return CRITICAL;
     }
     default: {
@@ -92,16 +100,16 @@ export const entitiesDetailsFromQueryResults = (res = {}) =>
   }, {});
 
 export const getWorstWorkloadStatusValue = (events = [], { start, end }) => {
-  let worstRank = -99;
+  let worstRank = WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
   for (const { statusValueCode, timestamp } of events) {
     if (timestamp >= start && timestamp <= end) {
-      const rank = [-99, 0, 2, 3].includes(statusValueCode)
+      const rank = knownWorkloadStatusValues.includes(statusValueCode)
         ? statusValueCode
-        : -99;
-      if (worstRank === -99 || rank > worstRank) {
+        : WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
+      if (rank > worstRank) {
         worstRank = rank;
       }
-      if (worstRank === 3) break;
+      if (worstRank === WORKLOAD_STATUS_VALUE_CODES.DISRUPTED) break;
     }
   }
   return worstRank;
