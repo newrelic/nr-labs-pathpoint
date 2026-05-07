@@ -1,3 +1,10 @@
+## [2.6.11](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.10...v2.6.11) (2026-05-07)
+
+
+### Bug Fixes
+
+* multiple workload issues ([3322527](https://github.com/newrelic/nr-labs-pathpoint/commit/332252756dc7969e82bf8b360670537ee5234f10))
+
 ## [2.6.10](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.9...v2.6.10) (2026-05-05)
 
 
