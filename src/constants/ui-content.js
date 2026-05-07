@@ -178,6 +178,7 @@ export const UI_CONTENT = {
     TOOLTIP: {
       WORKLOAD_UNKNOWN: 'The status of this workload is unknown',
       WORKLOAD_DISRUPTED: 'The workload is disrupted',
+      WORKLOAD_DEGRADED: 'The workload is degraded',
       WORKLOAD_OPERATIONAL: 'The workload is operational',
       SIGNAL_UNKNOWN: 'No alert conditions set up',
       SIGNAL_DISRUPTED: ' incident(s) in progress',

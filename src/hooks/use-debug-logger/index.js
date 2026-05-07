@@ -21,11 +21,9 @@ const useDebugLogger = ({ allowDebug = false }) => {
   );
 
   const debugString = useCallback(
-    (str, title = 'Debug info') => {
+    (str, title = '') => {
       if (allowDebug && str) {
-        console.groupCollapsed(title);
-        console.debug(str);
-        console.groupEnd();
+        console.debug(title, str);
       }
     },
     [allowDebug]

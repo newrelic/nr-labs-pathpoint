@@ -5,7 +5,12 @@ import { HeadingText, Popover, PopoverBody, PopoverTrigger } from 'nr1';
 
 import { AppContext, SignalsContext } from '../../contexts';
 import { generateIncidentsList } from '../../utils';
-import { ALERT_SEVERITY, UI_CONTENT, SIGNAL_TYPES } from '../../constants';
+import {
+  ALERT_SEVERITY,
+  UI_CONTENT,
+  SIGNAL_TYPES,
+  WORKLOAD_STATUS_VALUE_CODES,
+} from '../../constants';
 
 import typesList from '../../../nerdlets/signal-selection/types.json';
 
@@ -53,6 +58,19 @@ const SignalTooltip = ({
     });
     if (signalType === SIGNAL_TYPES.ENTITY) {
       if (data.type === 'WORKLOAD') {
+        if (Number.isFinite(data.statusValueCode)) {
+          switch (data.statusValueCode) {
+            case WORKLOAD_STATUS_VALUE_CODES.DISRUPTED:
+              return UI_CONTENT.SIGNAL.TOOLTIP.WORKLOAD_DISRUPTED;
+            case WORKLOAD_STATUS_VALUE_CODES.DEGRADED:
+              return UI_CONTENT.SIGNAL.TOOLTIP.WORKLOAD_DEGRADED;
+            case WORKLOAD_STATUS_VALUE_CODES.OPERATIONAL:
+              return UI_CONTENT.SIGNAL.TOOLTIP.WORKLOAD_OPERATIONAL;
+            default:
+              return UI_CONTENT.SIGNAL.TOOLTIP.WORKLOAD_UNKNOWN;
+          }
+        }
+
         if (data.alertSeverity === ALERT_SEVERITY.NOT_CONFIGURED) {
           return UI_CONTENT.SIGNAL.TOOLTIP.WORKLOAD_UNKNOWN;
         }

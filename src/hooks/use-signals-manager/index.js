@@ -50,6 +50,8 @@ const COUNTS_BY_TYPE_DEFAULT = {
 };
 
 const MAX_DYNAMIC_QUERIES_IN_BATCH = 10;
+const PRELOAD_BAND_CONCURRENCY = 5;
+const WORKLOAD_QUERY_CHUNK_MS = 2 * 60 * 60 * 1000;
 
 const keyFromTimeWindow = ({ start, end }) =>
   start && end ? `${start}:${end}` : null;
@@ -60,6 +62,14 @@ const chunkArray = (array, size) => {
     chunked.push(array.slice(i, i + size));
   }
   return chunked;
+};
+
+const chunkTimeRange = (start, end, chunkMs) => {
+  const chunks = [];
+  for (let s = start; s < end; s += chunkMs) {
+    chunks.push({ start: s, end: Math.min(s + chunkMs, end) });
+  }
+  return chunks;
 };
 
 const generateDynamicQueriesList = (stages) => {
@@ -219,7 +229,7 @@ const useSignalsManager = ({
   const [currentPlaybackTimeWindow, setCurrentPlaybackTimeWindow] =
     useState(null);
 
-  const { debugLogJson, debugString, debugTable } = useDebugLogger({
+  const { debugString, debugTable } = useDebugLogger({
     allowDebug: debugMode,
   });
 
@@ -417,15 +427,15 @@ const useSignalsManager = ({
 
   const fetchEntitiesStatus = useCallback(
     async (entitiesGuids, timeWindow, isForCache) => {
-      setIsLoading?.(true);
+      if (!isForCache) setIsLoading?.(true);
       const batches = chunkArray(entitiesGuids, MAX_ENTITIES_IN_FLOW);
+      let errorCount = 0;
       const batchPromises = batches.map(async (batchGuids, bIdx) => {
         const entitiesGuidsArray = guidsToArray(
           { entitiesGuids: batchGuids },
           MAX_PARAMS_IN_QUERY
         );
         const query = statusesFromGuidsArray(entitiesGuidsArray, timeWindow);
-        debugLogJson(batchGuids, `Entities [batch ${bIdx + 1}]`);
 
         const { data: { actor = {} } = {}, error } = await NerdGraphQuery.query(
           {
@@ -433,6 +443,7 @@ const useSignalsManager = ({
           }
         );
         if (error) {
+          errorCount++;
           queryErrorHandler(
             error,
             query,
@@ -450,7 +461,12 @@ const useSignalsManager = ({
         (acc, result) => ({ ...acc, ...result }),
         {}
       );
-      setIsLoading?.(false);
+      if (!isForCache)
+        debugString(
+          `Entities: ${entitiesGuids.length} guid(s) across ${batches.length} batch(es). ${errorCount} error(s).`,
+          'Fetch summary'
+        );
+      if (!isForCache) setIsLoading?.(false);
 
       if (isForCache) return entitiesStatusesObj;
       setStatuses((s) => ({
@@ -458,68 +474,68 @@ const useSignalsManager = ({
         [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
       }));
     },
-    [debugLogJson, setIsLoading]
+    [debugString, setIsLoading]
   );
 
   const fetchAlertsStatus = useCallback(
     async (alertsGuids, timeWindow, isForCache) => {
-      setIsLoading?.(true);
+      if (!isForCache) setIsLoading?.(true);
 
       const batchedConditions = alertsGuids.reduce(
         batchAlertConditionsByAccount,
         []
       );
-      debugLogJson(batchedConditions, 'Batched conditions');
+      let errorCount = 0;
 
-      const conditionsResponses = await Promise.allSettled(
-        batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
-          debugLogJson(
-            condIds,
-            `Alerts conditions details [batch ${bIdx + 1}]`
-          );
-          const query = conditionsDetailsQuery(acctId, condIds);
-          const {
-            data: { actor: { account: { alerts } = {} } = {} } = {},
-            error,
-          } = await NerdGraphQuery.query({ query });
-          if (error)
-            queryErrorHandler(
+      const [conditionsResponses, issuesBlocks] = await Promise.all([
+        Promise.allSettled(
+          batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
+            const query = conditionsDetailsQuery(acctId, condIds);
+            const {
+              data: { actor: { account: { alerts } = {} } = {} } = {},
               error,
-              query,
-              `Error fetching conditions details [batch ${bIdx + 1}]`,
-              signalsCountsRef.current
-            );
-          return { acctId, alerts };
-        })
-      );
-      const issuesBlocks = await Promise.allSettled(
-        batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
-          debugLogJson(condIds, `Issues for conditions [batch ${bIdx + 1}]`);
-          let query = issuesForConditionsQuery(acctId, condIds, timeWindow);
-          const {
-            data: {
-              actor: {
-                account: { aiIssues: { issues: { issues } = {} } = {} } = {},
+            } = await NerdGraphQuery.query({ query });
+            if (error) {
+              errorCount++;
+              queryErrorHandler(
+                error,
+                query,
+                `Error fetching conditions details [batch ${bIdx + 1}]`,
+                signalsCountsRef.current
+              );
+            }
+            return { acctId, alerts };
+          })
+        ),
+        Promise.allSettled(
+          batchedConditions?.map(async ({ acctId, condIds }, bIdx) => {
+            const query = issuesForConditionsQuery(acctId, condIds, timeWindow);
+            const {
+              data: {
+                actor: {
+                  account: { aiIssues: { issues: { issues } = {} } = {} } = {},
+                } = {},
               } = {},
-            } = {},
-            error,
-          } = await NerdGraphQuery.query({ query });
-          if (error)
-            queryErrorHandler(
               error,
-              query,
-              `Error fetching issues [batch ${bIdx + 1}]`,
-              signalsCountsRef.current
-            );
-          return { acctId, issues };
-        })
-      );
+            } = await NerdGraphQuery.query({ query });
+            if (error) {
+              errorCount++;
+              queryErrorHandler(
+                error,
+                query,
+                `Error fetching issues [batch ${bIdx + 1}]`,
+                signalsCountsRef.current
+              );
+            }
+            return { acctId, issues };
+          })
+        ),
+      ]);
       const batchedIncidentIds =
         batchedIncidentIdsFromIssuesQuery(issuesBlocks);
 
       const incidentsBlocks = await Promise.allSettled(
         batchedIncidentIds?.map(async ({ acctId, incidentIds }, iIdx) => {
-          debugLogJson(incidentIds, `Incidents [batch ${iIdx + 1}]`);
           const query = incidentsSearchQuery(acctId, incidentIds, timeWindow);
           const {
             data: {
@@ -531,12 +547,14 @@ const useSignalsManager = ({
             } = {},
             error,
           } = await NerdGraphQuery.query({ query });
-          if (error)
+          if (error) {
+            errorCount++;
             queryErrorHandler(
               error,
               query,
               `Error fetching incidents [batch ${iIdx + 1}]`
             );
+          }
           return { acctId, incidents };
         })
       );
@@ -577,14 +595,18 @@ const useSignalsManager = ({
         {}
       );
 
-      setIsLoading?.(false);
+      debugString(
+        `Alerts: ${alertsGuids.length} condition(s) across ${batchedConditions.length} account batch(es), ${batchedIncidentIds.length} incident batch(es). ${errorCount} error(s).`,
+        'Fetch summary'
+      );
+      if (!isForCache) setIsLoading?.(false);
       if (isForCache) return alertsStatusesObj;
       setStatuses((s) => ({
         ...s,
         [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
       }));
     },
-    [debugLogJson, setIsLoading]
+    [debugString, setIsLoading]
   );
 
   const fetchStatuses = useCallback(
@@ -597,7 +619,7 @@ const useSignalsManager = ({
       const alertsGuids = [...alertsSet];
 
       debugString(
-        `Starting fetch. Entities: ${entitiesGuids.length}, Alerts: ${alertsGuids.length}`,
+        `Fetching status for ${alertsGuids.length} alert(s) and ${entitiesGuids.length} entity(ies).`,
         'Fetching statuses'
       );
 
@@ -619,6 +641,7 @@ const useSignalsManager = ({
   );
 
   const runFetch = useCallback(async () => {
+    if (!shouldPollRef.current) return;
     if (isFetchingStatuses.current) {
       shouldResumeFetchStatuses.current = true;
       return;
@@ -673,7 +696,7 @@ const useSignalsManager = ({
           const result = await signalsInStages(stages, accounts);
           currentGuids = result.guids;
         } catch (err) {
-          console.error('Error preloading playback', err);
+          console.error('Error loading playback', err);
         }
       }
 
@@ -714,97 +737,133 @@ const useSignalsManager = ({
 
       let workloadsStatuses = {};
       if (Object.keys(workloads)?.length) {
-        const { data: { actor: w = {} } = {}, error } =
-          await NerdGraphQuery.query({
-            query: workloadsStatusesQuery(workloads, {
-              start: fifteenMinutesAgo(timeBands?.[0]?.start),
-              end: timeBands?.[timeBands.length - 1]?.end,
-            }),
+        const queryStart = fifteenMinutesAgo(timeBands?.[0]?.start);
+        const queryEnd = timeBands?.[timeBands.length - 1]?.end;
+        const timeChunks = chunkTimeRange(
+          queryStart,
+          queryEnd,
+          WORKLOAD_QUERY_CHUNK_MS
+        );
+        const chunkResults = await Promise.allSettled(
+          timeChunks.map((tw) =>
+            NerdGraphQuery.query({
+              query: workloadsStatusesQuery(workloads, tw),
+            })
+          )
+        );
+        workloadsStatuses = chunkResults.reduce((acc, result) => {
+          if (result.status !== 'fulfilled') return acc;
+          const { data: { actor: w = {} } = {}, error } = result.value;
+          if (error || !w) return acc;
+          Object.keys(w).forEach((key) => {
+            if (key === '__typename') return;
+            (w[key].results || []).forEach(
+              ({ statusValueCode, timestamp, workloadGuid }) => {
+                if (!acc[workloadGuid]) acc[workloadGuid] = [];
+                acc[workloadGuid].push({ statusValueCode, timestamp });
+              }
+            );
           });
-        if (!error && w) {
-          workloadsStatuses = Object.keys(w)?.reduce((acc, key) => {
-            if (key === '__typename') return acc;
-            const r = w[key].results || [];
-            return {
-              ...acc,
-              ...r.reduce(
-                (acc2, { statusValueCode, timestamp, workloadGuid }) => ({
-                  ...acc2,
-                  [workloadGuid]: [
-                    ...(acc2[workloadGuid] || []),
-                    { statusValueCode, timestamp },
-                  ],
-                }),
-                {}
-              ),
-            };
-          }, {});
-        }
+          return acc;
+        }, {});
       }
 
       const updatedStages = stages.map(updateStagesWithDynamic);
+      const bandDiagnostics = [];
 
-      timeBands.forEach(async (tw, idx) => {
-        const { key: bandKey, alertsStatusesObj } =
-          timeBandsDataArray[idx] || {};
-        const timeWindowCachedData = timeBandDataCache.current.get(bandKey);
+      for (let i = 0; i < timeBands.length; i += PRELOAD_BAND_CONCURRENCY) {
+        const chunk = timeBands.slice(i, i + PRELOAD_BAND_CONCURRENCY);
+        await Promise.all(
+          chunk.map(async (tw, chunkIdx) => {
+            const idx = i + chunkIdx;
+            const { key: bandKey, alertsStatusesObj } =
+              timeBandsDataArray[idx] || {};
+            const timeWindowCachedData = timeBandDataCache.current.get(bandKey);
 
-        if (overwriteCache || !timeWindowCachedData) {
-          let entitiesStatusesObj = entitiesGuidsArray.length
-            ? await fetchEntitiesStatus(entitiesGuidsArray, tw, true)
-            : {};
+            if (overwriteCache || !timeWindowCachedData) {
+              let entitiesStatusesObj = entitiesGuidsArray.length
+                ? await fetchEntitiesStatus(entitiesGuidsArray, tw, true)
+                : {};
 
-          entitiesStatusesObj = Object.keys(entitiesStatusesObj)?.reduce(
-            (acc, cur) => {
-              const e = entitiesStatusesObj[cur];
-              if (isWorkload(e))
-                return {
-                  ...acc,
-                  [cur]: {
-                    ...e,
-                    statusValueCode: getWorstWorkloadStatusValue(
-                      workloadsStatuses[e.guid],
-                      tw
-                    ),
-                  },
-                };
-              return { ...acc, [cur]: e };
-            },
-            {}
-          );
+              const returnedCount = Object.keys(entitiesStatusesObj).length;
+              if (returnedCount < entitiesGuidsArray.length) {
+                bandDiagnostics.push({
+                  idx,
+                  expected: entitiesGuidsArray.length,
+                  returned: returnedCount,
+                });
+              }
 
-          const timeWindowStatuses = {
-            [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
-            [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
-          };
-          timeBandDataCache.current.set(bandKey, timeWindowStatuses);
+              entitiesStatusesObj = Object.keys(entitiesStatusesObj)?.reduce(
+                (acc, cur) => {
+                  const e = entitiesStatusesObj[cur];
+                  if (isWorkload(e))
+                    return {
+                      ...acc,
+                      [cur]: {
+                        ...e,
+                        statusValueCode: getWorstWorkloadStatusValue(
+                          workloadsStatuses[e.guid],
+                          tw
+                        ),
+                      },
+                    };
+                  return { ...acc, [cur]: e };
+                },
+                {}
+              );
 
-          const { signalsWithStatuses } = addSignalStatuses(
-            updatedStages,
-            timeWindowStatuses
-          );
-          callback?.(
-            idx,
-            statusFromStatuses(
-              signalsWithStatuses.map(annotateStageWithStatuses)
-            )
-          );
-        } else {
-          const { signalsWithStatuses } = addSignalStatuses(
-            updatedStages,
-            timeWindowCachedData
-          );
-          callback?.(
-            idx,
-            statusFromStatuses(
-              signalsWithStatuses.map(annotateStageWithStatuses)
-            )
-          );
-        }
-      });
+              const timeWindowStatuses = {
+                [SIGNAL_TYPES.ENTITY]: entitiesStatusesObj,
+                [SIGNAL_TYPES.ALERT]: alertsStatusesObj,
+              };
+              timeBandDataCache.current.set(bandKey, timeWindowStatuses);
+
+              const { signalsWithStatuses } = addSignalStatuses(
+                updatedStages,
+                timeWindowStatuses
+              );
+              callback?.(
+                idx,
+                statusFromStatuses(
+                  signalsWithStatuses.map(annotateStageWithStatuses)
+                )
+              );
+            } else {
+              const { signalsWithStatuses } = addSignalStatuses(
+                updatedStages,
+                timeWindowCachedData
+              );
+              callback?.(
+                idx,
+                statusFromStatuses(
+                  signalsWithStatuses.map(annotateStageWithStatuses)
+                )
+              );
+            }
+          })
+        );
+      }
+
+      const anomalyLines = bandDiagnostics.map(
+        ({ idx, expected, returned }) =>
+          `  Band ${idx}: expected ${expected}, got ${returned}`
+      );
+      debugString(
+        bandDiagnostics.length
+          ? `${entitiesGuidsArray.length} entity(ies), ${
+              alertsGuidsArray.length
+            } alert(s) × ${timeBands.length} timeslices. ${
+              bandDiagnostics.length
+            } timeslice(s) with missing entities:\n${anomalyLines.join('\n')}`
+          : `${entitiesGuidsArray.length} entity(ies), ${alertsGuidsArray.length} alert(s) × ${timeBands.length} timeslices. All OK.`,
+        'Playback summary'
+      );
+
       setIsLoading?.(false);
     },
     [
+      debugString,
       fetchAlertsStatus,
       fetchEntitiesStatus,
       stages,
