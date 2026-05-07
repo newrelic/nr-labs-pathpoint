@@ -288,6 +288,7 @@ const HomeNerdlet = () => {
 
     return <NoFlows newFlowHandler={newFlowHandler} />;
   }, [
+    app,
     flows,
     flowsError,
     flowsLoading,

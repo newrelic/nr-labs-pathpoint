@@ -248,6 +248,7 @@ const useSignalsManager = ({
   const timeWindowAlertsCache = useRef(new Map());
   const playbackTimeWindow = useRef(null);
   const prevPreloadArgs = useRef(null);
+  const needsPreloadRerun = useRef(false);
 
   useEffect(() => {
     return () => clearTimeout(pollingTimeoutId.current);
@@ -339,6 +340,16 @@ const useSignalsManager = ({
 
     init();
   }, [stages, accounts, signalsInStages, setIsLoading]);
+
+  useEffect(() => {
+    if (!stages?.length || !accounts?.length) return;
+    if (!needsPreloadRerun.current) return;
+    if (!prevPreloadArgs.current) return;
+    if (shouldPollRef.current) return;
+    needsPreloadRerun.current = false;
+    const { timeBands, callback } = prevPreloadArgs.current;
+    preload(timeBands, callback, true);
+  }, [stages, accounts, preload]);
 
   useEffect(() => {
     guidsRef.current = guids;
@@ -679,6 +690,13 @@ const useSignalsManager = ({
       clearTimeout(pollingTimeoutId.current);
 
       prevPreloadArgs.current = { timeBands, callback };
+
+      if (!stages?.length || !accounts?.length) {
+        needsPreloadRerun.current = true;
+        setIsLoading?.(false);
+        return;
+      }
+      needsPreloadRerun.current = false;
 
       const timeWindow = {
         start: threeDaysAgo(timeBands?.[0]?.start),
