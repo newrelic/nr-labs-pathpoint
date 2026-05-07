@@ -1,3 +1,10 @@
+## [2.6.12](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.11...v2.6.12) (2026-05-07)
+
+
+### Bug Fixes
+
+* data not loading when pasting urls in ([02d8f7c](https://github.com/newrelic/nr-labs-pathpoint/commit/02d8f7ca01e7a50d73e198bbe24c6d82a343f9c7))
+
 ## [2.6.11](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.10...v2.6.11) (2026-05-07)
 
 
