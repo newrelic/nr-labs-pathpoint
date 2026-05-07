@@ -100,17 +100,29 @@ export const entitiesDetailsFromQueryResults = (res = {}) =>
   }, {});
 
 export const getWorstWorkloadStatusValue = (events = [], { start, end }) => {
-  let worstRank = WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
+  if (!events?.length) return WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
+
+  let worstInWindow = null;
+  let lastKnownCode = null;
+  let lastKnownTimestamp = -Infinity;
+
   for (const { statusValueCode, timestamp } of events) {
+    const code = knownWorkloadStatusValues.includes(statusValueCode)
+      ? statusValueCode
+      : WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
+
     if (timestamp >= start && timestamp <= end) {
-      const rank = knownWorkloadStatusValues.includes(statusValueCode)
-        ? statusValueCode
-        : WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
-      if (rank > worstRank) {
-        worstRank = rank;
+      if (worstInWindow === null || code > worstInWindow) {
+        worstInWindow = code;
       }
-      if (worstRank === WORKLOAD_STATUS_VALUE_CODES.DISRUPTED) break;
+      if (worstInWindow === WORKLOAD_STATUS_VALUE_CODES.DISRUPTED) break;
+    } else if (timestamp < start && timestamp > lastKnownTimestamp) {
+      lastKnownTimestamp = timestamp;
+      lastKnownCode = code;
     }
   }
-  return worstRank;
+
+  if (worstInWindow !== null) return worstInWindow;
+  if (lastKnownCode !== null) return lastKnownCode;
+  return WORKLOAD_STATUS_VALUE_CODES.UNKNOWN;
 };

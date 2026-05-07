@@ -143,14 +143,21 @@ const PlaybackBar = ({ isLoading, onPreload, onSeek, onChange }) => {
   }, []);
 
   useEffect(() => {
-    if (nerdletState.playbackTimeRange) {
-      setTimeRange(nerdletState.playbackTimeRange);
-      setSelectedIncrement(
-        nerdletState.playbackIncrement
-          ? nerdletState.playbackIncrement
-          : playbackIncrementForSelectedDuration(nerdletState.playbackTimeRange)
-      );
-    }
+    if (!nerdletState.playbackTimeRange) return;
+    setTimeRange((prev) => {
+      const { begin_time, end_time, duration } = nerdletState.playbackTimeRange;
+      return prev?.begin_time === begin_time &&
+        prev?.end_time === end_time &&
+        prev?.duration === duration
+        ? prev
+        : nerdletState.playbackTimeRange;
+    });
+    setSelectedIncrement((prev) => {
+      const next = nerdletState.playbackIncrement
+        ? nerdletState.playbackIncrement
+        : playbackIncrementForSelectedDuration(nerdletState.playbackTimeRange);
+      return prev?.timeInMs === next.timeInMs ? prev : next;
+    });
   }, [nerdletState.playbackTimeRange]);
 
   useEffect(() => {
