@@ -1,3 +1,10 @@
+## [2.6.13](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.12...v2.6.13) (2026-05-08)
+
+
+### Bug Fixes
+
+* missing aler violations in playback ([79204aa](https://github.com/newrelic/nr-labs-pathpoint/commit/79204aad66e807a7d5e02ce31b1c0ecb0be0cda7))
+
 ## [2.6.12](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.11...v2.6.12) (2026-05-07)
 
 
