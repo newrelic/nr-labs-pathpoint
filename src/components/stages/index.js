@@ -130,7 +130,7 @@ const Stages = forwardRef(
               type={selections.data?.type}
               status={selections.data?.status}
               data={statuses[selections.data?.type]?.[selections.id]}
-              timeWindow={playbackTimeWindow.current}
+              timeWindow={currentPlaybackTimeWindow}
             />
           ),
           status: selections.data?.status,
