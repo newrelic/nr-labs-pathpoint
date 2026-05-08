@@ -48,7 +48,6 @@ const Stages = forwardRef(
     const dragItemIndex = useRef();
     const dragOverItemIndex = useRef();
     const stagesDataRef = useRef(stages);
-    const playbackTimeWindow = useRef(null);
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
     const {
@@ -130,7 +129,7 @@ const Stages = forwardRef(
               type={selections.data?.type}
               status={selections.data?.status}
               data={statuses[selections.data?.type]?.[selections.id]}
-              timeWindow={playbackTimeWindow.current}
+              timeWindow={currentPlaybackTimeWindow}
             />
           ),
           status: selections.data?.status,
