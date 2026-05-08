@@ -48,7 +48,6 @@ const Stages = forwardRef(
     const dragItemIndex = useRef();
     const dragOverItemIndex = useRef();
     const stagesDataRef = useRef(stages);
-    const playbackTimeWindow = useRef(null);
     const { openSidebar, closeSidebar } = useSidebar();
     const [nerdletState, setNerdletState] = useNerdletState();
     const {
