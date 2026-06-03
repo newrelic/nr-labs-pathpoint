@@ -1,3 +1,10 @@
+## [2.6.14](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.13...v2.6.14) (2026-06-03)
+
+
+### Bug Fixes
+
+* filter null closedAt violations from time bands ([7e5638f](https://github.com/newrelic/nr-labs-pathpoint/commit/7e5638f2d4aa86f9be604cb37aaaeb44314ee6c2))
+
 ## [2.6.13](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.12...v2.6.13) (2026-05-08)
 
 
