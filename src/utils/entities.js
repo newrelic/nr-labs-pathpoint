@@ -73,9 +73,9 @@ export const guidsToArray = (guids = {}, maxArrayLen = 10) =>
     ];
   }, []);
 
-const statusFromViolations = (violations = []) => 
+const statusFromViolations = (violations = []) =>
   alertSeverities[
-     violations.reduce((acc, { alertSeverity }) => {
+    violations.reduce((acc, { alertSeverity }) => {
       const statusIndex =
         alertSeverities.findIndex((severity) => severity === alertSeverity) ||
         0;
@@ -87,7 +87,7 @@ export const entitiesDetailsFromQueryResults = (res = {}) =>
   Object.keys(res).reduce((acc, cur) => {
     const signalsArray = res[cur];
     if (!Array.isArray(signalsArray)) return acc;
-        signalsArray.forEach(
+    signalsArray.forEach(
       (entity) =>
         (acc[entity.guid] = {
           ...entity,
