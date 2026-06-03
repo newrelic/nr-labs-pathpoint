@@ -464,7 +464,7 @@ const useSignalsManager = ({
           return {};
         }
 
-        return entitiesDetailsFromQueryResults(actor);
+        return entitiesDetailsFromQueryResults(actor, timeWindow);
       });
 
       const results = await Promise.all(batchPromises);
