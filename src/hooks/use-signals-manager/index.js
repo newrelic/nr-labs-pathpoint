@@ -448,6 +448,8 @@ const useSignalsManager = ({
         );
         const query = statusesFromGuidsArray(entitiesGuidsArray, timeWindow);
 
+        console.log('query', query);
+
         const { data: { actor = {} } = {}, error } = await NerdGraphQuery.query(
           {
             query,
@@ -464,7 +466,7 @@ const useSignalsManager = ({
           return {};
         }
 
-        return entitiesDetailsFromQueryResults(actor, timeWindow);
+        return entitiesDetailsFromQueryResults(actor);
       });
 
       const results = await Promise.all(batchPromises);
