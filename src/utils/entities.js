@@ -73,39 +73,29 @@ export const guidsToArray = (guids = {}, maxArrayLen = 10) =>
     ];
   }, []);
 
-// NerdGraph may return closedAt: null for zero-duration violations (openedAt
-// === closedAt) due to a platform data consistency issue. These appear
-// always open and leak into every band window. Filter them out by
-// requiring that a violation with no closedAt opened within the band window.
-const statusFromViolations = (violations = [], timeWindow) =>
+const statusFromViolations = (violations = []) =>
   alertSeverities[
-    violations
-      .filter(
-        ({ closedAt, openedAt }) =>
-          closedAt !== null ||
-          !timeWindow?.start ||
-          openedAt >= timeWindow.start
-      )
-      .reduce((acc, { alertSeverity }) => {
-        const statusIndex =
-          alertSeverities.findIndex((severity) => severity === alertSeverity) ||
-          0;
-        return Math.max(acc, statusIndex);
-      }, 0)
+    violations.reduce((acc, { alertSeverity }) => {
+      const statusIndex =
+        alertSeverities.findIndex((severity) => severity === alertSeverity) ||
+        0;
+      return Math.max(acc, statusIndex);
+    }, 0)
   ];
 
-export const entitiesDetailsFromQueryResults = (res = {}, timeWindow) =>
+export const entitiesDetailsFromQueryResults = (res = {}) =>
   Object.keys(res).reduce((acc, cur) => {
     const signalsArray = res[cur];
     if (!Array.isArray(signalsArray)) return acc;
-    signalsArray.forEach((entity) => {
-      acc[entity.guid] = {
-        ...entity,
-        alertSeverity:
-          entity.alertSeverity ||
-          statusFromViolations(entity.alertViolations, timeWindow),
-      };
-    });
+    signalsArray.forEach(
+      (entity) =>
+        (acc[entity.guid] = {
+          ...entity,
+          alertSeverity:
+            entity.alertSeverity ||
+            statusFromViolations(entity.alertViolations),
+        })
+    );
     return acc;
   }, {});
 
