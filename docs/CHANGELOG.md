@@ -1,3 +1,10 @@
+## [2.6.15](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.14...v2.6.15) (2026-06-04)
+
+
+### Bug Fixes
+
+* revert closedAt null filter ([c55bdd9](https://github.com/newrelic/nr-labs-pathpoint/commit/c55bdd9e54cb55b0556d395c39de7d193e1adc0b))
+
 ## [2.6.14](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.13...v2.6.14) (2026-06-03)
 
 
