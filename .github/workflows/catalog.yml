@@ -22,6 +22,9 @@ on:
       url:
         description: "If action == `add`, must supply URL of repo"
         required: false
+
+permissions: {}
+
 jobs:
   job-check-workflow-dispatch-inputs:
     runs-on: ubuntu-latest
