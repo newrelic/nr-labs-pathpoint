@@ -1,3 +1,10 @@
+## [2.6.16](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.15...v2.6.16) (2026-07-29)
+
+
+### Bug Fixes
+
+* simplified uuid generation ([d4b6d8a](https://github.com/newrelic/nr-labs-pathpoint/commit/d4b6d8a39e2e71b3e72b8fad36b0ef5ec6327691))
+
 ## [2.6.15](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.14...v2.6.15) (2026-06-04)
 
 
