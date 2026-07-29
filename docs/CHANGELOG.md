@@ -1,3 +1,10 @@
+## [2.6.17](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.16...v2.6.17) (2026-07-29)
+
+
+### Bug Fixes
+
+* repolinter permissions update ([8f29be4](https://github.com/newrelic/nr-labs-pathpoint/commit/8f29be4b9d622eb0b3cb1580bd75904f4c198dd9))
+
 ## [2.6.16](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.15...v2.6.16) (2026-07-29)
 
 
