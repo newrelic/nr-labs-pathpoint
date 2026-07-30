@@ -6,6 +6,7 @@ export const UI_CONTENT = {
     BUTTON_LABEL_EDIT_MODE: 'Edit mode',
     BUTTON_LABEL_EDIT_SETTINGS: 'Settings',
     BUTTON_LABEL_EXPORT_FLOW: 'Export flow as JSON',
+    BUTTON_LABEL_MIGRATE_FLOW: 'Migrate flow',
     BUTTON_LABEL_AUDIT_LOG: 'Audit log',
     BUTTON_LABEL_EDIT_DISCARD: 'Discard changes',
     BUTTON_LABEL_EDIT_PERSIST: 'Save changes',
