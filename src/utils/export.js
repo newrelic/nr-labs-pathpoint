@@ -1,6 +1,10 @@
 import { NerdGraphMutation } from 'nr1';
 
-import { STEP_STATUS_OPTIONS, STEP_STATUS_UNITS } from '../constants';
+import {
+  SIGNAL_TYPES,
+  STEP_STATUS_OPTIONS,
+  STEP_STATUS_UNITS,
+} from '../constants';
 import { CREATE_PATHPOINT_MUTATION } from '../queries/export';
 
 const DEFAULT_REFRESH_INTERVAL = 'FIVE_MINUTES';
@@ -109,11 +113,11 @@ const STEP_HEALTH_ROLLUP_MAP = {
   [STEP_STATUS_OPTIONS.WORST]: 'WORST_STATUS_WINS',
 };
 
+// schema.graphqls: enum ThresholdType { FIXED, PERCENTAGE } - no COUNT variant,
+// so a count-based threshold has no exact equivalent; FIXED is the closest fit.
 const THRESHOLD_TYPE_MAP = {
   [STEP_STATUS_UNITS.PERCENT]: 'PERCENTAGE',
-  // TODO: confirm with the new-version team what a count-based threshold
-  // should map to on the PathPoint API - 'COUNT' is a best guess, not verified.
-  [STEP_STATUS_UNITS.COUNT]: 'COUNT',
+  [STEP_STATUS_UNITS.COUNT]: 'FIXED',
 };
 
 const toStepConfig = (step = {}) => {
@@ -138,14 +142,38 @@ const toStepConfig = (step = {}) => {
   return Object.keys(config).length > 0 ? config : undefined;
 };
 
+const transformEntitySearchQuery = (step = {}) => {
+  // this app only ever allows one query per step
+  const [query] = step.queries ?? [];
+  if (!query) return undefined;
+
+  // SignalQueryInput has no `type` - it's implicitly an entity search filter,
+  // so an `alert`-type query has no equivalent here.
+  // TODO: confirm with the new-version team whether alert-type step queries
+  // are supported at all - signals were reportedly dropped for alert type too.
+  if (query.type !== SIGNAL_TYPES.ENTITY) return undefined;
+
+  return {
+    query: query.query,
+    isExcluded:
+      query.isExcluded !== undefined
+        ? Boolean(query.isExcluded)
+        : query.included !== undefined
+        ? !query.included
+        : false,
+  };
+};
+
 const transformStep = (step = {}) => {
   const config = toStepConfig(step);
+  const entitySearchQuery = transformEntitySearchQuery(step);
   return {
     name: step.name ?? step.title ?? 'Step',
     isExcluded: step.isExcluded ?? step.excluded ?? false,
     link: step.link ?? null,
     signals: (step.signals ?? []).map(transformSignal),
     ...(config && { config }),
+    ...(entitySearchQuery && { entitySearchQuery }),
   };
 };
 
