@@ -27,7 +27,7 @@ import {
   NoFlows,
   Sidebar,
 } from '../../src/components';
-import { useFlowLoader, useFetchUser } from '../../src/hooks';
+import { useFetchUser, useFlowExport, useFlowLoader } from '../../src/hooks';
 import { AppContext, SidebarProvider } from '../../src/contexts';
 import { flowDocument } from '../../src/utils';
 import { MAX_ENTITIES_IN_STEP, MODES, UI_CONTENT } from '../../src/constants';
@@ -50,6 +50,10 @@ const ACTION_BTN_ATTRIBS = {
   EXPORT_FLOW: {
     type: Button.TYPE.TERTIARY,
     label: UI_CONTENT.GLOBAL.BUTTON_LABEL_EXPORT_FLOW,
+  },
+  MIGRATE_FLOW: {
+    type: Button.TYPE.TERTIARY,
+    label: UI_CONTENT.GLOBAL.BUTTON_LABEL_MIGRATE_FLOW,
   },
   AUDIT_LOG: {
     type: Button.TYPE.TERTIARY,
@@ -76,6 +80,7 @@ const HomeNerdlet = () => {
   const { accountId } = useContext(PlatformStateContext);
   const [nerdletState, setNerdletState] = useNerdletState();
   const { user } = useFetchUser();
+  const { exportFlow } = useFlowExport({ accountId });
   const {
     flows: flowsData,
     error: flowsError,
@@ -152,6 +157,11 @@ const HomeNerdlet = () => {
               {
                 ...ACTION_BTN_ATTRIBS.EXPORT_FLOW,
                 onClick: () => setIsExportFlowModalShown(true),
+              },
+              {
+                ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
+                onClick: async () =>
+                  console.log(await exportFlow(currentFlowDoc)),
               },
               {
                 ...ACTION_BTN_ATTRIBS.AUDIT_LOG,
