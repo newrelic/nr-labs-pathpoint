@@ -1,22 +1,39 @@
 import { useCallback } from 'react';
 
-import { migrateFlow, transformForExport } from '../../utils';
+import {
+  buildMigrationQuery,
+  migrateFlow,
+  transformForExport,
+} from '../../utils';
+
+const resolveAccountId = (doc = {}, accountId) => {
+  const docAccountId = doc.accountId ?? doc.input?.accountId;
+  return docAccountId ? Number(docAccountId) : Number(accountId);
+};
 
 const useFlowExport = ({ accountId } = {}) => {
-  const exportFlow = useCallback(
-    async (doc = {}) => {
-      const docAccountId = doc.accountId ?? doc.input?.accountId;
-      const targetAccountId = docAccountId
-        ? Number(docAccountId)
-        : Number(accountId);
-      const input = transformForExport(doc);
-      console.log('transformForExport result', input);
-      return migrateFlow(targetAccountId, input);
+  const getMigrationCode = useCallback(
+    (doc = {}) => {
+      try {
+        const code = buildMigrationQuery(
+          transformForExport(doc),
+          resolveAccountId(doc, accountId)
+        );
+        return { code, error: null };
+      } catch (error) {
+        return { code: null, error };
+      }
     },
     [accountId]
   );
 
-  return { exportFlow };
+  const migrateFlowHandler = useCallback(
+    (doc = {}) =>
+      migrateFlow(resolveAccountId(doc, accountId), transformForExport(doc)),
+    [accountId]
+  );
+
+  return { getMigrationCode, migrateFlow: migrateFlowHandler };
 };
 
 export default useFlowExport;

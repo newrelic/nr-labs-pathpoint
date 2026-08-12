@@ -203,6 +203,48 @@ export const transformForExport = (doc = {}) => {
   };
 };
 
+// GraphQL enum values are unquoted identifiers; the transforms above already
+// produce enum fields as SCREAMING_SNAKE_CASE strings, so treat those as enums.
+const isEnumLikeString = (str) => /^[A-Z][A-Z0-9_]*$/.test(str);
+
+const toGraphQLLiteral = (value, depth = 0) => {
+  const pad = '  '.repeat(depth);
+  const childPad = '  '.repeat(depth + 1);
+
+  if (value === null || value === undefined) return 'null';
+
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    const items = value.map(
+      (item) => `${childPad}${toGraphQLLiteral(item, depth + 1)}`
+    );
+    return `[\n${items.join('\n')}\n${pad}]`;
+  }
+
+  if (typeof value === 'string')
+    return isEnumLikeString(value) ? value : JSON.stringify(value);
+
+  if (typeof value !== 'object') return JSON.stringify(value);
+
+  const entries = Object.entries(value).filter(([, v]) => v !== undefined);
+  if (!entries.length) return '{}';
+  const fields = entries.map(
+    ([key, v]) => `${childPad}${key}: ${toGraphQLLiteral(v, depth + 1)}`
+  );
+  return `{\n${fields.join('\n')}\n${pad}}`;
+};
+
+export const buildMigrationQuery = (input, accountId) => `mutation {
+  pathPointCreate(
+    pathpoint: ${toGraphQLLiteral(input, 1)}
+    scope: { id: ${JSON.stringify(accountId)}, type: ACCOUNT }
+  ) {
+    name
+    guid
+    id
+  }
+}`;
+
 export const migrateFlow = async (accountId, input) => {
   try {
     const { data, error } = await NerdGraphMutation.mutate({
