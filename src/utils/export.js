@@ -1,11 +1,11 @@
-import { NerdGraphMutation } from 'nr1';
+import { NerdGraphMutation, NerdGraphQuery } from 'nr1';
 
 import {
   SIGNAL_TYPES,
   STEP_STATUS_OPTIONS,
   STEP_STATUS_UNITS,
 } from '../constants';
-import { CREATE_PATHPOINT_MUTATION } from '../queries/export';
+import { CREATE_PATHPOINT_MUTATION, flowEntityQuery } from '../queries/export';
 
 const DEFAULT_REFRESH_INTERVAL = 'FIVE_MINUTES';
 
@@ -244,6 +244,17 @@ export const buildMigrationQuery = (input, accountId) => `mutation {
     id
   }
 }`;
+
+export const findFlowEntity = async (accountId, guid) => {
+  const { data, error } = await NerdGraphQuery.query({
+    query: flowEntityQuery(accountId, guid),
+  });
+
+  if (error) return null;
+
+  const [entity] = data?.actor?.entitySearch?.results?.entities ?? [];
+  return entity ?? null;
+};
 
 export const migrateFlow = async (accountId, input) => {
   try {

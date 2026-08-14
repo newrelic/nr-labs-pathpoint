@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import PropTypes from 'prop-types';
 import {
   AccountPicker,
@@ -17,14 +23,25 @@ const MigrateFlowDialog = ({ flowDoc, hidden = true, onClose }) => {
   const [selectedAccountId, setSelectedAccountId] = useState(account?.id);
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
-  const { migrateFlow } = useFlowExport({ accountId: selectedAccountId });
+  const { migrateFlow, pollForFlowEntity } = useFlowExport({
+    accountId: selectedAccountId,
+  });
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!hidden) {
       setSelectedAccountId(account?.id);
       setResult(null);
+      cancelledRef.current = false;
     }
   }, [hidden, account?.id]);
+
+  useEffect(
+    () => () => {
+      cancelledRef.current = true;
+    },
+    []
+  );
 
   useEffect(() => {
     if (hidden || migrating) return;
@@ -50,14 +67,17 @@ const MigrateFlowDialog = ({ flowDoc, hidden = true, onClose }) => {
     setMigrating(true);
     const outcome = await migrateFlow(flowDoc || {});
     console.log('migrateFlow mutation result', outcome);
-    setMigrating(false);
     if (outcome?.success) {
+      await pollForFlowEntity(outcome.guid, () => cancelledRef.current);
+      if (cancelledRef.current) return;
+      setMigrating(false);
       onClose?.();
       navigation.openEntity(outcome.guid);
     } else {
+      setMigrating(false);
       setResult(outcome);
     }
-  }, [flowDoc, migrateFlow, onClose]);
+  }, [flowDoc, migrateFlow, onClose, pollForFlowEntity]);
 
   if (hidden) return null;
 
