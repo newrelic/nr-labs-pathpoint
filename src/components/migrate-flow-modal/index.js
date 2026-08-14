@@ -29,7 +29,7 @@ const MigrateFlowModal = ({
   const [view, setView] = useState(VIEWS.OPTIONS);
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState(null);
-  const { getMigrationCode } = useFlowExport({ accountId });
+  const { getMigrationCode, getTerraformCode } = useFlowExport({ accountId });
 
   // reset back to the tile picker whenever the panel closes, regardless of
   // how it was closed (X button, backdrop click, or the Migrate button)
@@ -49,9 +49,11 @@ const MigrateFlowModal = ({
   }, [flowDoc, getMigrationCode]);
 
   const terraformTileClickHandler = useCallback(() => {
-    setCodeError(null);
+    const { code: generatedCode, error } = getTerraformCode(flowDoc || {});
+    setCode(generatedCode || '');
+    setCodeError(error);
     setView(VIEWS.TERRAFORM);
-  }, []);
+  }, [flowDoc, getTerraformCode]);
 
   const backButtonClickHandler = useCallback(() => {
     setCodeError(null);
@@ -86,16 +88,19 @@ const MigrateFlowModal = ({
               className="migrate-header"
               type={HeadingText.TYPE.HEADING_3}
             >
-              Export flow via NerdGraph
+              {view === VIEWS.TERRAFORM
+                ? 'Export flow via Terraform'
+                : 'Export flow via NerdGraph'}
             </HeadingText>
             <BlockText className="migrate-byline">
-              Preview the NerdGraph code to migrate this flow to the new
-              Pathpoint
+              {view === VIEWS.TERRAFORM
+                ? 'Preview the newrelic_pathpoint_flow HCL to migrate this flow to the new Pathpoint'
+                : 'Preview the NerdGraph code to migrate this flow to the new Pathpoint'}
             </BlockText>
             {codeError && (
               <InlineMessage
                 type={InlineMessage.TYPE.WARNING}
-                label="We couldn't transform the query."
+                label="We couldn't generate the code."
               />
             )}
           </>
@@ -127,12 +132,12 @@ const MigrateFlowModal = ({
           </TileGroup>
         )}
         {view === VIEWS.TERRAFORM && (
-          <div className="migrate-placeholder">
+          <div className="migrate-terraform">
             <div className="code-wrapper">
               <AutoSizer>
                 {({ width, height }) => (
                   <CodeViewer
-                    code="# Terraform support for migrating flows is coming soon."
+                    code={code}
                     language={CodeViewer.LANGUAGE.HCL}
                     fileName={terraformFileName}
                     width={width}

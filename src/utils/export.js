@@ -245,6 +245,184 @@ export const buildMigrationQuery = (input, accountId) => `mutation {
   }
 }`;
 
+// HCL string literals need their own escaping: backslashes/quotes/newlines
+// as usual, plus `${` and `%{`, which HCL treats as template interpolation
+// markers even inside an otherwise-plain string.
+const tfString = (value) =>
+  `"${String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\$\{/g, '$${')
+    .replace(/%\{/g, '%%{')}"`;
+
+const tfIdentifier = (value) => {
+  const slug = String(value ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  const withFallback = slug || 'flow';
+  // resource labels can't start with a digit
+  return /^[0-9]/.test(withFallback) ? `flow_${withFallback}` : withFallback;
+};
+
+const indent = (lines, depth = 1) =>
+  lines.map((line) => (line ? `${'  '.repeat(depth)}${line}` : ''));
+
+const withBlankLineBefore = (blocks) =>
+  blocks.flatMap((block) => ['', ...block]);
+
+const buildSelectBody = (select = {}) => {
+  const lines = [`aggregation_type = ${tfString(select.aggregationType)}`];
+  if (select.attribute) lines.push(`attribute = ${tfString(select.attribute)}`);
+  if (select.alias) lines.push(`alias = ${tfString(select.alias)}`);
+  if (select.threshold !== undefined)
+    lines.push(`threshold = ${Number(select.threshold)}`);
+  return lines;
+};
+
+const buildTimeWindowBody = (timeWindow = {}) => {
+  if (timeWindow.customRange)
+    return [`custom_range = ${tfString(timeWindow.customRange)}`];
+  if (!timeWindow.relativeRange) return [];
+
+  const inner = [`since = ${tfString(timeWindow.relativeRange.since)}`];
+  if (timeWindow.relativeRange.compareAgainst)
+    inner.push(
+      `compare_against = ${tfString(timeWindow.relativeRange.compareAgainst)}`
+    );
+  return ['relative_range {', ...indent(inner), '}'];
+};
+
+const buildQueryBody = (query = {}) => {
+  const lines = [`from = ${tfString(query.from)}`];
+  if (query.where) lines.push(`where = ${tfString(query.where)}`);
+
+  const select = ['select {', ...indent(buildSelectBody(query.select)), '}'];
+  const blocks = [select];
+
+  const timeWindowBody = query.timeWindow
+    ? buildTimeWindowBody(query.timeWindow)
+    : [];
+  if (timeWindowBody.length)
+    blocks.push(['time_window {', ...indent(timeWindowBody), '}']);
+
+  return [...lines, ...withBlankLineBefore(blocks)];
+};
+
+const buildKpiBody = (kpi = {}) => {
+  const lines = [`name = ${tfString(kpi.name)}`];
+  if (kpi.description) lines.push(`description = ${tfString(kpi.description)}`);
+  if (kpi.category) lines.push(`category = ${tfString(kpi.category)}`);
+  if (kpi.accountId) lines.push(`account_id = ${Number(kpi.accountId)}`);
+
+  return [...lines, '', 'query {', ...indent(buildQueryBody(kpi.query)), '}'];
+};
+
+const buildStepBody = (step = {}) => {
+  const lines = [`name = ${tfString(step.name)}`];
+  if (step.isExcluded) lines.push(`is_excluded = true`);
+  if (step.link) lines.push(`link = ${tfString(step.link)}`);
+  if (step.scopedAccounts?.length)
+    lines.push(
+      `scoped_accounts = [${step.scopedAccounts.map(Number).join(', ')}]`
+    );
+
+  const blocks = [];
+
+  if (step.config) {
+    const inner = [];
+    if (step.config.healthRollup)
+      inner.push(`health_rollup = ${tfString(step.config.healthRollup)}`);
+    if (step.config.thresholdType)
+      inner.push(`threshold_type = ${tfString(step.config.thresholdType)}`);
+    if (step.config.thresholdValue !== undefined)
+      inner.push(`threshold_value = ${Number(step.config.thresholdValue)}`);
+    blocks.push(['config {', ...indent(inner), '}']);
+  }
+
+  if (step.entitySearchQuery) {
+    const inner = [`query = ${tfString(step.entitySearchQuery.query)}`];
+    if (step.entitySearchQuery.isExcluded) inner.push('is_excluded = true');
+    blocks.push(['entity_search_query {', ...indent(inner), '}']);
+  }
+
+  (step.signals ?? []).forEach((signal) => {
+    const inner = [`guid = ${tfString(signal.guid)}`];
+    if (signal.name) inner.push(`name = ${tfString(signal.name)}`);
+    if (signal.type) inner.push(`type = ${tfString(signal.type)}`);
+    if (signal.isExcluded) inner.push('is_excluded = true');
+    blocks.push(['signals {', ...indent(inner), '}']);
+  });
+
+  return [...lines, ...withBlankLineBefore(blocks)];
+};
+
+const buildLevelBody = (level = {}) =>
+  withBlankLineBefore(
+    (level.steps ?? []).map((step) => [
+      'steps {',
+      ...indent(buildStepBody(step)),
+      '}',
+    ])
+  ).slice(1); // drop the leading blank line before the first step
+
+const buildStageBody = (stage = {}) => {
+  const lines = [`name = ${tfString(stage.name)}`];
+  if (stage.healthRollup && stage.healthRollup !== 'AUTOMATIC_ROLL_UP')
+    lines.push(`health_rollup = ${tfString(stage.healthRollup)}`);
+  if (stage.isExcluded) lines.push(`is_excluded = true`);
+  if (stage.link) lines.push(`link = ${tfString(stage.link)}`);
+
+  const blocks = [];
+
+  if (stage.related?.source || stage.related?.target) {
+    const inner = [];
+    if (stage.related.source) inner.push('source = true');
+    if (stage.related.target) inner.push('target = true');
+    blocks.push(['related {', ...indent(inner), '}']);
+  }
+
+  (stage.stageKpis ?? [])
+    .map(transformKpi)
+    .forEach((kpi) =>
+      blocks.push(['stage_kpis {', ...indent(buildKpiBody(kpi)), '}'])
+    );
+
+  (stage.levels ?? []).forEach((level) =>
+    blocks.push(['levels {', ...indent(buildLevelBody(level)), '}'])
+  );
+
+  return [...lines, ...withBlankLineBefore(blocks)];
+};
+
+export const buildTerraformConfig = (input = {}, accountId) => {
+  const resourceLabel = tfIdentifier(input.name);
+
+  const lines = [];
+  if (accountId) lines.push(`account_id       = ${Number(accountId)}`);
+  lines.push(`name             = ${tfString(input.name)}`);
+  if (input.refreshInterval)
+    lines.push(`refresh_interval = ${tfString(input.refreshInterval)}`);
+
+  const blocks = (input.kpis ?? []).map((kpi) => [
+    'kpis {',
+    ...indent(buildKpiBody(kpi)),
+    '}',
+  ]);
+  (input.stages ?? []).forEach((stage) =>
+    blocks.push(['stages {', ...indent(buildStageBody(stage)), '}'])
+  );
+
+  const body = [...lines, ...withBlankLineBefore(blocks)];
+
+  return [
+    `resource "newrelic_pathpoint_flow" "${resourceLabel}" {`,
+    ...indent(body),
+    '}',
+  ].join('\n');
+};
+
 export const findFlowEntity = async (accountId, guid) => {
   const { data, error } = await NerdGraphQuery.query({
     query: flowEntityQuery(accountId, guid),

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import {
   buildMigrationQuery,
+  buildTerraformConfig,
   findFlowEntity,
   migrateFlow,
   transformForExport,
@@ -21,6 +22,21 @@ const useFlowExport = ({ accountId } = {}) => {
     (doc = {}) => {
       try {
         const code = buildMigrationQuery(
+          transformForExport(doc),
+          resolveAccountId(doc, accountId)
+        );
+        return { code, error: null };
+      } catch (error) {
+        return { code: null, error };
+      }
+    },
+    [accountId]
+  );
+
+  const getTerraformCode = useCallback(
+    (doc = {}) => {
+      try {
+        const code = buildTerraformConfig(
           transformForExport(doc),
           resolveAccountId(doc, accountId)
         );
@@ -52,6 +68,7 @@ const useFlowExport = ({ accountId } = {}) => {
 
   return {
     getMigrationCode,
+    getTerraformCode,
     migrateFlow: migrateFlowHandler,
     pollForFlowEntity,
   };
