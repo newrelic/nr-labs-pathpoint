@@ -24,7 +24,7 @@ This App is available via the New Relic Catalog.
 
 To enable it in your account:
 
-1. go to `Integrations & Agents > Apps and Visualzations` and search for "Pathpoint v2"
+1. go to `Integrations & Agents > Apps and Visualizations` and search for "Pathpoint v2"
 2. Click the `Pathpoint v2` card, and then click the `Add this App` button to add it to your account(s)
 3. Click `Open App` to launch the app (note: on the first time accessing the app, you may be prompted to enable it)
 
