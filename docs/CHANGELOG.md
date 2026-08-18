@@ -1,3 +1,10 @@
+## [2.6.18](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.17...v2.6.18) (2026-08-18)
+
+
+### Bug Fixes
+
+* typo fix in readme ([623323d](https://github.com/newrelic/nr-labs-pathpoint/commit/623323dfb11e909fc56b0f755d343d1412ceb28f))
+
 ## [2.6.17](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.16...v2.6.17) (2026-07-29)
 
 
