@@ -8,7 +8,16 @@ import { AppContext } from '../../contexts';
 import { validRefreshInterval } from '../../utils';
 import { REFRESH_INTERVALS, UI_CONTENT } from '../../constants';
 
+const ACCESS_LEVELS = [
+  { value: 0, label: 'Private' },
+  { value: 1, label: 'Read-only' },
+  { value: 2, label: 'Privileged' },
+  { value: 3, label: 'Public' },
+];
+
 const DEFAULT_REFRESH_INTERVAL_VALUE = REFRESH_INTERVALS[0].value;
+
+const DEFAULT_ACCESS_LEVEL_VALUE = ACCESS_LEVELS.at(-1).value;
 
 const EditFlowSettingsModal = ({
   flow,
@@ -23,6 +32,7 @@ const EditFlowSettingsModal = ({
     DEFAULT_REFRESH_INTERVAL_VALUE
   );
   const [updatedStepRowOverride, setUpdatedStepRowOverride] = useState(false);
+  const [updatedAccessLevel] = useState(DEFAULT_ACCESS_LEVEL_VALUE);
 
   useEffect(() => {
     if (!flow) return;
@@ -42,13 +52,15 @@ const EditFlowSettingsModal = ({
         if (
           (updatedName !== flow?.name ||
             updatedRefreshInterval !== flow?.refreshInterval ||
-            updatedStepRowOverride !== flow?.stepRowOverride) &&
+            updatedStepRowOverride !== flow?.stepRowOverride ||
+            updatedAccessLevel !== flow?.accessLevel) &&
           onUpdate
         ) {
           onUpdate({
             name: updatedName,
             refreshInterval: Number(updatedRefreshInterval),
             stepRowOverride: updatedStepRowOverride,
+            accessLevel: Number(updatedAccessLevel),
           });
         }
         break;
@@ -103,6 +115,27 @@ const EditFlowSettingsModal = ({
                 }
               >
                 {REFRESH_INTERVALS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="access-level-select">Access</label>
+            <div>
+              <select
+                className="access-level"
+                id="access-level-select"
+                value={updatedAccessLevel}
+                onChange={(e) =>
+                  setupdatedRefreshInterval(
+                    e?.target?.value || DEFAULT_ACCESS_LEVEL_VALUE
+                  )
+                }
+              >
+                {ACCESS_LEVELS.map(({ value, label }) => (
                   <option key={value} value={value}>
                     {label}
                   </option>

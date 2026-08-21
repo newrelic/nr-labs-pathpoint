@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Icon } from 'nr1';
 
 const LANGUAGE = {
   GRAPHQL: 'graphql',
   HCL: 'hcl',
+  JSON: 'json',
 };
 
 // each regex has one named group per token type; only one group matches per
@@ -14,6 +14,8 @@ const TOKEN_REGEX = {
     /(?<comment>#.*)|(?<string>"(?:\\.|[^"\\])*")|(?<keyword>\b(?:mutation|query|subscription|fragment|on|true|false|null)\b)|(?<enumValue>\b[A-Z][A-Z0-9_]*\b)|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punct>[{}()[\]:,!])|(?<identifier>[A-Za-z_][A-Za-z0-9_]*)/g,
   [LANGUAGE.HCL]:
     /(?<comment>\/\/.*|#.*|\/\*[\s\S]*?\*\/)|(?<string>"(?:\\.|[^"\\])*")|(?<keyword>\b(?:resource|data|variable|output|module|provider|locals|terraform|for_each|count|true|false|null)\b)|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punct>[{}()[\]=,.])|(?<identifier>[A-Za-z_][A-Za-z0-9_-]*)/g,
+  [LANGUAGE.JSON]:
+    /(?<string>"(?:\\.|[^"\\])*")|(?<keyword>\b(?:true|false|null)\b)|(?<number>-?\b\d+(?:\.\d+)?\b)|(?<punct>[{}[\]:,])/g,
 };
 
 const tokenize = (code, language) => {
@@ -45,16 +47,7 @@ const CodeViewer = ({
   width,
   height,
 }) => {
-  const linkRef = useRef(null);
   const tokens = useMemo(() => tokenize(code, language), [code, language]);
-
-  const downloadClickHandler = useCallback(() => {
-    const anchor = linkRef.current;
-    if (!anchor) return;
-    anchor.href = `data:text/plain;charset=utf-8,${encodeURIComponent(code)}`;
-    anchor.download = fileName || 'code.txt';
-    anchor.click();
-  }, [code, fileName]);
 
   // the 1px border on each side isn't included in the width/height AutoSizer
   // measures for us, so shrink by that much to avoid overflowing the wrapper
@@ -68,19 +61,7 @@ const CodeViewer = ({
     >
       <div className="code-viewer-header">
         <span className="file-name">{fileName}</span>
-        <div className="code-viewer-actions">
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Download"
-            title="Download"
-            onClick={downloadClickHandler}
-          >
-            <Icon type={Icon.TYPE.INTERFACE__OPERATIONS__DOWNLOAD} />
-          </button>
-        </div>
       </div>
-      <a ref={linkRef} className="hidden-download-link" />
       <pre className="code-viewer-body">
         <code>
           {tokens.map(({ text, type }, i) => (

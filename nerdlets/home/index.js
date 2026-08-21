@@ -25,7 +25,6 @@ import {
   Flow,
   FlowList,
   MigrateFlowDialog,
-  MigrateFlowModal,
   NoFlows,
   Sidebar,
 } from '../../src/components';
@@ -79,8 +78,7 @@ const HomeNerdlet = () => {
   const [editFlowSettings, setEditFlowSettings] = useState(false);
   const [transitionToFlow, setTransitionToFlow] = useState(false);
   const [isExportFlowModalShown, setIsExportFlowModalShown] = useState(false);
-  const [isMigrateFlowModalShown, setIsMigrateFlowModalShown] = useState(false);
-  const [isMigrateConfirmShown, setIsMigrateConfirmShown] = useState(false);
+  const [isMigrateDialogShown, setIsMigrateDialogShown] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
   const [nerdletState, setNerdletState] = useNerdletState();
   const { user } = useFetchUser();
@@ -163,7 +161,7 @@ const HomeNerdlet = () => {
               },
               {
                 ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
-                onClick: () => setIsMigrateFlowModalShown(true),
+                onClick: () => setIsMigrateDialogShown(true),
               },
               {
                 ...ACTION_BTN_ATTRIBS.AUDIT_LOG,
@@ -249,14 +247,7 @@ const HomeNerdlet = () => {
 
   const exportModalCloseHandler = () => setIsExportFlowModalShown(false);
 
-  const migrateModalCloseHandler = () => setIsMigrateFlowModalShown(false);
-
-  const migrateButtonClickHandler = () => {
-    setIsMigrateFlowModalShown(false);
-    setIsMigrateConfirmShown(true);
-  };
-
-  const migrateConfirmCloseHandler = () => setIsMigrateConfirmShown(false);
+  const migrateDialogCloseHandler = () => setIsMigrateDialogShown(false);
 
   const currentFlowDoc = useMemo(
     () => (currentFlowId ? flowDocument(flows, currentFlowId) : null),
@@ -345,20 +336,15 @@ const HomeNerdlet = () => {
         )}
         <ExportFlowModal
           flowDoc={currentFlowDoc}
+          accountId={accountId}
           hidden={!isExportFlowModalShown}
           onClose={exportModalCloseHandler}
         />
-        <MigrateFlowModal
-          flowDoc={currentFlowDoc}
-          accountId={accountId}
-          hidden={!isMigrateFlowModalShown}
-          onClose={migrateModalCloseHandler}
-          onMigrateClick={migrateButtonClickHandler}
-        />
         <MigrateFlowDialog
+          flowId={currentFlowId}
           flowDoc={currentFlowDoc}
-          hidden={!isMigrateConfirmShown}
-          onClose={migrateConfirmCloseHandler}
+          hidden={!isMigrateDialogShown}
+          onClose={migrateDialogCloseHandler}
         />
       </div>
     </AppContext.Provider>

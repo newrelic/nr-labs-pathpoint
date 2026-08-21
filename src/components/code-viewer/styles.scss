@@ -12,8 +12,6 @@
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
     padding: 6px 8px;
     border-bottom: 1px solid #e3e4e4;
 
@@ -26,34 +24,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
-    .code-viewer-actions {
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-
-      .icon-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: none;
-        padding: 4px;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #6b7274;
-
-        &:hover {
-          background-color: rgba(0, 0, 0, 0.06);
-          color: #1f2328;
-        }
-      }
-    }
-  }
-
-  .hidden-download-link {
-    display: none;
   }
 
   .code-viewer-body {

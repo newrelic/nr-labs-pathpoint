@@ -52,6 +52,12 @@
       gap: 8px;
     }
 
+    .dialog-checking {
+      display: flex;
+      justify-content: center;
+      padding: 24px 0;
+    }
+
     .dialog-migrating {
       display: flex;
       flex-direction: column;

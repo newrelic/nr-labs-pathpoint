@@ -442,9 +442,6 @@ export const migrateFlow = async (accountId, input) => {
       unsafeExperimentalNamespaces: ['PathPoint'],
     });
 
-    console.log('migrateFlow data', data);
-    console.log('migrateFlow error', error);
-
     if (error) return { success: false, error };
 
     const created = data?.pathPointCreate;
@@ -453,7 +450,6 @@ export const migrateFlow = async (accountId, input) => {
 
     return { success: true, guid: created.guid, name: created.name };
   } catch (error) {
-    console.log('migrateFlow error', error);
     return { success: false, error };
   }
 };
