@@ -79,8 +79,12 @@ const useFlowMigrate = ({ accountId, homeAccountId, user } = {}) => {
 
   const migrateFlowHandler = useCallback(
     async (doc = {}, flowId) => {
+      // the target account the user picked always wins here - unlike the
+      // read-only code previews above, this is the account the new
+      // Pathpoint actually gets created in, so doc.accountId must never
+      // override it
       const outcome = await migrateFlow(
-        resolveAccountId(doc, accountId),
+        Number(accountId),
         transformForExport(doc)
       );
       if (outcome?.success)
