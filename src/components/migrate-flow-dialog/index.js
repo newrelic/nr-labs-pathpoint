@@ -69,6 +69,15 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
     if (!migrating && e.target === e.currentTarget) onClose?.();
   };
 
+  // entity guids are base64-encoded `accountId|domain|type|identifier`, and
+  // are the only reliably up-to-date source for which account an entity
+  // actually lives in - trusting a separately-stored accountId risks it
+  // being stale or, for older records, missing entirely
+  const accountIdFromGuid = (guid) => {
+    const [acctId] = atob(guid)?.split('|') || [];
+    return Number(acctId);
+  };
+
   const accountChangeHandler = useCallback(
     (_, id) => setSelectedAccountId(id),
     []
@@ -82,7 +91,9 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
       if (cancelledRef.current) return;
       setMigrating(false);
       onClose?.();
-      navigation.openEntity(outcome.guid);
+      navigation.openEntity(outcome.guid, {
+        platformState: { accountId: accountIdFromGuid(outcome.guid) },
+      });
     } else {
       setMigrating(false);
       setResult(outcome);
@@ -91,7 +102,9 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
 
   const openInNewPathpointClickHandler = useCallback(() => {
     onClose?.();
-    navigation.openEntity(previousMigration.guid);
+    navigation.openEntity(previousMigration.guid, {
+      platformState: { accountId: accountIdFromGuid(previousMigration.guid) },
+    });
   }, [onClose, previousMigration]);
 
   if (hidden) return null;

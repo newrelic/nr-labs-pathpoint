@@ -19,9 +19,9 @@ const resolveAccountId = (doc = {}, accountId) => {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const recordMigration = async ({ accountId, flowId, guid, user }) => {
+const recordMigration = async ({ homeAccountId, flowId, guid, user }) => {
   const { data, error } = await AccountStorageQuery.query({
-    accountId,
+    accountId: homeAccountId,
     collection: NERD_STORAGE.FLOW_MIGRATIONS_COLLECTION,
     documentId: flowId,
   });
@@ -37,7 +37,7 @@ const recordMigration = async ({ accountId, flowId, guid, user }) => {
     ],
   };
   const { error: writeError } = await AccountStorageMutation.mutate({
-    accountId,
+    accountId: homeAccountId,
     actionType: AccountStorageMutation.ACTION_TYPE.WRITE_DOCUMENT,
     collection: NERD_STORAGE.FLOW_MIGRATIONS_COLLECTION,
     documentId: flowId,
@@ -89,7 +89,7 @@ const useFlowMigrate = ({ accountId, homeAccountId, user } = {}) => {
       );
       if (outcome?.success)
         await recordMigration({
-          accountId: homeAccountId,
+          homeAccountId,
           flowId,
           guid: outcome.guid,
           user,
