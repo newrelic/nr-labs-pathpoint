@@ -341,6 +341,7 @@ const HomeNerdlet = () => {
           onClose={exportModalCloseHandler}
         />
         <MigrateFlowDialog
+          accountId={accountId}
           flowId={currentFlowId}
           flowDoc={currentFlowDoc}
           hidden={!isMigrateDialogShown}

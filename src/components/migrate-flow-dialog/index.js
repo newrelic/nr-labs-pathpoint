@@ -19,16 +19,22 @@ import { AppContext } from '../../contexts';
 import { useFlowMigrate } from '../../hooks';
 import { LONG_DATE_FORMATTER } from '../../constants';
 
-const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
-  const { account, accounts = [], user } = useContext(AppContext) || {};
-  const [selectedAccountId, setSelectedAccountId] = useState(account?.id);
+const MigrateFlowDialog = ({
+  accountId,
+  flowId,
+  flowDoc,
+  hidden = true,
+  onClose,
+}) => {
+  const { accounts = [], user } = useContext(AppContext) || {};
+  const [selectedAccountId, setSelectedAccountId] = useState(accountId);
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
   const [previousMigration, setPreviousMigration] = useState(undefined);
   const { migrateFlow, pollForFlowEntity, checkPreviousMigration } =
     useFlowMigrate({
       accountId: selectedAccountId,
-      homeAccountId: account?.id,
+      homeAccountId: accountId,
       user,
     });
   const cancelledRef = useRef(false);
@@ -36,7 +42,7 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
   useEffect(() => {
     if (hidden) return;
 
-    setSelectedAccountId(account?.id);
+    setSelectedAccountId(accountId);
     setResult(null);
     setPreviousMigration(undefined);
     cancelledRef.current = false;
@@ -45,7 +51,7 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
       const previous = await checkPreviousMigration(flowId);
       if (!cancelledRef.current) setPreviousMigration(previous);
     })();
-  }, [hidden, account?.id, flowId]);
+  }, [hidden, accountId, flowId]);
 
   useEffect(
     () => () => {
@@ -230,6 +236,7 @@ const MigrateFlowDialog = ({ flowId, flowDoc, hidden = true, onClose }) => {
 };
 
 MigrateFlowDialog.propTypes = {
+  accountId: PropTypes.number,
   flowId: PropTypes.string,
   flowDoc: PropTypes.object,
   hidden: PropTypes.bool,
