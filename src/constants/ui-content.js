@@ -18,6 +18,11 @@ export const UI_CONTENT = {
     BUTTON_LABEL_DEBUG: ['Enable debug mode', 'Disable debug mode'],
     UNKNOWN_TEXT: '(unknown)',
   },
+  MIGRATE: {
+    DOCS_LINK_LABEL: 'See our docs',
+    // TODO: replace with the real KPI-migration docs page once published
+    DOCS_URL: 'https://docs.newrelic.com/TODO-pathpoint-kpi-migration',
+  },
   HELP_MODAL: {
     ABOUT: {
       appName: 'Pathpoint',

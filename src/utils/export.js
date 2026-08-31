@@ -74,6 +74,48 @@ const parseNrqlToQuery = (nrql = '') => {
   return { select, from, ...(where && { where }) };
 };
 
+// the new metric-based Pathpoint only supports a single aggregation over one
+// event type - `SELECT <agg>(<attr>?) FROM <event> [WHERE ...]`. AGGREGATION_MAP
+// keys are exactly the aggregation functions we can represent.
+const SUPPORTED_AGGREGATIONS = new Set(Object.keys(AGGREGATION_MAP));
+
+const isKpiSupported = (kpi = {}) => {
+  // already in new PathPoint format - transfers as-is
+  if (kpi.query?.select?.aggregationType) return true;
+
+  const nrql = (kpi.nrqlQuery ?? '').replace(/\s+/g, ' ').trim();
+  if (!nrql) return false;
+
+  // query of a query (subquery) or multiple SELECT clauses
+  if (/\bFROM\s*\(/i.test(nrql)) return false;
+  if ((nrql.match(/\bSELECT\b/gi) || []).length > 1) return false;
+
+  // FACET has no equivalent in the metric-based query model
+  if (/\bFACET\b/i.test(nrql)) return false;
+
+  // isolate the projection between SELECT and FROM
+  const projection = nrql.match(/\bSELECT\s+(.+?)\s+\bFROM\b/i)?.[1]?.trim();
+  if (!projection) return false;
+
+  // compound / multiple aggregations (e.g. `count(*), average(duration)`)
+  if (projection.includes(',')) return false;
+
+  // the single aggregation function must be one we support
+  const fn = projection.match(/^(\w+)\s*\(/)?.[1]?.toLowerCase();
+  if (!fn || !SUPPORTED_AGGREGATIONS.has(fn)) return false;
+
+  return true;
+};
+
+// names of the top-level KPIs that can't be represented in the new
+// metric-based Pathpoint and so won't transfer during migration
+export const getUnsupportedKpis = (doc = {}) => {
+  const data = doc.input ?? doc;
+  return (data.kpis ?? [])
+    .filter((kpi) => !isKpiSupported(kpi))
+    .map((kpi) => kpi.name ?? 'KPI');
+};
+
 const transformKpi = (kpi = {}) => {
   // already in new PathPoint format
   if (kpi.query?.select?.aggregationType) {
