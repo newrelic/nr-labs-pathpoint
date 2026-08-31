@@ -1,0 +1,67 @@
+.code-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid #e3e4e4;
+  border-radius: 4px;
+  background-color: #f3f4f4;
+  overflow: hidden;
+
+  .code-viewer-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e3e4e4;
+
+    .file-name {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+        monospace;
+      font-size: 12px;
+      color: #6b7274;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .code-viewer-body {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    background-color: #fbfbfb;
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+        monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre;
+      color: #1f2328;
+    }
+
+    .tok-comment {
+      color: #8a9199;
+      font-style: italic;
+    }
+    .tok-string {
+      color: #2e7d32;
+    }
+    .tok-keyword {
+      color: #8250df;
+      font-weight: 600;
+    }
+    .tok-enumValue {
+      color: #0550ae;
+    }
+    .tok-number {
+      color: #ae5f00;
+    }
+    .tok-punct {
+      color: #6b7274;
+    }
+  }
+}

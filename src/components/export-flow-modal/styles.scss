@@ -1,37 +1,45 @@
 .export-flow-modal {
   flex: 1;
   height: 100%;
+  min-height: 0;
+  // .modal-frame (modal/styles.scss) is a fixed, full-height panel with
+  // 80px top / 40px bottom padding; cap to that so flex children below can
+  // shrink instead of growing the whole panel past the viewport
+  max-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  justify-content: center;
 
-  .json-content {
-    flex: 1;
+  .export-header {
+    flex: 0 0 auto;
+    user-select: none;
+  }
+
+  .export-byline {
+    flex: 0 0 auto;
+    color: #6b7274;
+  }
+
+  .export-options {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+  }
 
-    .export-header {
-      user-select: none;
-    }
+  .export-code-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-    .chart-wrapper {
+    .code-wrapper {
       flex: 1;
-      height: 100%;
       min-height: 0;
-      width: 100%;
-
-      .json-chart {
-        div:first-of-type {
-          background-color: #f3f4f4;
-          border-radius: 4px;
-        }
-      }      
     }
   }
 
   .button-bar {
+    flex: 0 0 auto;
     display: flex;
     justify-content: flex-end;
     gap: 4px;
