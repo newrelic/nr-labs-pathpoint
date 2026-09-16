@@ -239,9 +239,10 @@ const MigrateFlowDialog = ({
               />
             )}
             <BlockText className="dialog-description">
-              We&apos;ll recreate this flow in our Pathpoint capability&mdash;your
-              original stays where it is. The 2 flows won&apos;t be linked, so
-              make all future changes in the new version.
+              We&apos;ll recreate this flow in our Pathpoint
+              capability&mdash;your original stays where it is. The 2 flows
+              won&apos;t be linked, so make all future changes in the new
+              version.
             </BlockText>
             <div className="dialog-field">
               <span className="dialog-field-label">Accounts</span>
