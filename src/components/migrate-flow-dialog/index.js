@@ -14,6 +14,7 @@ import {
   HeadingText,
   InlineMessage,
   navigation,
+  SectionMessage,
   Spinner,
 } from 'nr1';
 import { AppContext } from '../../contexts';
@@ -192,7 +193,7 @@ const MigrateFlowDialog = ({
           <>
             <div className="dialog-header">
               <HeadingText type={HeadingText.TYPE.HEADING_4}>
-                Migrate to the new Pathpoint
+                Migrate {flowDoc?.name || 'Untitled flow'}
               </HeadingText>
               <Button
                 ariaLabel="Close dialog"
@@ -203,6 +204,20 @@ const MigrateFlowDialog = ({
                 onClick={onClose}
               />
             </div>
+            {result && (
+              <SectionMessage
+                className="dialog-error"
+                type={SectionMessage.TYPE.CRITICAL}
+                title="You don't have access to this account"
+                description="Ask your admin for access, or switch to an account where you can create flows."
+                actions={[
+                  {
+                    label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
+                    to: UI_CONTENT.MIGRATE.DOCS_URL,
+                  },
+                ]}
+              />
+            )}
             {unsupportedKpis.length > 0 && (
               <InlineMessage
                 className="dialog-kpi-warning"
@@ -224,8 +239,9 @@ const MigrateFlowDialog = ({
               />
             )}
             <BlockText className="dialog-description">
-              You&apos;ll move a copy of this flow to the new Pathpoint — your
-              original stays where it is.
+              We&apos;ll recreate this flow in our Pathpoint capability&mdash;your
+              original stays where it is. The 2 flows won&apos;t be linked, so
+              make all future changes in the new version.
             </BlockText>
             <div className="dialog-field">
               <span className="dialog-field-label">Accounts</span>
@@ -234,14 +250,6 @@ const MigrateFlowDialog = ({
                 onChange={accountChangeHandler}
               />
             </div>
-            {result && (
-              <InlineMessage
-                type={InlineMessage.TYPE.CRITICAL}
-                label={`Migration failed: ${
-                  result.error?.message || result.error || 'unknown error'
-                }`}
-              />
-            )}
             <div className="dialog-button-bar">
               <Button variant={Button.VARIANT.TERTIARY} onClick={onClose}>
                 Cancel
