@@ -1,0 +1,89 @@
+.migrate-flow-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  // below nr1's own overlay layer (e.g. the Dropdown popover triggered from
+  // within this dialog) so those still render on top of us
+  z-index: 1000;
+
+  .migrate-flow-dialog {
+    width: 420px;
+    max-width: calc(100vw - 48px);
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+    .dialog-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+
+      .dialog-close-button {
+        margin: -8px -8px 0 0;
+      }
+    }
+
+    .dialog-kpi-warning {
+      margin-top: 8px;
+    }
+
+    .dialog-description {
+      margin-top: 8px;
+    }
+
+    .dialog-field {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .dialog-field-label {
+        font-weight: 600;
+        font-size: 12px;
+      }
+    }
+
+    .dialog-button-bar {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .dialog-checking {
+      display: flex;
+      justify-content: center;
+      padding: 24px 0;
+    }
+
+    .dialog-migrating {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+
+      .dialog-migrating-header {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .dialog-migrating-target {
+          color: #6b7274;
+        }
+      }
+
+      .dialog-migrating-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+      }
+    }
+  }
+}

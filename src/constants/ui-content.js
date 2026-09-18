@@ -5,7 +5,8 @@ export const UI_CONTENT = {
     BUTTON_LABEL_CREATE_FLOW: 'Create new flow',
     BUTTON_LABEL_EDIT_MODE: 'Edit mode',
     BUTTON_LABEL_EDIT_SETTINGS: 'Settings',
-    BUTTON_LABEL_EXPORT_FLOW: 'Export flow as JSON',
+    BUTTON_LABEL_EXPORT_FLOW: 'Export flow',
+    BUTTON_LABEL_MIGRATE_FLOW: 'Migrate flow',
     BUTTON_LABEL_AUDIT_LOG: 'Audit log',
     BUTTON_LABEL_EDIT_DISCARD: 'Discard changes',
     BUTTON_LABEL_EDIT_PERSIST: 'Save changes',
@@ -16,6 +17,11 @@ export const UI_CONTENT = {
     BUTTON_LABEL_HELP: 'Help',
     BUTTON_LABEL_DEBUG: ['Enable debug mode', 'Disable debug mode'],
     UNKNOWN_TEXT: '(unknown)',
+  },
+  MIGRATE: {
+    DOCS_LINK_LABEL: 'See our docs',
+    // TODO: replace with the real KPI-migration docs page once published
+    DOCS_URL: 'https://docs.newrelic.com/TODO-pathpoint-kpi-migration',
   },
   HELP_MODAL: {
     ABOUT: {
