@@ -16,11 +16,26 @@ import {
   navigation,
   SectionMessage,
   Spinner,
+  useNerdGraphQuery,
 } from 'nr1';
 import { AppContext } from '../../contexts';
 import { useFlowMigrate } from '../../hooks';
 import { getUnsupportedKpis } from '../../utils';
 import { LONG_DATE_FORMATTER, UI_CONTENT } from '../../constants';
+
+// used to confirm the entity a prior migration recorded still exists - a
+// stored migration whose flow has since been deleted should not block a
+// fresh migration, so we verify the guid rather than trusting the record
+const PREVIOUS_MIGRATION_ENTITY_QUERY = `
+  query($guid: EntityGuid!) {
+    actor {
+      entity(guid: $guid) {
+        accountId
+        name
+      }
+    }
+  }
+`;
 
 const MigrateFlowDialog = ({
   accountId,
@@ -33,7 +48,7 @@ const MigrateFlowDialog = ({
   const [selectedAccountId, setSelectedAccountId] = useState(accountId);
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
-  const [previousMigration, setPreviousMigration] = useState(undefined);
+  const [migrationRecord, setMigrationRecord] = useState(undefined);
   const { migrateFlow, pollForFlowEntity, checkPreviousMigration } =
     useFlowMigrate({
       accountId: selectedAccountId,
@@ -46,17 +61,39 @@ const MigrateFlowDialog = ({
     [flowDoc]
   );
 
+  const previousGuid = migrationRecord?.guid;
+  const {
+    loading: entityLoading,
+    error: entityError,
+    data: entityData,
+  } = useNerdGraphQuery({
+    query: PREVIOUS_MIGRATION_ENTITY_QUERY,
+    variables: { guid: previousGuid },
+    skip: !previousGuid,
+  });
+
+  // `undefined` while we're still determining (checking storage, then
+  // verifying the recorded entity still exists); otherwise a boolean
+  const previousMigration = useMemo(() => {
+    if (migrationRecord === undefined) return undefined; // still reading storage
+    if (!migrationRecord) return false; // no migration on record
+    if (entityLoading) return undefined; // verifying the recorded entity
+    if (entityError) return false; // can't confirm - allow migrating
+    if (!entityData) return undefined; // query not resolved yet
+    return Boolean(entityData?.actor?.entity);
+  }, [migrationRecord, entityLoading, entityError, entityData]);
+
   useEffect(() => {
     if (hidden) return;
 
     setSelectedAccountId(accountId);
     setResult(null);
-    setPreviousMigration(undefined);
+    setMigrationRecord(undefined);
     cancelledRef.current = false;
 
     (async () => {
       const previous = await checkPreviousMigration(flowId);
-      if (!cancelledRef.current) setPreviousMigration(previous);
+      if (!cancelledRef.current) setMigrationRecord(previous);
     })();
   }, [hidden, accountId, flowId]);
 
@@ -115,10 +152,10 @@ const MigrateFlowDialog = ({
 
   const openInNewPathpointClickHandler = useCallback(() => {
     onClose?.();
-    navigation.openEntity(previousMigration.guid, {
-      platformState: { accountId: accountIdFromGuid(previousMigration.guid) },
+    navigation.openEntity(migrationRecord.guid, {
+      platformState: { accountId: accountIdFromGuid(migrationRecord.guid) },
     });
-  }, [onClose, previousMigration]);
+  }, [onClose, migrationRecord]);
 
   if (hidden) return null;
 
@@ -149,12 +186,10 @@ const MigrateFlowDialog = ({
               />
             </div>
             <BlockText className="dialog-description">
-              {previousMigration.user?.name || 'Someone'} migrated{' '}
+              {migrationRecord.user?.name || 'Someone'} migrated{' '}
               {flowDoc?.name || 'this'} flow to the new pathpoint on{' '}
-              {LONG_DATE_FORMATTER.format(
-                new Date(previousMigration.timestamp)
-              )}
-              . Make any necessary changes in the new version.
+              {LONG_DATE_FORMATTER.format(new Date(migrationRecord.timestamp))}.
+              Make any necessary changes in the new version.
             </BlockText>
             <div className="dialog-button-bar">
               <Button variant={Button.VARIANT.TERTIARY} onClick={onClose}>
