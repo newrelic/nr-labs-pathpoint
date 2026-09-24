@@ -20,8 +20,9 @@ export const UI_CONTENT = {
   },
   MIGRATE: {
     DOCS_LINK_LABEL: 'See our docs',
-    // TODO: replace with the real KPI-migration docs page once published
-    DOCS_URL: 'https://docs.newrelic.com/TODO-pathpoint-kpi-migration',
+    // page is not live yet, but this is the intended destination
+    DOCS_URL:
+      'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#migration-limitations',
   },
   HELP_MODAL: {
     ABOUT: {
