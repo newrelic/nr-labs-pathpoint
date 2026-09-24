@@ -116,13 +116,37 @@ export const getUnsupportedKpis = (doc = {}) => {
     .map((kpi) => kpi.name ?? 'KPI');
 };
 
+// the account a KPI queries: this app stores it as accountIds[], the new
+// Pathpoint format uses a single accountId
+const kpiAccountId = (kpi = {}) =>
+  Number(kpi.accountId ?? kpi.accountIds?.[0] ?? 0);
+
+// true when a KPI is pinned to a specific account other than the one the flow
+// is being migrated to - cross-account KPIs aren't supported in the new
+// Pathpoint yet, so they can't transfer. A KPI with no resolvable account
+// (0/undefined) isn't treated as cross-account since we can't tell.
+const isCrossAccountKpi = (kpi = {}, targetAccountId) => {
+  const acctId = kpiAccountId(kpi);
+  const target = Number(targetAccountId);
+  return Boolean(acctId) && Boolean(target) && acctId !== target;
+};
+
+// names of the KPIs that live in a different account than the migration target
+// and so won't transfer
+export const getCrossAccountKpis = (doc = {}, targetAccountId) => {
+  const data = doc.input ?? doc;
+  return (data.kpis ?? [])
+    .filter((kpi) => isCrossAccountKpi(kpi, targetAccountId))
+    .map((kpi) => kpi.name ?? 'KPI');
+};
+
 const transformKpi = (kpi = {}) => {
   // already in new PathPoint format
   if (kpi.query?.select?.aggregationType) {
     return {
       name: kpi.name ?? 'KPI',
       category: kpi.category ?? '',
-      accountId: Number(kpi.accountId ?? kpi.accountIds?.[0] ?? 0),
+      accountId: kpiAccountId(kpi),
       description: kpi.description ?? '',
       query: kpi.query,
     };
@@ -131,7 +155,7 @@ const transformKpi = (kpi = {}) => {
   return {
     name: kpi.name ?? 'KPI',
     category: kpi.category ?? '',
-    accountId: Number(kpi.accountId ?? kpi.accountIds?.[0] ?? 0),
+    accountId: kpiAccountId(kpi),
     description: kpi.description ?? '',
     query: parseNrqlToQuery(kpi.nrqlQuery ?? ''),
   };
@@ -235,12 +259,15 @@ const transformStage = (stage = {}) => ({
   levels: (stage.levels ?? []).map(transformLevel),
 });
 
-export const transformForExport = (doc = {}) => {
+export const transformForExport = (doc = {}, targetAccountId) => {
   const data = doc.input ?? doc;
   return {
     name: data.name,
     refreshInterval: toRefreshIntervalEnum(data.refreshInterval),
-    kpis: (data.kpis ?? []).map(transformKpi),
+    // cross-account KPIs can't transfer, so keep them out of the migration
+    kpis: (data.kpis ?? [])
+      .filter((kpi) => !isCrossAccountKpi(kpi, targetAccountId))
+      .map(transformKpi),
     stages: (data.stages ?? []).map(transformStage),
   };
 };

@@ -50,9 +50,10 @@ const useFlowMigrate = ({ accountId, homeAccountId, user } = {}) => {
   const getMigrationCode = useCallback(
     (doc = {}) => {
       try {
+        const targetAccountId = resolveAccountId(doc, accountId);
         const code = buildMigrationQuery(
-          transformForExport(doc),
-          resolveAccountId(doc, accountId)
+          transformForExport(doc, targetAccountId),
+          targetAccountId
         );
         return { code, error: null };
       } catch (error) {
@@ -65,9 +66,10 @@ const useFlowMigrate = ({ accountId, homeAccountId, user } = {}) => {
   const getTerraformCode = useCallback(
     (doc = {}) => {
       try {
+        const targetAccountId = resolveAccountId(doc, accountId);
         const code = buildTerraformConfig(
-          transformForExport(doc),
-          resolveAccountId(doc, accountId)
+          transformForExport(doc, targetAccountId),
+          targetAccountId
         );
         return { code, error: null };
       } catch (error) {
@@ -85,7 +87,7 @@ const useFlowMigrate = ({ accountId, homeAccountId, user } = {}) => {
       // override it
       const outcome = await migrateFlow(
         Number(accountId),
-        transformForExport(doc)
+        transformForExport(doc, Number(accountId))
       );
       if (outcome?.success)
         await recordMigration({

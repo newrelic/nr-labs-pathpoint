@@ -87,3 +87,12 @@
     }
   }
 }
+
+// KPI names rendered as a real list when more than one won't transfer. Lives at
+// the top level (not under .migrate-flow-dialog-overlay) because InlineMessage
+// portals its description into a popover outside the dialog's DOM subtree.
+.dialog-kpi-list {
+  margin: 4px 0;
+  padding-left: 20px;
+  list-style: disc;
+}

@@ -20,7 +20,7 @@ import {
 } from 'nr1';
 import { AppContext } from '../../contexts';
 import { useFlowMigrate } from '../../hooks';
-import { getUnsupportedKpis } from '../../utils';
+import { getCrossAccountKpis, getUnsupportedKpis } from '../../utils';
 import { LONG_DATE_FORMATTER, UI_CONTENT } from '../../constants';
 
 // used to confirm the entity a prior migration recorded still exists - a
@@ -59,6 +59,10 @@ const MigrateFlowDialog = ({
   const unsupportedKpis = useMemo(
     () => getUnsupportedKpis(flowDoc || {}),
     [flowDoc]
+  );
+  const crossAccountKpis = useMemo(
+    () => getCrossAccountKpis(flowDoc || {}, selectedAccountId),
+    [flowDoc, selectedAccountId]
   );
 
   const previousGuid = migrationRecord?.guid;
@@ -261,11 +265,48 @@ const MigrateFlowDialog = ({
                   unsupportedKpis.length === 1 ? '' : 's'
                 } won't transfer`}
                 description={
-                  unsupportedKpis.length === 1
-                    ? `We use metrics instead of events for KPIs in the new Pathpoint, so this KPI won't transfer: ${unsupportedKpis[0]}. You'll need to create a new KPI using metric data.`
-                    : `We use metrics instead of events for KPIs in the new Pathpoint, so these KPIs won't transfer: ${unsupportedKpis.join(
-                        ', '
-                      )}. You'll need to create new KPIs using metric data.`
+                  unsupportedKpis.length === 1 ? (
+                    `We use metrics instead of events for KPIs in the new Pathpoint, so this KPI won't transfer: ${unsupportedKpis[0]}. You'll need to create a new KPI using metric data.`
+                  ) : (
+                    <>
+                      We use metrics instead of events for KPIs in the new
+                      Pathpoint, so these KPIs won&apos;t transfer:
+                      <ul className="dialog-kpi-list">
+                        {unsupportedKpis.map((name) => (
+                          <li key={name}>{name}</li>
+                        ))}
+                      </ul>
+                      You&apos;ll need to create new KPIs using metric data.
+                    </>
+                  )
+                }
+                action={{
+                  label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
+                  to: UI_CONTENT.MIGRATE.DOCS_URL,
+                }}
+              />
+            )}
+            {crossAccountKpis.length > 0 && (
+              <InlineMessage
+                className="dialog-kpi-warning"
+                type={InlineMessage.TYPE.WARNING}
+                label={`${crossAccountKpis.length} KPI${
+                  crossAccountKpis.length === 1 ? '' : 's'
+                } won't transfer`}
+                description={
+                  crossAccountKpis.length === 1 ? (
+                    `This KPI is in a different account: ${crossAccountKpis[0]}. You'll need to create a new KPI in this account.`
+                  ) : (
+                    <>
+                      These KPIs are in a different account:
+                      <ul className="dialog-kpi-list">
+                        {crossAccountKpis.map((name) => (
+                          <li key={name}>{name}</li>
+                        ))}
+                      </ul>
+                      You&apos;ll need to create new KPIs in this account.
+                    </>
+                  )
                 }
                 action={{
                   label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
