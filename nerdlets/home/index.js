@@ -25,6 +25,7 @@ import {
   Flow,
   FlowList,
   MigrateFlowDialog,
+  MigrateFlowModal,
   NoFlows,
   Sidebar,
 } from '../../src/components';
@@ -78,6 +79,7 @@ const HomeNerdlet = () => {
   const [editFlowSettings, setEditFlowSettings] = useState(false);
   const [transitionToFlow, setTransitionToFlow] = useState(false);
   const [isExportFlowModalShown, setIsExportFlowModalShown] = useState(false);
+  const [isMigrateModalShown, setIsMigrateModalShown] = useState(false);
   const [isMigrateDialogShown, setIsMigrateDialogShown] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
   const [nerdletState, setNerdletState] = useNerdletState();
@@ -161,7 +163,7 @@ const HomeNerdlet = () => {
               },
               {
                 ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
-                onClick: () => setIsMigrateDialogShown(true),
+                onClick: () => setIsMigrateModalShown(true),
               },
               {
                 ...ACTION_BTN_ATTRIBS.AUDIT_LOG,
@@ -246,6 +248,15 @@ const HomeNerdlet = () => {
   const auditLogCloseHandler = () => setisAuditLogShown(false);
 
   const exportModalCloseHandler = () => setIsExportFlowModalShown(false);
+
+  const migrateModalCloseHandler = () => setIsMigrateModalShown(false);
+
+  // "Have us handle it" hands off from the method picker to the guided,
+  // account-selection migration dialog
+  const managedMigrateHandler = () => {
+    setIsMigrateModalShown(false);
+    setIsMigrateDialogShown(true);
+  };
 
   const migrateDialogCloseHandler = () => setIsMigrateDialogShown(false);
 
@@ -339,6 +350,13 @@ const HomeNerdlet = () => {
           accountId={accountId}
           hidden={!isExportFlowModalShown}
           onClose={exportModalCloseHandler}
+        />
+        <MigrateFlowModal
+          flowDoc={currentFlowDoc}
+          accountId={accountId}
+          hidden={!isMigrateModalShown}
+          onClose={migrateModalCloseHandler}
+          onManagedMigrate={managedMigrateHandler}
         />
         <MigrateFlowDialog
           accountId={accountId}

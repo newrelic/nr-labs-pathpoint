@@ -64,6 +64,12 @@ const MigrateFlowDialog = ({
     () => getCrossAccountKpis(flowDoc || {}, selectedAccountId),
     [flowDoc, selectedAccountId]
   );
+  // both event-data and cross-account KPIs can't transfer yet, so we surface
+  // them together in a single warning (deduped in case a KPI hits both)
+  const nonTransferableKpis = useMemo(
+    () => [...new Set([...unsupportedKpis, ...crossAccountKpis])],
+    [unsupportedKpis, crossAccountKpis]
+  );
 
   const previousGuid = migrationRecord?.guid;
   const {
@@ -252,59 +258,31 @@ const MigrateFlowDialog = ({
                 actions={[
                   {
                     label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
-                    to: UI_CONTENT.MIGRATE.DOCS_URL,
+                    to: 'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#access-permissions',
                   },
                 ]}
               />
             )}
-            {unsupportedKpis.length > 0 && (
+            {nonTransferableKpis.length > 0 && (
               <InlineMessage
                 className="dialog-kpi-warning"
                 type={InlineMessage.TYPE.WARNING}
-                label={`${unsupportedKpis.length} KPI${
-                  unsupportedKpis.length === 1 ? '' : 's'
+                label={`${nonTransferableKpis.length} KPI${
+                  nonTransferableKpis.length === 1 ? '' : 's'
                 } won't transfer`}
                 description={
-                  unsupportedKpis.length === 1 ? (
-                    `We use metrics instead of events for KPIs in the new Pathpoint, so this KPI won't transfer: ${unsupportedKpis[0]}. You'll need to create a new KPI using metric data.`
+                  nonTransferableKpis.length === 1 ? (
+                    `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that use metric data or query from multiple accounts.`
                   ) : (
                     <>
-                      We use metrics instead of events for KPIs in the new
-                      Pathpoint, so these KPIs won&apos;t transfer:
+                      These KPIs won&apos;t transfer right now:
                       <ul className="dialog-kpi-list">
-                        {unsupportedKpis.map((name) => (
+                        {nonTransferableKpis.map((name) => (
                           <li key={name}>{name}</li>
                         ))}
                       </ul>
-                      You&apos;ll need to create new KPIs using metric data.
-                    </>
-                  )
-                }
-                action={{
-                  label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
-                  to: UI_CONTENT.MIGRATE.DOCS_URL,
-                }}
-              />
-            )}
-            {crossAccountKpis.length > 0 && (
-              <InlineMessage
-                className="dialog-kpi-warning"
-                type={InlineMessage.TYPE.WARNING}
-                label={`${crossAccountKpis.length} KPI${
-                  crossAccountKpis.length === 1 ? '' : 's'
-                } won't transfer`}
-                description={
-                  crossAccountKpis.length === 1 ? (
-                    `This KPI is in a different account: ${crossAccountKpis[0]}. You'll need to create a new KPI in this account.`
-                  ) : (
-                    <>
-                      These KPIs are in a different account:
-                      <ul className="dialog-kpi-list">
-                        {crossAccountKpis.map((name) => (
-                          <li key={name}>{name}</li>
-                        ))}
-                      </ul>
-                      You&apos;ll need to create new KPIs in this account.
+                      We&apos;re working on a way to transfer KPIs that use
+                      metric data or query from multiple accounts.
                     </>
                   )
                 }

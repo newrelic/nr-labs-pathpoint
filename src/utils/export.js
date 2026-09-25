@@ -90,6 +90,9 @@ const isKpiSupported = (kpi = {}) => {
   if (/\bFROM\s*\(/i.test(nrql)) return false;
   if ((nrql.match(/\bSELECT\b/gi) || []).length > 1) return false;
 
+  // metric queries don't map to the new event-based aggregation model
+  if (/\bFROM\s+Metric\b/i.test(nrql)) return false;
+
   // FACET has no equivalent in the metric-based query model
   if (/\bFACET\b/i.test(nrql)) return false;
 

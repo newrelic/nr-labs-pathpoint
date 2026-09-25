@@ -24,12 +24,17 @@ import { UI_CONTENT } from '../../constants';
 
 const VIEWS = {
   OPTIONS: 'options',
-  JSON: 'json',
   NERDGRAPH: 'nerdgraph',
   TERRAFORM: 'terraform',
 };
 
-const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
+const MigrateFlowModal = ({
+  flowDoc,
+  accountId,
+  hidden = true,
+  onClose,
+  onManagedMigrate,
+}) => {
   const [view, setView] = useState(VIEWS.OPTIONS);
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState(null);
@@ -38,7 +43,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
   });
   const linkRef = useRef(null);
 
-  // reset back to the tile picker whenever the panel closes, regardless of
+  // reset back to the method picker whenever the modal closes, regardless of
   // how it was closed (X button, backdrop click, or the Back button)
   useEffect(() => {
     if (hidden) {
@@ -63,13 +68,6 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
   }, [flowDoc, accountId]);
 
   const VIEW_CONFIG = {
-    [VIEWS.JSON]: {
-      heading: 'Export flow as JSON',
-      byline: 'Preview the raw flow document as JSON.',
-      language: CodeViewer.LANGUAGE.JSON,
-      fileName: `${flowNameSlug}.json`,
-      mimeType: 'application/json',
-    },
     [VIEWS.NERDGRAPH]: {
       heading: `Migrate ${flowName}`,
       byline:
@@ -88,12 +86,10 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
     },
   };
 
-  const jsonTileClickHandler = useCallback(() => {
-    const { created: _omit, ...flow } = flowDoc || {}; // eslint-disable-line no-unused-vars
-    setCode(JSON.stringify(flow, null, 2));
-    setCodeError(null);
-    setView(VIEWS.JSON);
-  }, [flowDoc]);
+  const managedMigrateTileClickHandler = useCallback(
+    () => onManagedMigrate?.(),
+    [onManagedMigrate]
+  );
 
   const nerdGraphTileClickHandler = useCallback(() => {
     const { code: generatedCode, error } = getMigrationCode(flowDoc || {});
@@ -129,34 +125,40 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
 
   return (
     <Modal hidden={hidden} onClose={onClose}>
-      <div className="export-flow-modal">
+      <div className="migrate-flow-modal">
         {view === VIEWS.OPTIONS ? (
           <>
             <HeadingText
-              className="export-header"
+              className="migrate-modal-header"
               type={HeadingText.TYPE.HEADING_3}
             >
-              Export flow
+              Migrate this flow for more features
             </HeadingText>
-            <BlockText className="export-byline">
-              Choose a format to export {flowName}.
+            <BlockText className="migrate-modal-byline">
+              Connect your technical health to your business metrics. Migrate to
+              our fully integrated Pathpoint capability to get the latest
+              updates and improvements, such as stage KPIs, alerts on KPIs, and
+              custom health parameters.
             </BlockText>
             <Link
-              className="export-docs-link"
+              className="migrate-modal-docs-link"
               to="https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#migrate-a-flow"
             >
               {UI_CONTENT.MIGRATE.DOCS_LINK_LABEL}
             </Link>
+            <BlockText className="migrate-modal-byline">
+              Select a method to migrate:
+            </BlockText>
           </>
         ) : (
           <>
             <HeadingText
-              className="export-header"
+              className="migrate-modal-header"
               type={HeadingText.TYPE.HEADING_3}
             >
               {currentConfig.heading}
             </HeadingText>
-            <BlockText className="export-byline">
+            <BlockText className="migrate-modal-byline">
               {currentConfig.byline}
             </BlockText>
             {view === VIEWS.NERDGRAPH && nonTransferableKpis.length > 0 && (
@@ -198,38 +200,31 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
         )}
         {view === VIEWS.OPTIONS && (
           <TileGroup
-            className="export-options"
+            className="migrate-modal-options"
             gapType={TileGroup.GAP_TYPE.SMALL}
           >
-            <Tile onClick={jsonTileClickHandler}>
-              <HeadingText type={HeadingText.TYPE.HEADING_6}>JSON</HeadingText>
-              <BlockText>
-                Export the raw flow document as JSON. Useful for backup or
-                inspection.
-              </BlockText>
+            <Tile onClick={managedMigrateTileClickHandler}>
+              <HeadingText type={HeadingText.TYPE.HEADING_6}>
+                Have us handle it
+              </HeadingText>
+              <BlockText>You select an account; we do the rest.</BlockText>
             </Tile>
             <Tile onClick={nerdGraphTileClickHandler}>
               <HeadingText type={HeadingText.TYPE.HEADING_6}>
-                NerdGraph
+                Use NerdGraph
               </HeadingText>
-              <BlockText>
-                Generate a ready-to-run NerdGraph mutation that recreates this
-                flow in Pathpoint, to run here or in the GraphiQL explorer.
-              </BlockText>
+              <BlockText>We provide the JSON; you do the rest.</BlockText>
             </Tile>
             <Tile onClick={terraformTileClickHandler}>
               <HeadingText type={HeadingText.TYPE.HEADING_6}>
-                Terraform
+                Use Terraform
               </HeadingText>
-              <BlockText>
-                Manage this flow as code with the New Relic Terraform provider.
-                Best for teams that version-control their observability config.
-              </BlockText>
+              <BlockText>We provide the JSON; you do the rest.</BlockText>
             </Tile>
           </TileGroup>
         )}
         {view !== VIEWS.OPTIONS && (
-          <div className="export-code-view">
+          <div className="migrate-modal-code-view">
             <div className="code-wrapper">
               <AutoSizer>
                 {({ width, height }) => (
@@ -266,11 +261,12 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
   );
 };
 
-ExportFlowModal.propTypes = {
+MigrateFlowModal.propTypes = {
   flowDoc: PropTypes.object,
   accountId: PropTypes.number,
   hidden: PropTypes.bool,
   onClose: PropTypes.func,
+  onManagedMigrate: PropTypes.func,
 };
 
-export default ExportFlowModal;
+export default MigrateFlowModal;
