@@ -73,7 +73,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
     [VIEWS.NERDGRAPH]: {
       heading: `Migrate ${flowName}`,
       byline:
-        'Use the following code in NerdGraph to create this flow in our Pathpoint capability—your original stays where it is. The 2 flows won’t be linked, so make all future changes in the new version.',
+        "Use the following code in NerdGraph to create this flow in our Pathpoint capability—your original stays where it is. The 2 flows won't be linked, so make all future changes in the new version.",
       language: CodeViewer.LANGUAGE.GRAPHQL,
       fileName: `${flowNameSlug}.graphql`,
       mimeType: 'text/plain',
@@ -81,7 +81,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
     [VIEWS.TERRAFORM]: {
       heading: `Migrate ${flowName}`,
       byline:
-        'Use the following code in Terraform to create this flow in our Pathpoint capability—your original stays where it is. The 2 flows won’t be linked, so make all future changes in the new version.',
+        "Use the following code in Terraform to create this flow in our Pathpoint capability—your original stays where it is. The 2 flows won't be linked, so make all future changes in the new version.",
       language: CodeViewer.LANGUAGE.HCL,
       fileName: `${flowNameSlug}.tf`,
       mimeType: 'text/plain',
@@ -214,7 +214,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
               </HeadingText>
               <BlockText>
                 Generate a ready-to-run NerdGraph mutation that recreates this
-                flow in Pathpoint, to run here or in the GraphiQL explorer.
+                flow in Pathpoint, to run in the GraphiQL explorer.
               </BlockText>
             </Tile>
             <Tile onClick={terraformTileClickHandler}>

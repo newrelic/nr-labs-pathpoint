@@ -32,7 +32,6 @@ export { default as EditInPlace } from './edit-in-place';
 export { default as Modal } from './modal';
 export { default as ExportFlowModal } from './export-flow-modal';
 export { default as MigrateFlowDialog } from './migrate-flow-dialog';
-export { default as MigrateFlowModal } from './migrate-flow-modal';
 export { default as CodeViewer } from './code-viewer';
 export { default as QueryTree } from './query-tree';
 export { default as SignalTooltipBasic } from './signal-tooltip-basic';
