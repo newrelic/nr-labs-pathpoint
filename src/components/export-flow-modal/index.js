@@ -136,7 +136,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
               className="export-header"
               type={HeadingText.TYPE.HEADING_3}
             >
-              Export flow
+              Export this flow
             </HeadingText>
             <BlockText className="export-byline">
               Choose a format to export {flowName}.
@@ -204,8 +204,9 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
             <Tile onClick={jsonTileClickHandler}>
               <HeadingText type={HeadingText.TYPE.HEADING_6}>JSON</HeadingText>
               <BlockText>
-                Export the raw flow document as JSON. Useful for backup or
-                inspection.
+                Export the raw flow document as JSON. Useful for backup,
+                inspection, or directly migrating this flow to the new
+                Pathpoint.
               </BlockText>
             </Tile>
             <Tile onClick={nerdGraphTileClickHandler}>
@@ -213,8 +214,9 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
                 NerdGraph
               </HeadingText>
               <BlockText>
-                Generate a ready-to-run NerdGraph mutation that recreates this
-                flow in Pathpoint, to run in the GraphiQL explorer.
+                Generate a NerdGraph mutation. You can run the mutation in our
+                NerdGraph API explorer to migrate this flow to the new
+                Pathpoint.
               </BlockText>
             </Tile>
             <Tile onClick={terraformTileClickHandler}>
@@ -222,8 +224,9 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
                 Terraform
               </HeadingText>
               <BlockText>
-                Manage this flow as code with the New Relic Terraform provider.
-                Best for teams that version-control their observability config.
+                Manage this flow as code, or migrate it to the new Pathpoint,
+                using our Terraform provider. This is a good option if you
+                version-control your observability configuration.
               </BlockText>
             </Tile>
           </TileGroup>
