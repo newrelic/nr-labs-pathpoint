@@ -160,33 +160,51 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
               {currentConfig.byline}
             </BlockText>
             {view === VIEWS.NERDGRAPH && nonTransferableKpis.length > 0 && (
-              <InlineMessage
-                className="dialog-kpi-warning"
-                type={InlineMessage.TYPE.WARNING}
-                label={`${nonTransferableKpis.length} KPI${
-                  nonTransferableKpis.length === 1 ? '' : 's'
-                } won't transfer`}
-                description={
-                  nonTransferableKpis.length === 1 ? (
-                    `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that use metric data or query from multiple accounts.`
-                  ) : (
-                    <>
-                      These KPIs won&apos;t transfer right now:
-                      <ul className="dialog-kpi-list">
-                        {nonTransferableKpis.map((name) => (
-                          <li key={name}>{name}</li>
-                        ))}
-                      </ul>
-                      We&apos;re working on a way to transfer KPIs that use
-                      metric data or query from multiple accounts.
-                    </>
-                  )
-                }
-                action={{
-                  label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
-                  to: UI_CONTENT.MIGRATE.DOCS_URL,
-                }}
-              />
+              <div className="export-kpi-warning">
+                <span className="export-kpi-warning-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    focusable="false"
+                  >
+                    <path d="M8 10.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zM8 5.5a.5.5 0 01.5.5v3a.5.5 0 01-1 0V6a.5.5 0 01.5-.5z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M8 .5a.5.5 0 01.438.257l7.5 13.5A.501.501 0 0115.5 15H.5a.5.5 0 01-.437-.743l7.5-13.5L7.6.7A.5.5 0 018 .5zM1.35 14h13.3L8 2.03 1.35 14z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+                <div className="export-kpi-warning-content">
+                  <div className="export-kpi-warning-label">
+                    {`${nonTransferableKpis.length} KPI${
+                      nonTransferableKpis.length === 1 ? '' : 's'
+                    } won't transfer`}
+                  </div>
+                  <BlockText className="export-kpi-description">
+                    {nonTransferableKpis.length === 1 ? (
+                      `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that use metric data or query from multiple accounts.`
+                    ) : (
+                      <>
+                        These KPIs won&apos;t transfer right now:
+                        <ul className="export-kpi-list">
+                          {nonTransferableKpis.map((name) => (
+                            <li key={name}>{name}</li>
+                          ))}
+                        </ul>
+                        We&apos;re working on a way to transfer KPIs that use
+                        metric data or query from multiple accounts.
+                      </>
+                    )}
+                  </BlockText>
+                  <Link
+                    className="export-kpi-docs-link"
+                    to={UI_CONTENT.MIGRATE.DOCS_URL}
+                  >
+                    {UI_CONTENT.MIGRATE.DOCS_LINK_LABEL}
+                  </Link>
+                </div>
+              </div>
             )}
             {codeError && (
               <InlineMessage
