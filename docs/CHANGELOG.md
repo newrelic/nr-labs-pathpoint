@@ -1,3 +1,29 @@
+# [2.7.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.18...v2.7.0) (2026-09-30)
+
+
+### Bug Fixes
+
+* add warning for cross-account kpis when trying to migrate ([29c947c](https://github.com/newrelic/nr-labs-pathpoint/commit/29c947c96da3d47c45ba140aef9d7c8a0b0f417f))
+* additional changes to the export flow process ([a1620b1](https://github.com/newrelic/nr-labs-pathpoint/commit/a1620b1c0a0a87edaf8bfa68fd6135fdb9b734c0))
+* change inline message to display in export flow modal ([b71d5f3](https://github.com/newrelic/nr-labs-pathpoint/commit/b71d5f32e300978dbc3247c3ae0326996dd6e413))
+* check if flow created before redirecting to migrated flow ([1bfd3e1](https://github.com/newrelic/nr-labs-pathpoint/commit/1bfd3e12b47faf0555c28a0c6805458b43ba3f99))
+* check if migrated flows have been deleted ([359dc78](https://github.com/newrelic/nr-labs-pathpoint/commit/359dc78a50677c0057c492f9e478aac49ca9f88f))
+* content updates for the migrate and export flow ([2207344](https://github.com/newrelic/nr-labs-pathpoint/commit/22073447c78ccaee80857ed1fd2a2f2649bbfe6c))
+* ensure accountId where flow-migrations is stored matches flow ([5352688](https://github.com/newrelic/nr-labs-pathpoint/commit/5352688cd2cb3aa3ded464cbe00096619496faac))
+* get and set correct account when redirecting to migrated flows ([c78118c](https://github.com/newrelic/nr-labs-pathpoint/commit/c78118c2403acf47201893bc220b6ac56345d3e6))
+* graphql fixes ([8000b1a](https://github.com/newrelic/nr-labs-pathpoint/commit/8000b1af775465e6db92a081cd06b9b5ccbd05cf))
+* handle unsupported KPIs when migrating ([7b76718](https://github.com/newrelic/nr-labs-pathpoint/commit/7b767188b078c7dc41a75167931a7570156a3ac3))
+* remove modal for migrate; other minor fixes ([44d1fbe](https://github.com/newrelic/nr-labs-pathpoint/commit/44d1fbe6615643589ac3e6fddb58145e5817f88e))
+* set accountid when migrating ([23d22ae](https://github.com/newrelic/nr-labs-pathpoint/commit/23d22ae5b3ad73b95d085545dfbce383210afba5))
+* update copy in migrate flow dialog ([9adf39a](https://github.com/newrelic/nr-labs-pathpoint/commit/9adf39a293f815d343ec5e7c624c885378e26571))
+* updated export and migrate functionality ([cc81f76](https://github.com/newrelic/nr-labs-pathpoint/commit/cc81f7682a6247c418a54a9d8833b783b4a50e5b))
+
+
+### Features
+
+* add terraform support for migrate ([b44c296](https://github.com/newrelic/nr-labs-pathpoint/commit/b44c296df5bd080a8d214f720c18055fb31aa103))
+* export flow ([c8a25ec](https://github.com/newrelic/nr-labs-pathpoint/commit/c8a25ec6be67d294469b4850d1af253f2e06e1fc))
+
 ## [2.6.18](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.17...v2.6.18) (2026-08-18)
 
 
