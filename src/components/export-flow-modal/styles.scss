@@ -1,37 +1,91 @@
 .export-flow-modal {
   flex: 1;
   height: 100%;
+  min-height: 0;
+  // .modal-frame (modal/styles.scss) is a fixed, full-height panel with
+  // 80px top / 40px bottom padding; cap to that so flex children below can
+  // shrink instead of growing the whole panel past the viewport
+  max-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  justify-content: center;
 
-  .json-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .export-header {
+    flex: 0 0 auto;
+    user-select: none;
+  }
 
-    .export-header {
-      user-select: none;
+  .export-byline {
+    flex: 0 0 auto;
+    color: #6b7274;
+  }
+
+  .export-kpi-warning {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: min-content auto;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 4px;
+    background-color: #fefae9;
+    color: #293338;
+    font-size: 12px;
+    line-height: 16px;
+
+    .export-kpi-warning-icon {
+      display: inline-flex;
+      width: 16px;
+      height: 16px;
+      color: #8e6806;
+
+      svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+        pointer-events: none;
+      }
     }
 
-    .chart-wrapper {
-      flex: 1;
-      height: 100%;
-      min-height: 0;
-      width: 100%;
+    .export-kpi-warning-label {
+      font-weight: 600;
+    }
 
-      .json-chart {
-        div:first-of-type {
-          background-color: #f3f4f4;
-          border-radius: 4px;
-        }
-      }      
+    .export-kpi-description {
+      margin-top: 4px;
+    }
+
+    .export-kpi-docs-link {
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .export-kpi-list {
+      margin: 4px 0;
+      padding-left: 20px;
+      list-style: disc;
+    }
+  }
+
+  .export-options {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .export-code-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .code-wrapper {
+      flex: 1;
+      min-height: 0;
     }
   }
 
   .button-bar {
+    flex: 0 0 auto;
     display: flex;
     justify-content: flex-end;
     gap: 4px;

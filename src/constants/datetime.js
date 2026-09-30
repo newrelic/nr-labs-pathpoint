@@ -9,3 +9,7 @@ export const SHORT_DATETIME_FORMATTER = new Intl.DateTimeFormat('default', {
   hour: 'numeric',
   minute: '2-digit',
 });
+
+export const LONG_DATE_FORMATTER = new Intl.DateTimeFormat('default', {
+  dateStyle: 'long',
+});

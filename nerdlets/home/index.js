@@ -24,10 +24,11 @@ import {
   ExportFlowModal,
   Flow,
   FlowList,
+  MigrateFlowDialog,
   NoFlows,
   Sidebar,
 } from '../../src/components';
-import { useFlowLoader, useFetchUser } from '../../src/hooks';
+import { useFetchUser, useFlowLoader } from '../../src/hooks';
 import { AppContext, SidebarProvider } from '../../src/contexts';
 import { flowDocument } from '../../src/utils';
 import { MAX_ENTITIES_IN_STEP, MODES, UI_CONTENT } from '../../src/constants';
@@ -51,6 +52,10 @@ const ACTION_BTN_ATTRIBS = {
     type: Button.TYPE.TERTIARY,
     label: UI_CONTENT.GLOBAL.BUTTON_LABEL_EXPORT_FLOW,
   },
+  MIGRATE_FLOW: {
+    type: Button.TYPE.TERTIARY,
+    label: UI_CONTENT.GLOBAL.BUTTON_LABEL_MIGRATE_FLOW,
+  },
   AUDIT_LOG: {
     type: Button.TYPE.TERTIARY,
     label: UI_CONTENT.GLOBAL.BUTTON_LABEL_AUDIT_LOG,
@@ -73,6 +78,7 @@ const HomeNerdlet = () => {
   const [editFlowSettings, setEditFlowSettings] = useState(false);
   const [transitionToFlow, setTransitionToFlow] = useState(false);
   const [isExportFlowModalShown, setIsExportFlowModalShown] = useState(false);
+  const [isMigrateDialogShown, setIsMigrateDialogShown] = useState(false);
   const { accountId } = useContext(PlatformStateContext);
   const [nerdletState, setNerdletState] = useNerdletState();
   const { user } = useFetchUser();
@@ -152,6 +158,10 @@ const HomeNerdlet = () => {
               {
                 ...ACTION_BTN_ATTRIBS.EXPORT_FLOW,
                 onClick: () => setIsExportFlowModalShown(true),
+              },
+              {
+                ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
+                onClick: () => setIsMigrateDialogShown(true),
               },
               {
                 ...ACTION_BTN_ATTRIBS.AUDIT_LOG,
@@ -237,6 +247,8 @@ const HomeNerdlet = () => {
 
   const exportModalCloseHandler = () => setIsExportFlowModalShown(false);
 
+  const migrateDialogCloseHandler = () => setIsMigrateDialogShown(false);
+
   const currentFlowDoc = useMemo(
     () => (currentFlowId ? flowDocument(flows, currentFlowId) : null),
     [currentFlowId, flows]
@@ -261,26 +273,24 @@ const HomeNerdlet = () => {
 
     if (currentFlowDoc)
       return (
-        <AppContext.Provider value={app}>
-          <SidebarProvider>
-            <Flow
-              flowDoc={currentFlowDoc}
-              onClose={backToFlowsHandler}
-              mode={mode}
-              setMode={transitionToMode}
-              prevNonEditMode={prevNonEditMode}
-              flows={flows}
-              onRefetch={flowsRefetch}
-              onSelectFlow={flowClickHandler}
-              onTransition={transitionToMode}
-              isAuditLogShown={isAuditLogShown}
-              onAuditLogClose={auditLogCloseHandler}
-              editFlowSettings={editFlowSettings}
-              setEditFlowSettings={setEditFlowSettings}
-            />
-            <Sidebar />
-          </SidebarProvider>
-        </AppContext.Provider>
+        <SidebarProvider>
+          <Flow
+            flowDoc={currentFlowDoc}
+            onClose={backToFlowsHandler}
+            mode={mode}
+            setMode={transitionToMode}
+            prevNonEditMode={prevNonEditMode}
+            flows={flows}
+            onRefetch={flowsRefetch}
+            onSelectFlow={flowClickHandler}
+            onTransition={transitionToMode}
+            isAuditLogShown={isAuditLogShown}
+            onAuditLogClose={auditLogCloseHandler}
+            editFlowSettings={editFlowSettings}
+            setEditFlowSettings={setEditFlowSettings}
+          />
+          <Sidebar />
+        </SidebarProvider>
       );
 
     if (flows && flows.length)
@@ -303,32 +313,42 @@ const HomeNerdlet = () => {
   ]);
 
   return (
-    <div className="container">
-      <div className="messages-wrapper">
-        <Messages
-          org="newrelic"
-          repo="nr-labs-pathpoint"
-          branch="main"
-          directory="docs"
-          timeoutPeriod={604800} // 1 week
+    <AppContext.Provider value={app}>
+      <div className="container">
+        <div className="messages-wrapper">
+          <Messages
+            org="newrelic"
+            repo="nr-labs-pathpoint"
+            branch="main"
+            directory="docs"
+            timeoutPeriod={604800} // 1 week
+          />
+        </div>
+        <div className="main">{currentView}</div>
+        {isHelpModalShown && (
+          <HelpModal
+            isModalOpen={isHelpModalShown}
+            setModalOpen={setIsHelpModalShown}
+            about={UI_CONTENT.HELP_MODAL.ABOUT}
+            urls={UI_CONTENT.HELP_MODAL.URLS}
+            ownerBadge={UI_CONTENT.HELP_MODAL.OWNER_BADGE}
+          />
+        )}
+        <ExportFlowModal
+          flowDoc={currentFlowDoc}
+          accountId={accountId}
+          hidden={!isExportFlowModalShown}
+          onClose={exportModalCloseHandler}
+        />
+        <MigrateFlowDialog
+          accountId={accountId}
+          flowId={currentFlowId}
+          flowDoc={currentFlowDoc}
+          hidden={!isMigrateDialogShown}
+          onClose={migrateDialogCloseHandler}
         />
       </div>
-      <div className="main">{currentView}</div>
-      {isHelpModalShown && (
-        <HelpModal
-          isModalOpen={isHelpModalShown}
-          setModalOpen={setIsHelpModalShown}
-          about={UI_CONTENT.HELP_MODAL.ABOUT}
-          urls={UI_CONTENT.HELP_MODAL.URLS}
-          ownerBadge={UI_CONTENT.HELP_MODAL.OWNER_BADGE}
-        />
-      )}
-      <ExportFlowModal
-        flowDoc={currentFlowDoc}
-        hidden={!isExportFlowModalShown}
-        onClose={exportModalCloseHandler}
-      />
-    </div>
+    </AppContext.Provider>
   );
 };
 
