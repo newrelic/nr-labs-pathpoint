@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.7.0...v2.7.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* hiding migrate option; fixing links ([92795ea](https://github.com/newrelic/nr-labs-pathpoint/commit/92795eabeb33000d7a922ac51c0afd00a40568a1))
+
 # [2.7.0](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.6.18...v2.7.0) (2026-09-30)
 
 
