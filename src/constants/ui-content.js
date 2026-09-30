@@ -22,7 +22,7 @@ export const UI_CONTENT = {
     DOCS_LINK_LABEL: 'See our docs',
     // page is not live yet, but this is the intended destination
     DOCS_URL:
-      'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#migration-limitations',
+      'https://docs.newrelic.com/docs/pathpoint/flow-view/#migration-limitations',
   },
   HELP_MODAL: {
     ABOUT: {
