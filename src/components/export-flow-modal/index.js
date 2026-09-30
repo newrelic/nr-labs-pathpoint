@@ -143,7 +143,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
             </BlockText>
             <Link
               className="export-docs-link"
-              to="https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#migrate-a-flow"
+              to="https://docs.newrelic.com/docs/pathpoint/flow-view/#migrate-a-flow"
             >
               {UI_CONTENT.MIGRATE.DOCS_LINK_LABEL}
             </Link>

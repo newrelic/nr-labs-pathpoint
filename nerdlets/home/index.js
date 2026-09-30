@@ -159,10 +159,11 @@ const HomeNerdlet = () => {
                 ...ACTION_BTN_ATTRIBS.EXPORT_FLOW,
                 onClick: () => setIsExportFlowModalShown(true),
               },
-              {
-                ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
-                onClick: () => setIsMigrateDialogShown(true),
-              },
+              // TODO: migrate flow option hidden for now - uncomment to re-enable
+              // {
+              //   ...ACTION_BTN_ATTRIBS.MIGRATE_FLOW,
+              //   onClick: () => setIsMigrateDialogShown(true),
+              // },
               {
                 ...ACTION_BTN_ATTRIBS.AUDIT_LOG,
                 onClick: () => setisAuditLogShown(true),
