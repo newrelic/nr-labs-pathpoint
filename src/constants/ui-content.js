@@ -23,6 +23,27 @@ export const UI_CONTENT = {
     // page is not live yet, but this is the intended destination
     DOCS_URL:
       'https://docs.newrelic.com/docs/pathpoint/flow-view/#migration-limitations',
+    ACCESS_DOCS_URL:
+      'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#access-permissions',
+    // keyed by MIGRATION_ERROR_TYPES (see utils/export.js)
+    // TODO: PREVIEW_NOT_ENABLED and UNKNOWN are placeholder copy - waiting on
+    // final verbiage
+    ERRORS: {
+      PREVIEW_NOT_ENABLED: {
+        TITLE: "Preview isn't enabled for this account",
+        DESCRIPTION:
+          'Your account or organization needs to opt in to Preview before you can migrate flows.',
+      },
+      ACCESS_DENIED: {
+        TITLE: "You don't have access to this account",
+        DESCRIPTION:
+          'Ask your admin for access, or switch to an account where you can create flows.',
+      },
+      UNKNOWN: {
+        TITLE: "We couldn't migrate this flow",
+        DESCRIPTION: 'Something went wrong. Please try again.',
+      },
+    },
   },
   HELP_MODAL: {
     ABOUT: {
