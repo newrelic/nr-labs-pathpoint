@@ -27,7 +27,7 @@ export const UI_CONTENT = {
       'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#access-permissions',
     // keyed by MIGRATION_ERROR_TYPES (see utils/export.js)
     // TODO: PREVIEW_NOT_ENABLED and UNKNOWN are placeholder copy - waiting on
-    // final verbiage from the new Pathpoint team
+    // final verbiage
     ERRORS: {
       PREVIEW_NOT_ENABLED: {
         TITLE: "Preview isn't enabled for this account",
