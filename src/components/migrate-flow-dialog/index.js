@@ -20,8 +20,36 @@ import {
 } from 'nr1';
 import { AppContext } from '../../contexts';
 import { useFlowMigrate } from '../../hooks';
-import { getCrossAccountKpis, getUnsupportedKpis } from '../../utils';
+import {
+  getCrossAccountKpis,
+  getMigrationErrorType,
+  getUnsupportedKpis,
+  MIGRATION_ERROR_TYPES,
+} from '../../utils';
 import { LONG_DATE_FORMATTER, UI_CONTENT } from '../../constants';
+
+const { ERRORS } = UI_CONTENT.MIGRATE;
+
+const MIGRATION_ERROR_MESSAGES = {
+  [MIGRATION_ERROR_TYPES.PREVIEW_NOT_ENABLED]: {
+    title: ERRORS.PREVIEW_NOT_ENABLED.TITLE,
+    description: ERRORS.PREVIEW_NOT_ENABLED.DESCRIPTION,
+  },
+  [MIGRATION_ERROR_TYPES.ACCESS_DENIED]: {
+    title: ERRORS.ACCESS_DENIED.TITLE,
+    description: ERRORS.ACCESS_DENIED.DESCRIPTION,
+    actions: [
+      {
+        label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
+        to: UI_CONTENT.MIGRATE.ACCESS_DOCS_URL,
+      },
+    ],
+  },
+  [MIGRATION_ERROR_TYPES.UNKNOWN]: {
+    title: ERRORS.UNKNOWN.TITLE,
+    description: ERRORS.UNKNOWN.DESCRIPTION,
+  },
+};
 
 // used to confirm the entity a prior migration recorded still exists - a
 // stored migration whose flow has since been deleted should not block a
@@ -46,6 +74,9 @@ const MigrateFlowDialog = ({
 }) => {
   const { accounts = [], user } = useContext(AppContext) || {};
   const [selectedAccountId, setSelectedAccountId] = useState(accountId);
+  // platform state can hold 'cross-account' (the "All accounts" view) until
+  // the picker settles on a real account - never migrate into that
+  const isAccountSelected = Number(selectedAccountId) > 0;
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
   const [migrationRecord, setMigrationRecord] = useState(undefined);
@@ -69,6 +100,13 @@ const MigrateFlowDialog = ({
   const nonTransferableKpis = useMemo(
     () => [...new Set([...unsupportedKpis, ...crossAccountKpis])],
     [unsupportedKpis, crossAccountKpis]
+  );
+  const errorMessage = useMemo(
+    () =>
+      result && !result.success
+        ? MIGRATION_ERROR_MESSAGES[getMigrationErrorType(result.error)]
+        : null,
+    [result]
   );
 
   const previousGuid = migrationRecord?.guid;
@@ -144,6 +182,7 @@ const MigrateFlowDialog = ({
   );
 
   const migrateClickHandler = useCallback(async () => {
+    if (!isAccountSelected) return;
     setMigrating(true);
     const outcome = await migrateFlow(flowDoc || {}, flowId);
     if (outcome?.success) {
@@ -158,7 +197,14 @@ const MigrateFlowDialog = ({
       setMigrating(false);
       setResult(outcome);
     }
-  }, [flowDoc, flowId, migrateFlow, onClose, pollForFlowEntity]);
+  }, [
+    isAccountSelected,
+    flowDoc,
+    flowId,
+    migrateFlow,
+    onClose,
+    pollForFlowEntity,
+  ]);
 
   const openInNewPathpointClickHandler = useCallback(() => {
     onClose?.();
@@ -249,18 +295,13 @@ const MigrateFlowDialog = ({
                 onClick={onClose}
               />
             </div>
-            {result && (
+            {errorMessage && (
               <SectionMessage
                 className="dialog-error"
                 type={SectionMessage.TYPE.CRITICAL}
-                title="You don't have access to this account"
-                description="Ask your admin for access, or switch to an account where you can create flows."
-                actions={[
-                  {
-                    label: UI_CONTENT.MIGRATE.DOCS_LINK_LABEL,
-                    to: 'https://docs.newrelic.com/docs/pathpoint/create-manage-flows/#access-permissions',
-                  },
-                ]}
+                title={errorMessage.title}
+                description={errorMessage.description}
+                actions={errorMessage.actions}
               />
             )}
             {nonTransferableKpis.length > 0 && (
@@ -311,7 +352,7 @@ const MigrateFlowDialog = ({
               </Button>
               <Button
                 variant={Button.VARIANT.PRIMARY}
-                disabled={!selectedAccountId}
+                disabled={!isAccountSelected}
                 onClick={migrateClickHandler}
               >
                 Migrate flow

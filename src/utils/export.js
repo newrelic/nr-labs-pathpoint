@@ -506,6 +506,39 @@ export const findFlowEntity = async (accountId, guid) => {
   return entity ?? null;
 };
 
+export const MIGRATION_ERROR_TYPES = {
+  PREVIEW_NOT_ENABLED: 'previewNotEnabled',
+  ACCESS_DENIED: 'accessDenied',
+  UNKNOWN: 'unknown',
+};
+
+// nr1 may hand back a string, an Error, or an Apollo-style error with the
+// API's messages in graphQLErrors - gather every message we can find
+const migrationErrorMessages = (error) => {
+  if (!error) return [];
+  if (typeof error === 'string') return [error];
+  return [
+    error.message,
+    ...(error.graphQLErrors ?? []).map((e) => e?.message),
+    ...(error.errors ?? []).map((e) => e?.message),
+  ].filter(Boolean);
+};
+
+// the API only tells us why a create failed through its message text:
+// - "feature not enabled" - the account/org hasn't opted in to Preview
+// - "User does not have required capability 'pathpoint.create.flow'"
+export const getMigrationErrorType = (error) => {
+  const text = migrationErrorMessages(error).join(' ').toLowerCase();
+  if (text.includes('feature not enabled'))
+    return MIGRATION_ERROR_TYPES.PREVIEW_NOT_ENABLED;
+  if (
+    text.includes('required capability') ||
+    text.includes('pathpoint.create.flow')
+  )
+    return MIGRATION_ERROR_TYPES.ACCESS_DENIED;
+  return MIGRATION_ERROR_TYPES.UNKNOWN;
+};
+
 export const migrateFlow = async (accountId, input) => {
   try {
     const { data, error } = await NerdGraphMutation.mutate({
