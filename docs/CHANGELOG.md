@@ -1,3 +1,11 @@
+## [2.7.2](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.7.1...v2.7.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* handle different errors when migrating ([6ee1d11](https://github.com/newrelic/nr-labs-pathpoint/commit/6ee1d11e132c52db078b6dbbe11b4945f6184dcd))
+* updated copy; other minor fixes ([2d0ee53](https://github.com/newrelic/nr-labs-pathpoint/commit/2d0ee539af7a7765983142f3f6b3774be827595f))
+
 ## [2.7.1](https://github.com/newrelic/nr-labs-pathpoint/compare/v2.7.0...v2.7.1) (2026-09-30)
 
 
