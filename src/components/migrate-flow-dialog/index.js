@@ -74,6 +74,9 @@ const MigrateFlowDialog = ({
 }) => {
   const { accounts = [], user } = useContext(AppContext) || {};
   const [selectedAccountId, setSelectedAccountId] = useState(accountId);
+  // platform state can hold 'cross-account' (the "All accounts" view) until
+  // the picker settles on a real account - never migrate into that
+  const isAccountSelected = Number(selectedAccountId) > 0;
   const [migrating, setMigrating] = useState(false);
   const [result, setResult] = useState(null);
   const [migrationRecord, setMigrationRecord] = useState(undefined);
@@ -179,6 +182,7 @@ const MigrateFlowDialog = ({
   );
 
   const migrateClickHandler = useCallback(async () => {
+    if (!isAccountSelected) return;
     setMigrating(true);
     const outcome = await migrateFlow(flowDoc || {}, flowId);
     if (outcome?.success) {
@@ -193,7 +197,14 @@ const MigrateFlowDialog = ({
       setMigrating(false);
       setResult(outcome);
     }
-  }, [flowDoc, flowId, migrateFlow, onClose, pollForFlowEntity]);
+  }, [
+    isAccountSelected,
+    flowDoc,
+    flowId,
+    migrateFlow,
+    onClose,
+    pollForFlowEntity,
+  ]);
 
   const openInNewPathpointClickHandler = useCallback(() => {
     onClose?.();
@@ -341,7 +352,7 @@ const MigrateFlowDialog = ({
               </Button>
               <Button
                 variant={Button.VARIANT.PRIMARY}
-                disabled={!selectedAccountId}
+                disabled={!isAccountSelected}
                 onClick={migrateClickHandler}
               >
                 Migrate flow
