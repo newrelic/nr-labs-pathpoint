@@ -54,8 +54,8 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
 
   const flowName = flowDoc?.name || 'this flow';
 
-  // KPIs that can't be recreated in the new Pathpoint yet (metric/event-data
-  // queries or cross-account) - deduped in case a KPI hits both checks
+  // KPIs that can't be recreated in the new Pathpoint yet (unsupported query
+  // shapes or cross-account) - deduped in case a KPI hits both checks
   const nonTransferableKpis = useMemo(() => {
     const unsupported = getUnsupportedKpis(flowDoc || {});
     const crossAccount = getCrossAccountKpis(flowDoc || {}, accountId);
@@ -183,7 +183,7 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
                   </div>
                   <BlockText className="export-kpi-description">
                     {nonTransferableKpis.length === 1 ? (
-                      `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that use metric data or query from multiple accounts.`
+                      `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that query from multiple accounts.`
                     ) : (
                       <>
                         These KPIs won&apos;t transfer right now:
@@ -192,8 +192,8 @@ const ExportFlowModal = ({ flowDoc, accountId, hidden = true, onClose }) => {
                             <li key={name}>{name}</li>
                           ))}
                         </ul>
-                        We&apos;re working on a way to transfer KPIs that use
-                        metric data or query from multiple accounts.
+                        We&apos;re working on a way to transfer KPIs that query
+                        from multiple accounts.
                       </>
                     )}
                   </BlockText>

@@ -47,16 +47,53 @@ const AGGREGATION_MAP = {
   latest: 'LATEST',
 };
 
+const NRQL_CLAUSE_REGEX =
+  /\b(SELECT|FROM|WHERE|FACET|SINCE|UNTIL|LIMIT|OFFSET|TIMESERIES|COMPARE\s+WITH|ORDER\s+BY|SLIDE\s+BY|EXTRAPOLATE|WITH)\b/gi;
+
+// blank out string literals and anything inside parentheses (keeping the
+// length the same) so clause keywords only match at the top level of the query
+const maskNrql = (nrql = '') => {
+  let depth = 0;
+  let inString = false;
+  return [...nrql]
+    .map((ch) => {
+      if (inString) {
+        if (ch === "'") inString = false;
+        return ' ';
+      }
+      if (ch === "'") {
+        inString = true;
+        return ' ';
+      }
+      if (ch === '(') depth += 1;
+      if (ch === ')') {
+        depth = Math.max(0, depth - 1);
+        return ' ';
+      }
+      return depth ? ' ' : ch;
+    })
+    .join('');
+};
+
+// NRQL clauses can come in any order (e.g. `FROM Metric SELECT ...`), so find
+// a clause by position and return its text up to the next clause
+const getNrqlClause = (nrql = '', clause) => {
+  const matches = [...maskNrql(nrql).matchAll(NRQL_CLAUSE_REGEX)];
+  const idx = matches.findIndex((m) => m[1].toUpperCase() === clause);
+  if (idx < 0) return undefined;
+  const start = matches[idx].index + matches[idx][0].length;
+  const end = matches[idx + 1]?.index ?? nrql.length;
+  return nrql.slice(start, end).trim();
+};
+
 const parseNrqlToQuery = (nrql = '') => {
-  const fromMatch = nrql.match(/\bFROM\s+(\w+)/i);
-  const from = fromMatch?.[1] ?? 'Transaction';
+  const from = getNrqlClause(nrql, 'FROM')?.match(/^\w+/)?.[0] ?? 'Transaction';
 
-  const whereMatch = nrql.match(
-    /\bWHERE\s+(.*?)(?:\bSINCE\b|\bUNTIL\b|\bLIMIT\b|\bFACET\b|\bTIMESERIES\b|$)/i
+  const where = getNrqlClause(nrql, 'WHERE') || undefined;
+
+  const selectMatch = getNrqlClause(nrql, 'SELECT')?.match(
+    /^(\w+)\s*\(\s*([^)]*)\s*\)/
   );
-  const where = whereMatch?.[1]?.trim() || undefined;
-
-  const selectMatch = nrql.match(/\bSELECT\s+(\w+)\s*\(\s*([^)]*)\s*\)/i);
   if (!selectMatch) {
     return {
       select: { aggregationType: 'COUNT' },
@@ -90,14 +127,11 @@ const isKpiSupported = (kpi = {}) => {
   if (/\bFROM\s*\(/i.test(nrql)) return false;
   if ((nrql.match(/\bSELECT\b/gi) || []).length > 1) return false;
 
-  // metric queries don't map to the new event-based aggregation model
-  if (/\bFROM\s+Metric\b/i.test(nrql)) return false;
-
   // FACET has no equivalent in the metric-based query model
   if (/\bFACET\b/i.test(nrql)) return false;
 
-  // isolate the projection between SELECT and FROM
-  const projection = nrql.match(/\bSELECT\s+(.+?)\s+\bFROM\b/i)?.[1]?.trim();
+  // isolate the projection (the SELECT clause, wherever it appears)
+  const projection = getNrqlClause(nrql, 'SELECT');
   if (!projection) return false;
 
   // compound / multiple aggregations (e.g. `count(*), average(duration)`)
