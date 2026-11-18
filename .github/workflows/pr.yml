@@ -15,7 +15,8 @@ on:
 jobs:
   checkout-and-build-pr:
     name: checkout-and-build-pr
-    runs-on: ubuntu-latest
+    # Pinned: the NR1 CLI installer uses apt-key, which ubuntu-latest (26.04) no longer ships.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -125,7 +126,8 @@ jobs:
   validate-nerdpack:
     name: validate nerdpack
     needs: checkout-and-build-pr
-    runs-on: ubuntu-latest
+    # Pinned: the NR1 CLI installer uses apt-key, which ubuntu-latest (26.04) no longer ships.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2

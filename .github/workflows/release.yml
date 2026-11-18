@@ -16,7 +16,8 @@ env:
 
 jobs:
   job-checkout-and-build:
-    runs-on: ubuntu-latest
+    # Pinned: the NR1 CLI installer uses apt-key, which ubuntu-latest (26.04) no longer ships.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
