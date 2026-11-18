@@ -313,7 +313,7 @@ const MigrateFlowDialog = ({
                 } won't transfer`}
                 description={
                   nonTransferableKpis.length === 1 ? (
-                    `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that use metric data or query from multiple accounts.`
+                    `This KPI won't transfer: ${nonTransferableKpis[0]}. We're working on a way to transfer KPIs that query from multiple accounts.`
                   ) : (
                     <>
                       These KPIs won&apos;t transfer right now:
@@ -322,8 +322,8 @@ const MigrateFlowDialog = ({
                           <li key={name}>{name}</li>
                         ))}
                       </ul>
-                      We&apos;re working on a way to transfer KPIs that use
-                      metric data or query from multiple accounts.
+                      We&apos;re working on a way to transfer KPIs that query
+                      from multiple accounts.
                     </>
                   )
                 }
